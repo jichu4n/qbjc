@@ -1,0 +1,28 @@
+{
+  "name": "qbjc",
+  "version": "0.1.0",
+  "description": "QBasic to JavaScript compiler",
+  "scripts": {
+    "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
+    "build": "npm run build:grammar && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jichu4n/qbjc.git"
+  },
+  "author": "Chuan Ji <chuan@jichu4n.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jichu4n/qbjc/issues"
+  },
+  "homepage": "https://github.com/jichu4n/qbjc#readme",
+  "devDependencies": {
+    "@types/nearley": "^2.11.1",
+    "@types/node": "^14.14.10",
+    "typescript": "^4.1.2"
+  },
+  "dependencies": {
+    "nearley": "^2.20.1",
+    "source-map": "^0.7.3"
+  }
+}
