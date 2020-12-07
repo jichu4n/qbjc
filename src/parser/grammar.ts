@@ -3,6 +3,16 @@
 // Bypasses TS6133. Allow declared but unused functions.
 // @ts-ignore
 function id(d: any[]): any { return d[0]; }
+declare var PRINT: any;
+declare var END: any;
+declare var COLON: any;
+declare var NEWLINE: any;
+
+import lexer from './lexer';
+
+function discard() {
+  return null;
+}
 
 interface NearleyToken {
   value: any;
@@ -32,13 +42,24 @@ interface Grammar {
 };
 
 const grammar: Grammar = {
-  Lexer: undefined,
+  Lexer: lexer,
   ParserRules: [
-    {"name": "program$ebnf$1", "symbols": ["statement"]},
-    {"name": "program$ebnf$1", "symbols": ["program$ebnf$1", "statement"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "program", "symbols": ["program$ebnf$1"]},
-    {"name": "statement$string$1", "symbols": [{"literal":"E"}, {"literal":"N"}, {"literal":"D"}], "postprocess": (d) => d.join('')},
-    {"name": "statement", "symbols": ["statement$string$1"]}
+    {"name": "program", "symbols": ["statements"]},
+    {"name": "statements$ebnf$1", "symbols": ["statementSep"], "postprocess": id},
+    {"name": "statements$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "statements$ebnf$2", "symbols": []},
+    {"name": "statements$ebnf$2$subexpression$1", "symbols": ["statement", "statementSep"]},
+    {"name": "statements$ebnf$2", "symbols": ["statements$ebnf$2", "statements$ebnf$2$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "statements", "symbols": ["statements$ebnf$1", "statements$ebnf$2"], "postprocess": ([$1, $2]) => $2.map(id)},
+    {"name": "statement", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT)], "postprocess": id},
+    {"name": "statement", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": id},
+    {"name": "statementSep$ebnf$1$subexpression$1", "symbols": [(lexer.has("COLON") ? {type: "COLON"} : COLON)]},
+    {"name": "statementSep$ebnf$1$subexpression$1", "symbols": [(lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE)]},
+    {"name": "statementSep$ebnf$1", "symbols": ["statementSep$ebnf$1$subexpression$1"]},
+    {"name": "statementSep$ebnf$1$subexpression$2", "symbols": [(lexer.has("COLON") ? {type: "COLON"} : COLON)]},
+    {"name": "statementSep$ebnf$1$subexpression$2", "symbols": [(lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE)]},
+    {"name": "statementSep$ebnf$1", "symbols": ["statementSep$ebnf$1", "statementSep$ebnf$1$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "statementSep", "symbols": ["statementSep$ebnf$1"], "postprocess": discard}
   ],
   ParserStart: "program",
 };
