@@ -16,11 +16,30 @@ const lexer = moo.compile({
   IDENTIFIER: {
     match: /[a-zA-Z_][a-zA-Z0-9_]*(?:\$|%|#|&|!)?/,
     type: caseInsensitiveKeywords({
-      PRINT: 'print',
+      AND: 'and',
       END: 'end',
+      LET: 'let',
+      MOD: 'mod',
+      OR: 'or',
+      PRINT: 'print',
     }),
   },
+
   COLON: ':',
+  LPAREN: '(',
+  RPAREN: ')',
+  ADD: '+',
+  SUB: '-',
+  MUL: '*',
+  EXP: '^',
+  DIV: '/',
+  INTDIV: '\\',
+  EQ: '=',
+
+  STRING_LITERAL: {
+    match: /"[^"]*"/,
+    value: (text) => text.substr(1, text.length - 2),
+  },
 });
 
 // Modify generated lexer to discard irrelevant tokens.
