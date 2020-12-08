@@ -5,6 +5,7 @@ import {Token} from 'moo';
 import lexer from './lexer';
 import {
   AstNode,
+  Module,
   ExprType,
   BinaryOpExpr,
   UnaryOpExpr,
@@ -13,7 +14,11 @@ import {
   StmtType,
   AssignStmt,
   PrintStmt,
-} from '../ast';
+} from '../ast/ast';
+
+// ----
+// Helper functions.
+// ----
 
 function discard() { return null; }
 
@@ -47,10 +52,14 @@ function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
   };
 }
 
+// ----
+// Generated grammer
+// ----
+
 %}
 @lexer lexer
 
-program -> stmts  {% id %}
+module -> stmts  {% ([$1]): Module => ({ stmts: $1 }) %}
 
 # ----
 # Statements

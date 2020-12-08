@@ -1,14 +1,21 @@
-import nearley from 'nearley';
-import grammar from './parser/grammar';
+import {parseString} from './parser/parser';
+import codegen from './codegen/code-generator';
 
-const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
-parser.feed('\n:\n');
-parser.feed(`
+const input = `
   PRINT "HELLO"
   LET x = "world"
   PRINT x
   x = x + "!" + "!"
   PRINT x
-`);
-parser.feed('\n');
-console.log(JSON.stringify(parser.results, null, 2));
+`;
+
+const parseResult = parseString(input);
+console.log(JSON.stringify(parseResult, null, 2));
+
+if (parseResult.length > 0 && parseResult[0] !== null) {
+  const {code, map} = codegen(parseResult[0], {sourceFileName: 'test.bas'});
+  console.log('-----------');
+  console.log(code);
+  console.log('-----------');
+  console.log(map.toString());
+}

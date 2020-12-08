@@ -1,5 +1,8 @@
 /** An AST node. */
-export interface AstNode {
+export type AstNode = Stmt | Expr;
+
+/** Common properties of all AST nodes. */
+export interface AstNodeBase {
   loc: AstNodeLocation;
 }
 
@@ -7,6 +10,13 @@ export interface AstNode {
 export interface AstNodeLocation {
   line: number;
   col: number;
+}
+
+// ----
+// Program structure
+// ----
+export interface Module {
+  stmts: Array<Stmt>;
 }
 
 // ----
@@ -21,13 +31,13 @@ export enum StmtType {
   PRINT = 'print',
 }
 
-export interface AssignStmt extends AstNode {
+export interface AssignStmt extends AstNodeBase {
   type: StmtType.ASSIGN;
   targetExpr: LhsExpr;
   valueExpr: Expr;
 }
 
-export interface PrintStmt extends AstNode {
+export interface PrintStmt extends AstNodeBase {
   type: StmtType.PRINT;
   args: Array<Expr>;
 }
@@ -37,7 +47,7 @@ export interface PrintStmt extends AstNode {
 // ----
 
 /** An expression. */
-export type Expr = LiteralExpr | VarRefExpr | BinaryOpExpr | UnaryOp;
+export type Expr = LiteralExpr | VarRefExpr | BinaryOpExpr | UnaryOpExpr;
 
 /** An expression that can be assigned to. */
 export type LhsExpr = VarRefExpr;
@@ -49,12 +59,12 @@ export enum ExprType {
   UNARY_OP = 'unaryOp',
 }
 
-export interface LiteralExpr extends AstNode {
+export interface LiteralExpr extends AstNodeBase {
   type: ExprType.LITERAL;
   value: string; // TODO
 }
 
-export interface VarRefExpr extends AstNode {
+export interface VarRefExpr extends AstNodeBase {
   type: ExprType.VAR_REF;
   name: string;
 }
@@ -77,7 +87,7 @@ export enum BinaryOp {
   LTE = 'lte',
 }
 
-export interface BinaryOpExpr extends AstNode {
+export interface BinaryOpExpr extends AstNodeBase {
   type: ExprType.BINARY_OP;
   op: BinaryOp;
   leftExpr: Expr;
@@ -89,7 +99,7 @@ export enum UnaryOp {
   NEG = 'sub',
 }
 
-export interface UnaryOpExpr extends AstNode {
+export interface UnaryOpExpr extends AstNodeBase {
   type: ExprType.UNARY_OP;
   op: UnaryOp;
   expr: Expr;

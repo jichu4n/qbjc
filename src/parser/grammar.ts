@@ -25,6 +25,7 @@ import {Token} from 'moo';
 import lexer from './lexer';
 import {
   AstNode,
+  Module,
   ExprType,
   BinaryOpExpr,
   UnaryOpExpr,
@@ -33,7 +34,11 @@ import {
   StmtType,
   AssignStmt,
   PrintStmt,
-} from '../ast';
+} from '../ast/ast';
+
+// ----
+// Helper functions.
+// ----
 
 function discard() { return null; }
 
@@ -67,6 +72,10 @@ function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
   };
 }
 
+// ----
+// Generated grammer
+// ----
+
 
 interface NearleyToken {
   value: any;
@@ -98,7 +107,7 @@ interface Grammar {
 const grammar: Grammar = {
   Lexer: lexer,
   ParserRules: [
-    {"name": "program", "symbols": ["stmts"], "postprocess": id},
+    {"name": "module", "symbols": ["stmts"], "postprocess": ([$1]): Module => ({ stmts: $1 })},
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmts$ebnf$2", "symbols": []},
@@ -165,7 +174,7 @@ const grammar: Grammar = {
             ({ type: ExprType.LITERAL, value: $1.value, ...useLoc($1) })
             }
   ],
-  ParserStart: "program",
+  ParserStart: "module",
 };
 
 export default grammar;
