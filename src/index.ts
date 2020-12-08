@@ -3,10 +3,10 @@ import codegen from './codegen/code-generator';
 
 const input = `
   PRINT "HELLO"
-  LET x = "world"
+  LET x = " " + "world" + "!"
   PRINT x
-  x = x + "!" + "!"
-  PRINT x
+  y = 2 + 3 * 4 ^ 5
+  PRINT y + 1 <= 10 * 100
 `;
 
 const parseResult = parseString(input);

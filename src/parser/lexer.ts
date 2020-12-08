@@ -25,21 +25,29 @@ const lexer = moo.compile({
     }),
   },
 
-  COLON: ':',
-  LPAREN: '(',
-  RPAREN: ')',
-  ADD: '+',
-  SUB: '-',
-  MUL: '*',
-  EXP: '^',
-  DIV: '/',
-  INTDIV: '\\',
-  EQ: '=',
-
   STRING_LITERAL: {
     match: /"[^"]*"/,
     value: (text) => text.substr(1, text.length - 2),
   },
+  NUMERIC_LITERAL: /-?(?:\d*\.\d+|\d+)/,
+
+  COLON: ':',
+  SEMICOLON: ';',
+  LPAREN: '(',
+  RPAREN: ')',
+  ADD: '+',
+  SUB: '-', // Note: must be after NUMERIC_LITERAL
+  MUL: '*',
+  EXP: '^',
+  DIV: '/',
+  INTDIV: '\\',
+  // Note: order matters in the comparison operators!
+  EQ: '=',
+  NE: '<>',
+  GTE: '>=',
+  LTE: '<=',
+  GT: '>',
+  LT: '<',
 });
 
 // Modify generated lexer to discard irrelevant tokens.

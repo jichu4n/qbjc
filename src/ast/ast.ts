@@ -61,7 +61,7 @@ export enum ExprType {
 
 export interface LiteralExpr extends AstNodeBase {
   type: ExprType.LITERAL;
-  value: string; // TODO
+  value: string | number; // TODO
 }
 
 export interface VarRefExpr extends AstNodeBase {

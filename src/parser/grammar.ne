@@ -53,11 +53,16 @@ function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
 }
 
 // ----
-// Generated grammer
+// Generated grammer for QBasic
 // ----
 
 %}
+
 @lexer lexer
+
+# ----
+# Program structure
+# ----
 
 module -> stmts  {% ([$1]): Module => ({ stmts: $1 }) %}
 
@@ -98,11 +103,27 @@ assignStmt ->
 
 # An expression.
 expr ->
-    expr6  {% id %}
+    expr10  {% id %}
 
 # An expression that can be assigned to.
 lhsExpr ->
     varRefExpr  {% id %}
+
+expr10 ->
+      expr9  {% id %}
+    | expr10 (%OR) expr9  {% buildBinaryOpExpr %}
+
+expr9 ->
+      expr8  {% id %}
+    | expr9 (%AND) expr8  {% buildBinaryOpExpr %}
+
+expr8 ->
+      expr7  {% id %}
+    | (%NOT) expr7  {% buildUnaryOpExpr %}
+
+expr7 ->
+      expr6  {% id %}
+    | expr6 (%EQ | %NE | %GT | %GTE | %LT | %LTE) expr6  {% buildBinaryOpExpr %}
 
 expr6 ->
       expr5  {% id %}
@@ -126,7 +147,7 @@ expr2 ->
 
 expr1 ->
       expr0  {% id %}
-    | expr1 %EXP expr0  {% buildBinaryOpExpr %}
+    | expr1 (%EXP) expr0  {% buildBinaryOpExpr %}
 
 expr0 ->
       varRefExpr  {% id %}
@@ -140,8 +161,12 @@ varRefExpr ->
     %}
 
 literalExpr ->
-    %STRING_LITERAL  {%
-        ([$1]): LiteralExpr =>
-            ({ type: ExprType.LITERAL, value: $1.value, ...useLoc($1) })
-    %}
+      %STRING_LITERAL  {%
+          ([$1]): LiteralExpr =>
+              ({ type: ExprType.LITERAL, value: $1.value, ...useLoc($1) })
+      %}
+    | %NUMERIC_LITERAL  {%
+          ([$1]): LiteralExpr =>
+              ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
+      %}
 

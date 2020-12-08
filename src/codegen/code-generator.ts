@@ -89,37 +89,70 @@ class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitLiteralExpr(node: LiteralExpr): SourceNode {
-    return this.createSourceNode(node, `'${node.value}'`); // TODO: Escape literals
+    let valueString: string;
+    if (typeof node.value === 'string') {
+      valueString = `'${node.value}'`; // TODO: Escape literals
+    } else if (typeof node.value === 'number') {
+      valueString = `${node.value}`;
+    } else {
+      throw new Error(
+        `Unrecognized literal value: ${JSON.stringify(node.value)}`
+      );
+    }
+    return this.createSourceNode(node, valueString);
   }
   visitVarRefExpr(node: VarRefExpr): SourceNode {
     return this.createSourceNode(node, `ctx.localVars['${node.name}']`);
   }
   visitBinaryOpExpr(node: BinaryOpExpr): SourceNode {
-    const OP_MAP = {
-      [BinaryOp.ADD]: '+',
-      [BinaryOp.SUB]: '-',
-      [BinaryOp.MUL]: '*',
-      [BinaryOp.DIV]: '/',
-      [BinaryOp.INTDIV]: 'intdiv',
-      [BinaryOp.EXP]: 'exp',
-      [BinaryOp.MOD]: '%',
-      [BinaryOp.AND]: '&&',
-      [BinaryOp.OR]: '||',
-      [BinaryOp.EQ]: '===',
-      [BinaryOp.NE]: '!=',
-      [BinaryOp.GT]: '>',
-      [BinaryOp.GTE]: '>=',
-      [BinaryOp.LT]: '<',
-      [BinaryOp.LTE]: '<=',
-    };
-    return this.createSourceNode(
-      node,
-      '(',
-      this.accept(node.leftExpr),
-      OP_MAP[node.op],
-      this.accept(node.rightExpr),
-      ')'
-    );
+    let chunks: Array<SourceNode | string> = [];
+    switch (node.op) {
+      case BinaryOp.EXP:
+        chunks.push(
+          'Math.pow(',
+          this.accept(node.leftExpr),
+          ', ',
+          this.accept(node.rightExpr),
+          ')'
+        );
+        break;
+      case BinaryOp.INTDIV:
+        chunks.push(
+          'Math.floor(',
+          this.accept(node.leftExpr),
+          ' / ',
+          this.accept(node.rightExpr),
+          ')'
+        );
+        break;
+      default:
+        const OP_MAP = {
+          [BinaryOp.ADD]: '+',
+          [BinaryOp.SUB]: '-',
+          [BinaryOp.MUL]: '*',
+          [BinaryOp.DIV]: '/',
+          [BinaryOp.INTDIV]: 'intdiv',
+          [BinaryOp.EXP]: 'exp',
+          [BinaryOp.MOD]: '%',
+          [BinaryOp.AND]: '&&',
+          [BinaryOp.OR]: '||',
+          [BinaryOp.EQ]: '===',
+          [BinaryOp.NE]: '!=',
+          [BinaryOp.GT]: '>',
+          [BinaryOp.GTE]: '>=',
+          [BinaryOp.LT]: '<',
+          [BinaryOp.LTE]: '<=',
+        };
+        chunks.push(
+          '(',
+          this.accept(node.leftExpr),
+          ` ${OP_MAP[node.op]} `,
+          this.accept(node.rightExpr),
+          ')'
+        );
+        break;
+    }
+    return this.createSourceNode(node, ...chunks);
   }
   visitUnaryOpExpr(node: UnaryOpExpr): SourceNode {
     const OP_MAP = {
