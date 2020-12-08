@@ -5,6 +5,7 @@ import {
   AstNode,
   BinaryOp,
   BinaryOpExpr,
+  LabelStmt,
   LiteralExpr,
   Module,
   PrintStmt,
@@ -57,6 +58,12 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     return sourceNode;
   }
 
+  visitLabelStmt(node: LabelStmt): SourceNode {
+    return this.createSourceNode(
+      node,
+      this.lines(`{ label: '${node.label}' },`, '')
+    );
+  }
   visitAssignStmt(node: AssignStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
       this.accept(node.targetExpr),
@@ -131,8 +138,6 @@ class CodeGenerator extends AstVisitor<SourceNode> {
           [BinaryOp.SUB]: '-',
           [BinaryOp.MUL]: '*',
           [BinaryOp.DIV]: '/',
-          [BinaryOp.INTDIV]: 'intdiv',
-          [BinaryOp.EXP]: 'exp',
           [BinaryOp.MOD]: '%',
           [BinaryOp.AND]: '&&',
           [BinaryOp.OR]: '||',

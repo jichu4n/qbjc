@@ -3,6 +3,7 @@ import {
   AstNode,
   BinaryOpExpr,
   ExprType,
+  LabelStmt,
   LiteralExpr,
   Module,
   PrintStmt,
@@ -15,6 +16,7 @@ import {
 export default abstract class AstVisitor<T = any> {
   protected abstract visitModule(module: Module): T;
 
+  protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
@@ -25,6 +27,8 @@ export default abstract class AstVisitor<T = any> {
 
   protected accept(node: AstNode): T {
     switch (node.type) {
+      case StmtType.LABEL:
+        return this.visitLabelStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
       case StmtType.PRINT:

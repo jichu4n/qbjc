@@ -5,8 +5,11 @@ const input = `
   PRINT "HELLO"
   LET x = " " + "world" + "!"
   PRINT x
-  y = 2 + 3 * 4 ^ 5
-  PRINT y + 1 <= 10 * 100
+
+  handleY:
+  100 y = 2 + 3 * 4 ^ 5
+  200 PRINT y + 1 <= 10 * 100
+  300
 `;
 
 const parseResult = parseString(input);

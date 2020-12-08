@@ -24,11 +24,17 @@ export interface Module {
 // ----
 
 /** A statement. */
-export type Stmt = AssignStmt | PrintStmt;
+export type Stmt = LabelStmt | AssignStmt | PrintStmt;
 
 export enum StmtType {
+  LABEL = 'label',
   ASSIGN = 'assign',
   PRINT = 'print',
+}
+
+export interface LabelStmt extends AstNodeBase {
+  type: StmtType.LABEL;
+  label: string;
 }
 
 export interface AssignStmt extends AstNodeBase {

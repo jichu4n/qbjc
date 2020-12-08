@@ -6,6 +6,8 @@ function id(d: any[]): any { return d[0]; }
 declare var COLON: any;
 declare var NEWLINE: any;
 declare var END: any;
+declare var NUMERIC_LITERAL: any;
+declare var IDENTIFIER: any;
 declare var PRINT: any;
 declare var LET: any;
 declare var EQ: any;
@@ -26,9 +28,7 @@ declare var DIV: any;
 declare var EXP: any;
 declare var LPAREN: any;
 declare var RPAREN: any;
-declare var IDENTIFIER: any;
 declare var STRING_LITERAL: any;
-declare var NUMERIC_LITERAL: any;
 
 import {Token} from 'moo';
 import lexer from './lexer';
@@ -40,7 +40,9 @@ import {
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
+  Stmt,
   StmtType,
+  LabelStmt,
   AssignStmt,
   PrintStmt,
 } from '../ast/ast';
@@ -82,7 +84,7 @@ function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
 }
 
 // ----
-// Generated grammer
+// Generated grammer for QBasic
 // ----
 
 
@@ -120,9 +122,8 @@ const grammar: Grammar = {
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmts$ebnf$2", "symbols": []},
-    {"name": "stmts$ebnf$2$subexpression$1", "symbols": ["stmt", "stmtSep"]},
-    {"name": "stmts$ebnf$2", "symbols": ["stmts$ebnf$2", "stmts$ebnf$2$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "stmts", "symbols": ["stmts$ebnf$1", "stmts$ebnf$2"], "postprocess": ([$1, $2]) => $2.map(id)},
+    {"name": "stmts$ebnf$2", "symbols": ["stmts$ebnf$2", "stmtWithSep"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "stmts", "symbols": ["stmts$ebnf$1", "stmts$ebnf$2"], "postprocess": ([$1, $2]) => $2},
     {"name": "stmtSep$ebnf$1$subexpression$1", "symbols": [(lexer.has("COLON") ? {type: "COLON"} : COLON)]},
     {"name": "stmtSep$ebnf$1$subexpression$1", "symbols": [(lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE)]},
     {"name": "stmtSep$ebnf$1", "symbols": ["stmtSep$ebnf$1$subexpression$1"]},
@@ -130,9 +131,21 @@ const grammar: Grammar = {
     {"name": "stmtSep$ebnf$1$subexpression$2", "symbols": [(lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE)]},
     {"name": "stmtSep$ebnf$1", "symbols": ["stmtSep$ebnf$1", "stmtSep$ebnf$1$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "stmtSep", "symbols": ["stmtSep$ebnf$1"], "postprocess": discard},
-    {"name": "stmt", "symbols": ["printStmt"], "postprocess": id},
-    {"name": "stmt", "symbols": ["assignStmt"], "postprocess": id},
-    {"name": "stmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": discard},
+    {"name": "stmtWithSep$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "stmtWithSep$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "stmtWithSep", "symbols": ["labelStmt", "stmtWithSep$ebnf$1"], "postprocess": id},
+    {"name": "stmtWithSep", "symbols": ["nonLabelStmt", "stmtSep"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": discard},
+    {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
+        ([$1]): LabelStmt =>
+            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+            },
+    {"name": "labelStmt", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": 
+        ([$1, $2]): LabelStmt =>
+            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+            },
     {"name": "printStmt$ebnf$1", "symbols": ["expr"], "postprocess": id},
     {"name": "printStmt$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 

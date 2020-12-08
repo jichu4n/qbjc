@@ -11,7 +11,9 @@ import {
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
+  Stmt,
   StmtType,
+  LabelStmt,
   AssignStmt,
   PrintStmt,
 } from '../ast/ast';
@@ -70,15 +72,29 @@ module -> stmts  {% ([$1]): Module => ({ stmts: $1 }) %}
 # Statements
 # ----
 stmts ->
-    stmtSep:? (stmt stmtSep):*  {% ([$1, $2]) => $2.map(id) %}
+    stmtSep:? stmtWithSep:*  {% ([$1, $2]) => $2 %}
 
 stmtSep ->
     (%COLON | %NEWLINE):+  {% discard %}
 
-stmt ->
+stmtWithSep ->
+      labelStmt stmtSep:?  {% id %}
+    | nonLabelStmt stmtSep  {% id %}
+
+nonLabelStmt ->
       printStmt  {% id %}
     | assignStmt  {% id %}
     | %END  {% discard %}
+
+labelStmt ->
+      %NUMERIC_LITERAL  {%
+        ([$1]): LabelStmt =>
+            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+    %}
+    | %IDENTIFIER %COLON  {%
+        ([$1, $2]): LabelStmt =>
+            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+    %}
 
 printStmt ->
     %PRINT expr:?  {%
