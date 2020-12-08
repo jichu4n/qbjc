@@ -3,6 +3,7 @@ import {SourceNode} from 'source-map';
 import {
   AssignStmt,
   AstNode,
+  AstVisitor,
   BinaryOp,
   BinaryOpExpr,
   LabelStmt,
@@ -14,7 +15,6 @@ import {
   UnaryOpExpr,
   VarRefExpr,
 } from '../ast/ast';
-import AstVisitor from '../ast/ast-visitor';
 
 /** Default indentation per level. */
 const DEFAULT_INDENT_WIDTH = 4;
