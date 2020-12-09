@@ -64,9 +64,15 @@ export interface IfStmt extends AstNodeBase {
   elseBranch: Stmts;
 }
 
+export enum PrintSep {
+  COMMA = 'comma',
+  SEMICOLON = 'semicolon',
+}
+
+export type PrintArg = Expr | PrintSep;
 export interface PrintStmt extends AstNodeBase {
   type: StmtType.PRINT;
-  args: Array<Expr>;
+  args: Array<PrintArg>;
 }
 
 // ----

@@ -38,6 +38,7 @@ const lexer = moo.compile({
 
   COLON: ':',
   SEMICOLON: ';',
+  COMMA: ',',
   LPAREN: '(',
   RPAREN: ')',
   ADD: '+',

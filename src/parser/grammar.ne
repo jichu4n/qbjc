@@ -150,10 +150,14 @@ blockIfStmt ->
     %}
 
 printStmt ->
-    %PRINT expr:?  {%
-        ([$1, $2]): PrintStmt =>
-            ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
+    %PRINT printArg:*  {%
+        ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
     %}
+
+printArg ->
+      expr  {% id %}
+    | %COMMA  {% ([$1]) => $1.type.toLowerCase() %}
+    | %SEMICOLON  {% ([$1]) => $1.type.toLowerCase() %}
 
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%
