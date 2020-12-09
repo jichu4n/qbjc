@@ -6,6 +6,7 @@ import {
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
+  GotoStmt,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -70,6 +71,11 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       ' = ',
       this.accept(node.valueExpr),
       ';',
+    ]);
+  }
+  visitGotoStmt(node: GotoStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => [
+      `return { type: 'goto', destLabel: '${node.destLabel}' };`,
     ]);
   }
   visitPrintStmt(node: PrintStmt): SourceNode {

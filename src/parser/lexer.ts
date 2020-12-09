@@ -18,6 +18,7 @@ const lexer = moo.compile({
     type: caseInsensitiveKeywords({
       AND: 'and',
       END: 'end',
+      GOTO: 'goto',
       LET: 'let',
       MOD: 'mod',
       OR: 'or',

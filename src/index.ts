@@ -10,6 +10,7 @@ const input = `
   100 y = 2 + 3 * 4 ^ 5
   200 PRINT y + 1 <= 10 * 100
   300
+  GOTO handleY
 `;
 
 const parseResult = parseString(input);

@@ -24,11 +24,12 @@ export interface Module {
 // ----
 
 /** A statement. */
-export type Stmt = LabelStmt | AssignStmt | PrintStmt;
+export type Stmt = LabelStmt | AssignStmt | GotoStmt | PrintStmt;
 
 export enum StmtType {
   LABEL = 'label',
   ASSIGN = 'assign',
+  GOTO = 'goto',
   PRINT = 'print',
 }
 
@@ -41,6 +42,11 @@ export interface AssignStmt extends AstNodeBase {
   type: StmtType.ASSIGN;
   targetExpr: LhsExpr;
   valueExpr: Expr;
+}
+
+export interface GotoStmt extends AstNodeBase {
+  type: StmtType.GOTO;
+  destLabel: string;
 }
 
 export interface PrintStmt extends AstNodeBase {
@@ -117,6 +123,7 @@ export abstract class AstVisitor<T = any> {
 
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
+  protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
@@ -130,6 +137,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitLabelStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
+      case StmtType.GOTO:
+        return this.visitGotoStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case ExprType.LITERAL:

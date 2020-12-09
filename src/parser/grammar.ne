@@ -14,6 +14,7 @@ import {
   Stmt,
   StmtType,
   LabelStmt,
+  GotoStmt,
   AssignStmt,
   PrintStmt,
 } from '../ast/ast';
@@ -82,9 +83,9 @@ stmtWithSep ->
     | nonLabelStmt stmtSep  {% id %}
 
 nonLabelStmt ->
-      printStmt  {% id %}
-    | assignStmt  {% id %}
-    | %END  {% discard %}
+      assignStmt  {% id %}
+    | gotoStmt  {% id %}
+    | printStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -96,12 +97,6 @@ labelStmt ->
             ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
     %}
 
-printStmt ->
-    %PRINT expr:?  {%
-        ([$1, $2]): PrintStmt =>
-            ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
-    %}
-
 assignStmt ->
     %LET:? lhsExpr %EQ expr  {%
         ([$1, $2, $3, $4]): AssignStmt =>
@@ -111,6 +106,18 @@ assignStmt ->
               valueExpr: $4,
               ...useLoc($1 || $2),
             })
+    %}
+
+gotoStmt ->
+    %GOTO (%IDENTIFIER | %NUMERIC_LITERAL)  {%
+        ([$1, $2]): GotoStmt =>
+            ({ type: StmtType.GOTO, destLabel: id($2).value, ...useLoc($1) })
+    %}
+
+printStmt ->
+    %PRINT expr:?  {%
+        ([$1, $2]): PrintStmt =>
+            ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
     %}
 
 # ----
