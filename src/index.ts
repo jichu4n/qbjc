@@ -11,6 +11,18 @@ const input = `
   200 PRINT y + 1 <= 10 * 100
   300
   GOTO handleY
+
+  IF x > y THEN
+    PRINT "x > y"
+  ELSEIF x = y THEN
+    PRINT "x = y"
+  ELSEIF x < y THEN
+    PRINT "x < y"
+  ELSE
+    PRINT "???"
+  END IF
+
+  IF x <> y THEN PRINT "x <> y" ELSE PRINT "x = y"
 `;
 
 const parseResult = parseString(input);

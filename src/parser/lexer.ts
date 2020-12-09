@@ -17,12 +17,16 @@ const lexer = moo.compile({
     match: /[a-zA-Z_][a-zA-Z0-9_]*(?:\$|%|#|&|!)?/,
     type: caseInsensitiveKeywords({
       AND: 'and',
+      ELSE: 'else',
+      ELSEIF: 'elseif',
       END: 'end',
       GOTO: 'goto',
+      IF: 'if',
       LET: 'let',
       MOD: 'mod',
       OR: 'or',
       PRINT: 'print',
+      THEN: 'then',
     }),
   },
 

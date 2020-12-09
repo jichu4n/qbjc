@@ -10,6 +10,11 @@ declare var IDENTIFIER: any;
 declare var LET: any;
 declare var EQ: any;
 declare var GOTO: any;
+declare var IF: any;
+declare var THEN: any;
+declare var ELSE: any;
+declare var ELSEIF: any;
+declare var END: any;
 declare var PRINT: any;
 declare var OR: any;
 declare var AND: any;
@@ -41,10 +46,12 @@ import {
   LiteralExpr,
   VarRefExpr,
   Stmt,
+  Stmts,
   StmtType,
   LabelStmt,
   GotoStmt,
   AssignStmt,
+  IfStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -65,7 +72,7 @@ function useLoc(tokenOrAstNode: Token | AstNode) {
   }
 }
 
-function buildBinaryOpExpr([$1, $2, $3]: any[]): BinaryOpExpr {
+function buildBinaryOpExpr([$1, $2, $3]: Array<any>): BinaryOpExpr {
   return {
     type: ExprType.BINARY_OP,
     op: id($2).type.toLowerCase(),
@@ -75,7 +82,7 @@ function buildBinaryOpExpr([$1, $2, $3]: any[]): BinaryOpExpr {
   };
 }
 
-function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
+function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
   return {
     type: ExprType.UNARY_OP,
     op: id($1).type.toLowerCase(),
@@ -138,6 +145,7 @@ const grammar: Grammar = {
     {"name": "stmtWithSep", "symbols": ["nonLabelStmt", "stmtSep"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LabelStmt =>
@@ -164,11 +172,53 @@ const grammar: Grammar = {
         ([$1, $2]): GotoStmt =>
             ({ type: StmtType.GOTO, destLabel: id($2).value, ...useLoc($1) })
             },
+    {"name": "ifStmt", "symbols": ["singleLineIfStmt"], "postprocess": id},
+    {"name": "ifStmt", "symbols": ["blockIfStmt"], "postprocess": id},
+    {"name": "singleLineIfStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("ELSE") ? {type: "ELSE"} : ELSE), "singleLineStmts"]},
+    {"name": "singleLineIfStmt$ebnf$1", "symbols": ["singleLineIfStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "singleLineIfStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "singleLineIfStmt", "symbols": [(lexer.has("IF") ? {type: "IF"} : IF), "expr", (lexer.has("THEN") ? {type: "THEN"} : THEN), "singleLineStmts", "singleLineIfStmt$ebnf$1"], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6]): IfStmt =>
+            ({
+              type: StmtType.IF,
+              ifBranches: [ { condExpr: $2, stmts: $4 } ],
+              elseBranch: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              ...useLoc($1),
+            })
+            },
+    {"name": "blockIfStmt$ebnf$1", "symbols": []},
+    {"name": "blockIfStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("ELSEIF") ? {type: "ELSEIF"} : ELSEIF), "expr", (lexer.has("THEN") ? {type: "THEN"} : THEN), (lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE), "stmts"]},
+    {"name": "blockIfStmt$ebnf$1", "symbols": ["blockIfStmt$ebnf$1", "blockIfStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "blockIfStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("ELSE") ? {type: "ELSE"} : ELSE), "stmts"]},
+    {"name": "blockIfStmt$ebnf$2", "symbols": ["blockIfStmt$ebnf$2$subexpression$1"], "postprocess": id},
+    {"name": "blockIfStmt$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "blockIfStmt", "symbols": [(lexer.has("IF") ? {type: "IF"} : IF), "expr", (lexer.has("THEN") ? {type: "THEN"} : THEN), (lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE), "stmts", "blockIfStmt$ebnf$1", "blockIfStmt$ebnf$2", (lexer.has("END") ? {type: "END"} : END), (lexer.has("IF") ? {type: "IF"} : IF)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7, $8, $9]): IfStmt =>
+            ({
+              type: StmtType.IF,
+              ifBranches: [
+                { condExpr: $2, stmts: $5 },
+                ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
+              ],
+              elseBranch: $7 ? (([$7_1, $7_2]) => $7_2)($7) : [],
+              ...useLoc($1),
+            })
+            },
     {"name": "printStmt$ebnf$1", "symbols": ["expr"], "postprocess": id},
     {"name": "printStmt$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
         ([$1, $2]): PrintStmt =>
             ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
+            },
+    {"name": "singleLineStmts$ebnf$1", "symbols": []},
+    {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "singleLineStmts$ebnf$2", "symbols": []},
+    {"name": "singleLineStmts$ebnf$2$subexpression$1$ebnf$1", "symbols": [(lexer.has("COLON") ? {type: "COLON"} : COLON)]},
+    {"name": "singleLineStmts$ebnf$2$subexpression$1$ebnf$1", "symbols": ["singleLineStmts$ebnf$2$subexpression$1$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "singleLineStmts$ebnf$2$subexpression$1", "symbols": ["singleLineStmts$ebnf$2$subexpression$1$ebnf$1", "nonLabelStmt"]},
+    {"name": "singleLineStmts$ebnf$2", "symbols": ["singleLineStmts$ebnf$2", "singleLineStmts$ebnf$2$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "singleLineStmts", "symbols": ["singleLineStmts$ebnf$1", "nonLabelStmt", "singleLineStmts$ebnf$2"], "postprocess": 
+        ([$1, $2, $3]): Stmts => [$2, ...$3.map(([$3_1, $3_2]: Array<any>) => $3_2)]
             },
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},

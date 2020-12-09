@@ -12,10 +12,12 @@ import {
   LiteralExpr,
   VarRefExpr,
   Stmt,
+  Stmts,
   StmtType,
   LabelStmt,
   GotoStmt,
   AssignStmt,
+  IfStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -36,7 +38,7 @@ function useLoc(tokenOrAstNode: Token | AstNode) {
   }
 }
 
-function buildBinaryOpExpr([$1, $2, $3]: any[]): BinaryOpExpr {
+function buildBinaryOpExpr([$1, $2, $3]: Array<any>): BinaryOpExpr {
   return {
     type: ExprType.BINARY_OP,
     op: id($2).type.toLowerCase(),
@@ -46,7 +48,7 @@ function buildBinaryOpExpr([$1, $2, $3]: any[]): BinaryOpExpr {
   };
 }
 
-function buildUnaryOpExpr([$1, $2]: any[]): UnaryOpExpr {
+function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
   return {
     type: ExprType.UNARY_OP,
     op: id($1).type.toLowerCase(),
@@ -85,6 +87,7 @@ stmtWithSep ->
 nonLabelStmt ->
       assignStmt  {% id %}
     | gotoStmt  {% id %}
+    | ifStmt  {% id %}
     | printStmt  {% id %}
 
 labelStmt ->
@@ -114,10 +117,47 @@ gotoStmt ->
             ({ type: StmtType.GOTO, destLabel: id($2).value, ...useLoc($1) })
     %}
 
+ifStmt ->
+      singleLineIfStmt  {% id %}
+    | blockIfStmt  {% id %}
+
+singleLineIfStmt ->
+    %IF expr %THEN singleLineStmts (%ELSE singleLineStmts):?  {%
+        ([$1, $2, $3, $4, $5, $6]): IfStmt =>
+            ({
+              type: StmtType.IF,
+              ifBranches: [ { condExpr: $2, stmts: $4 } ],
+              elseBranch: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              ...useLoc($1),
+            })
+    %}
+
+blockIfStmt ->
+    %IF expr %THEN %NEWLINE stmts
+        (%ELSEIF expr %THEN %NEWLINE stmts):*
+        (%ELSE stmts):?
+        %END %IF  {%
+        ([$1, $2, $3, $4, $5, $6, $7, $8, $9]): IfStmt =>
+            ({
+              type: StmtType.IF,
+              ifBranches: [
+                { condExpr: $2, stmts: $5 },
+                ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
+              ],
+              elseBranch: $7 ? (([$7_1, $7_2]) => $7_2)($7) : [],
+              ...useLoc($1),
+            })
+    %}
+
 printStmt ->
     %PRINT expr:?  {%
         ([$1, $2]): PrintStmt =>
             ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
+    %}
+
+singleLineStmts ->
+    %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%
+        ([$1, $2, $3]): Stmts => [$2, ...$3.map(([$3_1, $3_2]: Array<any>) => $3_2)]
     %}
 
 # ----

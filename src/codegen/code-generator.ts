@@ -7,6 +7,7 @@ import {
   BinaryOp,
   BinaryOpExpr,
   GotoStmt,
+  IfStmt,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -19,6 +20,9 @@ import {
 
 /** Default indentation per level. */
 const DEFAULT_INDENT_WIDTH = 4;
+
+type SourceChunk = string | SourceNode | Array<string | SourceNode>;
+type SourceChunks = Array<SourceChunk>;
 
 interface CodeGeneratorOpts {
   sourceFileName?: string;
@@ -53,17 +57,14 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       )
     );
 
-    sourceNode.add(module.stmts.map((stmt) => this.accept(stmt)));
+    sourceNode.add(this.acceptAll(module.stmts));
 
     sourceNode.add(this.lines(-1, '];', 'async run(ctx) {}', -1, '}', ''));
     return sourceNode;
   }
 
   visitLabelStmt(node: LabelStmt): SourceNode {
-    return this.createSourceNode(
-      node,
-      this.lines(`{ label: '${node.label}' },`, '')
-    );
+    return this.createSourceNode(node, this.generateLabelStmt(node.label));
   }
   visitAssignStmt(node: AssignStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
@@ -74,9 +75,58 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     ]);
   }
   visitGotoStmt(node: GotoStmt): SourceNode {
-    return this.createStmtSourceNode(node, () => [
-      `return { type: 'goto', destLabel: '${node.destLabel}' };`,
-    ]);
+    return this.createStmtSourceNode(node, () =>
+      this.generateGotoCode(node.destLabel)
+    );
+  }
+  visitIfStmt(node: IfStmt): SourceNode {
+    // Generate labels for each "elseif" branch, the else branch, and the "end if".
+    const branchLabelPrefix = this.generateLabel();
+    const branchLabels: Array<string> = [];
+    for (let i = 1; i < node.ifBranches.length; ++i) {
+      branchLabels.push(`${branchLabelPrefix}_elif_${i}`);
+    }
+    if (node.elseBranch.length > 0) {
+      branchLabels.push(`${branchLabelPrefix}_else`);
+    }
+    const endIfLabel = `${branchLabelPrefix}_endif`;
+    branchLabels.push(endIfLabel);
+
+    const chunks: SourceChunks = [];
+    let nextBranchLabelIdx = 0;
+
+    // Generate code for "if" and "elseif" branches.
+    for (const {condExpr, stmts} of node.ifBranches) {
+      chunks.push(
+        this.createStmtSourceNode(node, () => [
+          'if (!(',
+          this.accept(condExpr),
+          `)) { ${this.generateGotoCode(branchLabels[nextBranchLabelIdx])} }`,
+        ])
+      );
+      ++this.indent;
+      chunks.push(this.acceptAll(stmts));
+      if (nextBranchLabelIdx < branchLabels.length - 1) {
+        chunks.push(
+          this.createStmtSourceNode(node, () =>
+            this.generateGotoCode(endIfLabel)
+          )
+        );
+      }
+      --this.indent;
+      chunks.push(this.generateLabelStmt(branchLabels[nextBranchLabelIdx]));
+      ++nextBranchLabelIdx;
+    }
+
+    // Generate code for "else" branch.
+    if (node.elseBranch.length > 0) {
+      ++this.indent;
+      chunks.push(this.acceptAll(node.elseBranch));
+      --this.indent;
+      chunks.push(this.generateLabelStmt(branchLabels[nextBranchLabelIdx]));
+    }
+
+    return this.createSourceNode(node, ...chunks);
   }
   visitPrintStmt(node: PrintStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
@@ -86,16 +136,12 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     ]);
   }
 
-  private createStmtSourceNode(
-    node: Stmt,
-    generateRunCode: () => SourceNode | string | Array<SourceNode | string>
-  ) {
-    let runCode: ReturnType<typeof generateRunCode>;
+  private createStmtSourceNode(node: Stmt, generateRunCode: () => SourceChunk) {
     return this.createSourceNode(
       node,
       this.lines('{', +1, ''),
       this.lines('async run(ctx) { '),
-      ...(Array.isArray((runCode = generateRunCode())) ? runCode : [runCode]),
+      generateRunCode(),
       ' },\n',
       this.lines(-1, '},', '')
     );
@@ -179,10 +225,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     );
   }
 
-  private createSourceNode(
-    node: AstNode,
-    ...chunks: Array<string | SourceNode | Array<string | SourceNode>>
-  ) {
+  private createSourceNode(node: AstNode, ...chunks: SourceChunks) {
     return new SourceNode(
       node.loc.line,
       node.loc.col,
@@ -208,11 +251,25 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     return outputLines.join('\n');
   }
 
+  private generateLabel() {
+    return `$${this.nextGeneratedLabelIdx++}`;
+  }
+
+  private generateLabelStmt(label: string) {
+    return this.lines(`{ label: '${label}' },`, '');
+  }
+
+  private generateGotoCode(destLabel: string) {
+    return `return { type: 'goto', destLabel: '${destLabel}' };`;
+  }
+
   private readonly sourceFileName: string | null;
   private readonly indentWidth: number;
 
   /** Current indentation level. */
   private indent = 0;
+  /** Current generated label index. */
+  private nextGeneratedLabelIdx = 1;
 }
 
 export default function codegen(module: Module, opts: CodeGeneratorOpts = {}) {

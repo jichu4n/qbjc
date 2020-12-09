@@ -15,8 +15,11 @@ export interface AstNodeLocation {
 // ----
 // Program structure
 // ----
+
+export type Stmts = Array<Stmt>;
+
 export interface Module {
-  stmts: Array<Stmt>;
+  stmts: Stmts;
 }
 
 // ----
@@ -24,12 +27,13 @@ export interface Module {
 // ----
 
 /** A statement. */
-export type Stmt = LabelStmt | AssignStmt | GotoStmt | PrintStmt;
+export type Stmt = LabelStmt | AssignStmt | GotoStmt | IfStmt | PrintStmt;
 
 export enum StmtType {
   LABEL = 'label',
   ASSIGN = 'assign',
   GOTO = 'goto',
+  IF = 'if',
   PRINT = 'print',
 }
 
@@ -47,6 +51,17 @@ export interface AssignStmt extends AstNodeBase {
 export interface GotoStmt extends AstNodeBase {
   type: StmtType.GOTO;
   destLabel: string;
+}
+
+export interface IfBranch {
+  condExpr: Expr;
+  stmts: Stmts;
+}
+
+export interface IfStmt extends AstNodeBase {
+  type: StmtType.IF;
+  ifBranches: Array<IfBranch>;
+  elseBranch: Stmts;
 }
 
 export interface PrintStmt extends AstNodeBase {
@@ -124,6 +139,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
   protected abstract visitGotoStmt(node: GotoStmt): T;
+  protected abstract visitIfStmt(node: IfStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
@@ -137,6 +153,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitLabelStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
+      case StmtType.IF:
+        return this.visitIfStmt(node);
       case StmtType.GOTO:
         return this.visitGotoStmt(node);
       case StmtType.PRINT:
@@ -152,5 +170,9 @@ export abstract class AstVisitor<T = any> {
       default:
         throw new Error(`Unknown node type: ${JSON.stringify(node)}`);
     }
+  }
+
+  protected acceptAll(nodes: Array<AstNode>): Array<T> {
+    return nodes.map((node) => this.accept(node));
   }
 }
