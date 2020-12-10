@@ -16,6 +16,8 @@ declare var ELSE: any;
 declare var ELSEIF: any;
 declare var END: any;
 declare var PRINT: any;
+declare var COMMA: any;
+declare var SEMICOLON: any;
 declare var OR: any;
 declare var AND: any;
 declare var NOT: any;
@@ -204,12 +206,14 @@ const grammar: Grammar = {
               ...useLoc($1),
             })
             },
-    {"name": "printStmt$ebnf$1", "symbols": ["expr"], "postprocess": id},
-    {"name": "printStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "printStmt$ebnf$1", "symbols": []},
+    {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1", "printArg"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
-        ([$1, $2]): PrintStmt =>
-            ({ type: StmtType.PRINT, args: $2 ? [$2] : [], ...useLoc($1) })
+        ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },
+    {"name": "printArg", "symbols": ["expr"], "postprocess": id},
+    {"name": "printArg", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": ([$1]) => $1.type.toLowerCase()},
+    {"name": "printArg", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": ([$1]) => $1.type.toLowerCase()},
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "singleLineStmts$ebnf$2", "symbols": []},

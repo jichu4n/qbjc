@@ -48,23 +48,20 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
     this.indent = 0;
     sourceNode.add(
-      this.lines(
-        'export default class CompiledModule {',
-        +1,
-        'statements = [',
-        '',
-        +1
-      )
+      this.lines('module.exports = {', +1, 'default: {', +1, 'stmts: [', '', +1)
     );
 
     sourceNode.add(this.acceptAll(module.stmts));
 
-    sourceNode.add(this.lines(-1, '];', 'async run(ctx) {}', -1, '}', ''));
+    sourceNode.add(this.lines(-1, '],', -1, '}', -1, '}', ''));
     return sourceNode;
   }
 
   visitLabelStmt(node: LabelStmt): SourceNode {
-    return this.createSourceNode(node, this.generateLabelStmt(node.label));
+    return this.createSourceNode(
+      node,
+      this.generateLabelStmt(node, node.label)
+    );
   }
   visitAssignStmt(node: AssignStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
@@ -82,39 +79,51 @@ class CodeGenerator extends AstVisitor<SourceNode> {
   visitIfStmt(node: IfStmt): SourceNode {
     // Generate labels for each "elseif" branch, the else branch, and the "end if".
     const branchLabelPrefix = this.generateLabel();
-    const branchLabels: Array<string> = [];
+    const branchLabels: Array<{
+      node: AstNode | null | undefined;
+      label: string;
+    }> = [];
     for (let i = 1; i < node.ifBranches.length; ++i) {
-      branchLabels.push(`${branchLabelPrefix}_elif_${i}`);
+      branchLabels.push({
+        node: node.ifBranches[i].stmts[0],
+        label: `${branchLabelPrefix}_elif_${i}`,
+      });
     }
     if (node.elseBranch.length > 0) {
-      branchLabels.push(`${branchLabelPrefix}_else`);
+      branchLabels.push({
+        node: node.elseBranch[0],
+        label: `${branchLabelPrefix}_else`,
+      });
     }
     const endIfLabel = `${branchLabelPrefix}_endif`;
-    branchLabels.push(endIfLabel);
+    branchLabels.push({node: null, label: endIfLabel});
 
     const chunks: SourceChunks = [];
     let nextBranchLabelIdx = 0;
 
     // Generate code for "if" and "elseif" branches.
     for (const {condExpr, stmts} of node.ifBranches) {
+      const {node: nextBranchNode, label: nextBranchLabel} = branchLabels[
+        nextBranchLabelIdx
+      ];
       chunks.push(
-        this.createStmtSourceNode(node, () => [
+        this.createStmtSourceNode(condExpr, () => [
           'if (!(',
           this.accept(condExpr),
-          `)) { ${this.generateGotoCode(branchLabels[nextBranchLabelIdx])} }`,
+          `)) { ${this.generateGotoCode(nextBranchLabel)} }`,
         ])
       );
       ++this.indent;
       chunks.push(this.acceptAll(stmts));
       if (nextBranchLabelIdx < branchLabels.length - 1) {
         chunks.push(
-          this.createStmtSourceNode(node, () =>
+          this.createStmtSourceNode(condExpr, () =>
             this.generateGotoCode(endIfLabel)
           )
         );
       }
       --this.indent;
-      chunks.push(this.generateLabelStmt(branchLabels[nextBranchLabelIdx]));
+      chunks.push(this.generateLabelStmt(nextBranchNode, nextBranchLabel));
       ++nextBranchLabelIdx;
     }
 
@@ -123,7 +132,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       ++this.indent;
       chunks.push(this.acceptAll(node.elseBranch));
       --this.indent;
-      chunks.push(this.generateLabelStmt(branchLabels[nextBranchLabelIdx]));
+      chunks.push(this.generateLabelStmt(null, endIfLabel));
     }
 
     return this.createSourceNode(node, ...chunks);
@@ -136,10 +145,14 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     ]);
   }
 
-  private createStmtSourceNode(node: Stmt, generateRunCode: () => SourceChunk) {
+  private createStmtSourceNode(
+    node: AstNode,
+    generateRunCode: () => SourceChunk
+  ) {
     return this.createSourceNode(
       node,
       this.lines('{', +1, ''),
+      this.lines(`loc: ${JSON.stringify(node.loc)},`, ''),
       this.lines('async run(ctx) { '),
       generateRunCode(),
       ' },\n',
@@ -255,8 +268,16 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     return `$${this.nextGeneratedLabelIdx++}`;
   }
 
-  private generateLabelStmt(label: string) {
-    return this.lines(`{ label: '${label}' },`, '');
+  private generateLabelStmt(node: AstNode | null | undefined, label: string) {
+    return this.lines(
+      '{',
+      +1,
+      ...(node ? [`loc: ${JSON.stringify(node.loc)},`] : []),
+      `label: '${label}',`,
+      -1,
+      `},`,
+      ''
+    );
   }
 
   private generateGotoCode(destLabel: string) {

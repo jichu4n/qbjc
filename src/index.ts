@@ -1,16 +1,17 @@
+import requireFromString from 'require-from-string';
 import {parseString} from './parser/parser';
 import codegen from './codegen/code-generator';
+import {Executor} from './runtime/executor';
 
 const input = `
   PRINT "HELLO"
-  LET x = " " + "world" + "!"
+  LET x = "world" + "!"
   PRINT x
 
   handleY:
   100 y = 2 + 3 * 4 ^ 5
   200 PRINT y + 1 <= 10 * 100
   300
-  GOTO handleY
 
   IF x > y THEN
     PRINT "x > y"
@@ -34,4 +35,9 @@ if (parseResult.length > 0 && parseResult[0] !== null) {
   console.log(code);
   console.log('-----------');
   console.log(map.toString());
+  console.log('-----------');
+
+  const compiledModule = requireFromString(code).default;
+  const executor = new Executor({});
+  executor.executeModule(compiledModule);
 }
