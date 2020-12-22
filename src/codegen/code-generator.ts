@@ -139,7 +139,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
   }
   visitPrintStmt(node: PrintStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
-      'console.log(',
+      'ctx.runtime.print(',
       this.accept(node.args[0] as AstNode), // TODO
       ');',
     ]);

@@ -1,4 +1,5 @@
 import Platform from './platform';
+import Runtime from './runtime';
 import {
   CompiledModule,
   CompiledStmt,
@@ -29,7 +30,7 @@ export class Executor {
     const labelIdxMap = this.buildLabelIdxMap(stmts);
 
     const ctx: ExecutionContext = {
-      platform: this.platform,
+      runtime: new Runtime(this.platform),
       localVars: {},
     };
 

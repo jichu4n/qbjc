@@ -1,7 +1,8 @@
 import requireFromString from 'require-from-string';
-import {parseString} from './parser/parser';
 import codegen from './codegen/code-generator';
+import {parseString} from './parser/parser';
 import {Executor} from './runtime/executor';
+import NodePlatform from './runtime/node-platform';
 
 const input = `
   PRINT "HELLO"
@@ -38,6 +39,6 @@ if (parseResult.length > 0 && parseResult[0] !== null) {
   console.log('-----------');
 
   const compiledModule = requireFromString(code).default;
-  const executor = new Executor({});
+  const executor = new Executor(new NodePlatform());
   executor.executeModule(compiledModule);
 }

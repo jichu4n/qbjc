@@ -1,4 +1,4 @@
-import Platform from './platform';
+import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
 export interface CompiledModule {
@@ -39,6 +39,6 @@ export interface GotoResult {
 
 /** Compiled statement execution context. */
 export interface ExecutionContext {
-  platform: Platform;
+  runtime: Runtime;
   localVars: {[key: string]: any};
 }
