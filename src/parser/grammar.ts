@@ -42,6 +42,7 @@ import lexer from './lexer';
 import {
   AstNode,
   Module,
+  Expr,
   ExprType,
   BinaryOpExpr,
   UnaryOpExpr,
@@ -206,14 +207,17 @@ const grammar: Grammar = {
               ...useLoc($1),
             })
             },
-    {"name": "printStmt$ebnf$1", "symbols": []},
-    {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1", "printArg"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
+    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },
-    {"name": "printArg", "symbols": ["expr"], "postprocess": id},
-    {"name": "printArg", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": ([$1]) => $1.type.toLowerCase()},
-    {"name": "printArg", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": ([$1]) => $1.type.toLowerCase()},
+    {"name": "printArgs", "symbols": ["printArg"], "postprocess": id},
+    {"name": "printArgs$subexpression$1", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "printArgs$subexpression$1", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)]},
+    {"name": "printArgs", "symbols": ["printArgs", "printArgs$subexpression$1", "printArg"], "postprocess": 
+        ([$1, $2, $3]) => [...$1, id($2).type.toLowerCase(), ...$3]
+            },
+    {"name": "printArg", "symbols": [], "postprocess": (): Array<Expr> => []},
+    {"name": "printArg", "symbols": ["expr"], "postprocess": ([$1]) => [$1]},
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "singleLineStmts$ebnf$2", "symbols": []},

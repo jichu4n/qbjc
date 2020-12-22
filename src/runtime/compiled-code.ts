@@ -42,3 +42,15 @@ export interface ExecutionContext {
   runtime: Runtime;
   localVars: {[key: string]: any};
 }
+
+/** Type of an argument to print(). */
+export enum PrintArgType {
+  COMMA = 'comma',
+  SEMICOLON = 'semicolon',
+  VALUE = 'value',
+}
+
+/** Argument to print(). */
+export type PrintArg =
+  | {type: PrintArgType.COMMA | PrintArgType.SEMICOLON}
+  | {type: PrintArgType.VALUE; value: string | number};

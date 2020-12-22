@@ -40,7 +40,11 @@ export class Executor {
 
       const nextStmt = stmts[nextStmtIdx];
       if ('run' in nextStmt) {
-        result = await nextStmt.run(ctx);
+        try {
+          result = await nextStmt.run(ctx);
+        } catch (e) {
+          throw new ExecutionError(e.message, {stmt: nextStmt});
+        }
       }
 
       if (!result) {

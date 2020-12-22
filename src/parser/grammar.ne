@@ -6,6 +6,7 @@ import lexer from './lexer';
 import {
   AstNode,
   Module,
+  Expr,
   ExprType,
   BinaryOpExpr,
   UnaryOpExpr,
@@ -150,14 +151,19 @@ blockIfStmt ->
     %}
 
 printStmt ->
-    %PRINT printArg:*  {%
+    %PRINT printArgs  {%
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
     %}
 
+printArgs ->
+      printArg  {% id %}
+    | printArgs (%COMMA | %SEMICOLON) printArg  {%
+        ([$1, $2, $3]) => [...$1, id($2).type.toLowerCase(), ...$3]
+    %}
+
 printArg ->
-      expr  {% id %}
-    | %COMMA  {% ([$1]) => $1.type.toLowerCase() %}
-    | %SEMICOLON  {% ([$1]) => $1.type.toLowerCase() %}
+      null  {% (): Array<Expr> => [] %}
+    | expr  {% ([$1]) => [$1] %}
 
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%

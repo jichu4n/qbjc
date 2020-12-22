@@ -13,7 +13,8 @@ const TEST_SOURCE_DIR_PATH = path.join(
   '..',
   'src',
   'tests',
-  'testdata'
+  'testdata',
+  'compile-and-run'
 );
 const TEST_FILES = fs
   .readdirSync(TEST_SOURCE_DIR_PATH)

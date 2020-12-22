@@ -63,6 +63,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       this.generateLabelStmt(node, node.label)
     );
   }
+
   visitAssignStmt(node: AssignStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
       this.accept(node.targetExpr),
@@ -71,11 +72,13 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       ';',
     ]);
   }
+
   visitGotoStmt(node: GotoStmt): SourceNode {
     return this.createStmtSourceNode(node, () =>
       this.generateGotoCode(node.destLabel)
     );
   }
+
   visitIfStmt(node: IfStmt): SourceNode {
     // Generate labels for each "elseif" branch, the else branch, and the "end if".
     const branchLabelPrefix = this.generateLabel();
@@ -137,10 +140,20 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
     return this.createSourceNode(node, ...chunks);
   }
+
   visitPrintStmt(node: PrintStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
       'ctx.runtime.print(',
-      this.accept(node.args[0] as AstNode), // TODO
+      ...node.args.map((arg) =>
+        typeof arg === 'string'
+          ? `{ type: '${arg}' },`
+          : this.createSourceNode(
+              arg,
+              `{ type: 'value', value: `,
+              this.accept(arg),
+              ' },'
+            )
+      ),
       ');',
     ]);
   }
