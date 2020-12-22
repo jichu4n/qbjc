@@ -15,7 +15,9 @@ const TEST_SOURCE_DIR_PATH = path.join(
   'tests',
   'testdata'
 );
-const TEST_FILES = ['hello-world.bas'];
+const TEST_FILES = fs
+  .readdirSync(TEST_SOURCE_DIR_PATH)
+  .filter((fileName) => fileName.endsWith('.bas'));
 
 describe('Compile and run', () => {
   for (const testFile of TEST_FILES) {
@@ -25,7 +27,6 @@ describe('Compile and run', () => {
 
 class NodePlatformForTest extends NodePlatform {
   writeStdout(s: string) {
-    super.writeStdout(s);
     this.stdout.push(s);
   }
 
@@ -41,14 +42,19 @@ async function testCompileAndRun(testFile: string) {
   const source = await fs.readFile(testFilePath, 'utf-8');
 
   const parseResult = parseString(source);
+  const astFilePath = `${testFilePath}.ast.json`;
+  await fs.writeJSON(astFilePath, parseResult, {spaces: 4});
   expect(parseResult).toHaveLength(1);
   expect(parseResult[0]).toBeTruthy();
 
   const {code} = codegen(parseResult[0]!, {sourceFileName: testFile});
+  const compiledCodeFilePath = `${testFilePath}.js`;
+  await fs.writeFile(compiledCodeFilePath, code);
+
   const compiledModule = requireFromString(code).default;
   const nodePlatformForTest = new NodePlatformForTest();
   const executor = new Executor(nodePlatformForTest);
-  executor.executeModule(compiledModule);
+  await executor.executeModule(compiledModule);
 
   const expectSpec = parseExpectSpec(source);
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
