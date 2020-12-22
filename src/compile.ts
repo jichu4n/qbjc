@@ -47,7 +47,7 @@ async function compile({
     const sourceMapFileName = `${path.basename(outputFilePath)}.map`;
     await fs.writeFile(
       path.join(path.dirname(outputFilePath), sourceMapFileName),
-      sourceMap
+      sourceMap.toString()
     );
 
     code += `\n//# sourceMappingURL=${sourceMapFileName}\n`;

@@ -1,5 +1,3 @@
-import Platform from './platform';
-import Runtime from './runtime';
 import {
   CompiledModule,
   CompiledStmt,
@@ -7,6 +5,7 @@ import {
   CompiledStmtResultType,
   ExecutionContext,
 } from './compiled-code';
+import Runtime, {RuntimePlatform} from './runtime';
 
 export class ExecutionError extends Error {
   constructor(message: string, {stmt}: {stmt?: CompiledStmt} = {}) {
@@ -19,7 +18,7 @@ export class ExecutionError extends Error {
 
 /** Manages the execution of a compiled program. */
 export default class Executor {
-  constructor(private readonly platform: Platform) {}
+  constructor(private readonly platform: RuntimePlatform) {}
 
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {

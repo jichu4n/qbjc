@@ -15,9 +15,9 @@
   "bin": "./dist/index.js",
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
-    "build:nodeBootstrapBundle": "node ./dist/tools/build-bootstrap-bundle.js --minify ./dist/runtime/node-bootstrap.js",
+    "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime.js ./dist/runtime/node-runtime-bundle.js",
     "build:tsc": "tsc && chmod +x ./dist/index.js",
-    "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeBootstrapBundle",
+    "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
     "test": "npm run build && jest"
   },
   "devDependencies": {

@@ -1,9 +1,17 @@
-import Platform from './platform';
 import {PrintArgType, PrintArg} from './compiled-code';
 
-/** Runtime support library for compiled code. */
+/** Interface for platform-specific runtime functionality. */
+export interface RuntimePlatform {
+  writeStdout(s: string): void;
+}
+
+/** Runtime support library.
+ *
+ * This class provides the interface invoked by compiled code. It is platform-agnostic, and wraps
+ * the low-level, platform-dependent functionality in the injected RuntimePlatform.
+ */
 export default class Runtime {
-  constructor(private readonly platform: Platform) {}
+  constructor(private readonly platform: RuntimePlatform) {}
 
   print(...args: Array<PrintArg>) {
     const PRINT_ZONE_LENGTH = 14;

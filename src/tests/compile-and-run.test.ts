@@ -4,7 +4,7 @@ import path from 'path';
 import requireFromString from 'require-from-string';
 import compile from '../compile';
 import Executor from '../runtime/executor';
-import NodePlatform from '../runtime/node-platform';
+import {NodePlatform} from '../runtime/node-runtime';
 
 const TEST_SOURCE_DIR_PATH = path.join(
   __dirname,

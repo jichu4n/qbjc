@@ -2,8 +2,8 @@
 import {program} from 'commander';
 import requireFromString from 'require-from-string';
 import compile from './compile';
-import Executor from './runtime/executor';
-import NodePlatform from './runtime/node-platform';
+import {CompiledModule} from './runtime/compiled-code';
+import {NodeExecutor} from './runtime/node-runtime';
 // Not using resolveJsonModule because it causes the output to be generated relative to the root
 // directory instead of src/.
 const packageJson = require('../package.json');
@@ -37,14 +37,10 @@ if (require.main === module) {
     });
 
     if (program.run) {
-      if (program.bundle) {
-        const run = requireFromString(result.code).default;
-        await run();
-      } else {
-        const compiledModule = requireFromString(result.code).default;
-        const executor = new Executor(new NodePlatform());
-        await executor.executeModule(compiledModule);
-      }
+      const compiledModule = requireFromString(result.code)
+        .default as CompiledModule;
+      const executor = new NodeExecutor();
+      await executor.executeModule(compiledModule);
     }
   })();
 }
