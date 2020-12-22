@@ -2,11 +2,6 @@
   "name": "qbjc",
   "version": "0.1.0",
   "description": "QBasic to JavaScript compiler",
-  "scripts": {
-    "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
-    "build": "npm run build:grammar && tsc",
-    "test": "npm run build && jest"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jichu4n/qbjc.git"
@@ -17,6 +12,14 @@
     "url": "https://github.com/jichu4n/qbjc/issues"
   },
   "homepage": "https://github.com/jichu4n/qbjc#readme",
+  "bin": "./dist/index.js",
+  "scripts": {
+    "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
+    "build:nodeBootstrapBundle": "node ./dist/tools/build-bootstrap-bundle.js --minify ./dist/runtime/node-bootstrap.js",
+    "build:tsc": "tsc && chmod +x ./dist/index.js",
+    "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeBootstrapBundle",
+    "test": "npm run build && jest"
+  },
   "devDependencies": {
     "@types/fs-extra": "^9.0.5",
     "@types/jest": "^26.0.19",
@@ -29,6 +32,8 @@
     "typescript": "^4.1.2"
   },
   "dependencies": {
+    "@vercel/ncc": "^0.26.1",
+    "commander": "^6.2.1",
     "fs-extra": "^9.0.1",
     "lodash": "^4.17.20",
     "moo": "^0.5.1",

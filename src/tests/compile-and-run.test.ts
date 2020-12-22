@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
+import _ from 'lodash';
 import path from 'path';
 import requireFromString from 'require-from-string';
-import codegen from '../codegen/code-generator';
-import {parseString} from '../parser/parser';
-import {Executor} from '../runtime/executor';
+import compile from '../compile';
+import Executor from '../runtime/executor';
 import NodePlatform from '../runtime/node-platform';
-import _ from 'lodash';
 
 const TEST_SOURCE_DIR_PATH = path.join(
   __dirname,
@@ -40,17 +39,7 @@ interface ExpectSpec {
 
 async function testCompileAndRun(testFile: string) {
   const testFilePath = path.join(TEST_SOURCE_DIR_PATH, testFile);
-  const source = await fs.readFile(testFilePath, 'utf-8');
-
-  const parseResult = parseString(source);
-  const astFilePath = `${testFilePath}.ast.json`;
-  await fs.writeJSON(astFilePath, parseResult, {spaces: 4});
-  expect(parseResult).toHaveLength(1);
-  expect(parseResult[0]).toBeTruthy();
-
-  const {code} = codegen(parseResult[0]!, {sourceFileName: testFile});
-  const compiledCodeFilePath = `${testFilePath}.js`;
-  await fs.writeFile(compiledCodeFilePath, code);
+  const {source, code} = await compile({sourceFilePath: testFilePath});
 
   const compiledModule = requireFromString(code).default;
   const nodePlatformForTest = new NodePlatformForTest();

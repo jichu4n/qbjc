@@ -5,7 +5,7 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "baseUrl": ".",
+    "baseUrl": "."
   },
   "include": [
     "src/**/*"

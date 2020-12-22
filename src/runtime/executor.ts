@@ -18,7 +18,7 @@ export class ExecutionError extends Error {
 }
 
 /** Manages the execution of a compiled program. */
-export class Executor {
+export default class Executor {
   constructor(private readonly platform: Platform) {}
 
   /** Executes a compiled module. */

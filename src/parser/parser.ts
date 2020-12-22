@@ -10,7 +10,7 @@ export function createParser(opts?: ParserOptions) {
 export function parseString(
   input: string,
   opts?: ParserOptions
-): Array<Module> | [null] {
+): Array<Module> {
   const parser = createParser(opts);
   parser.feed(input);
   // Add terminating line break (necessary due to lack of EOF terminal).
