@@ -38,6 +38,7 @@ interface ForStmtState {
   startLabel: string;
   endLabel: string;
   stepValue: string;
+  endValue: string;
 }
 
 interface CodeGeneratorOpts {
@@ -243,6 +244,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       startLabel,
       endLabel,
       stepValue,
+      endValue,
     });
 
     const chunks: SourceChunks = [];
@@ -320,6 +322,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         startLabel,
         endLabel,
         stepValue,
+        endValue,
       } = this.openForStmtStates.pop()!;
       chunks.push(
         this.createStmtSourceNode(node, () => [
@@ -330,6 +333,12 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       );
       --this.indent;
       chunks.push(this.generateLabelStmt(forStmt, endLabel));
+      chunks.push(
+        this.createStmtSourceNode(
+          forStmt,
+          () => `delete ${stepValue}; delete ${endValue};`
+        )
+      );
     }
     return this.createSourceNode(node, ...chunks);
   }
