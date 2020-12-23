@@ -6,16 +6,21 @@ import moo from 'moo';
  */
 export enum Keywords {
   AND = 'and',
+  DO = 'do',
   ELSE = 'else',
   ELSEIF = 'elseif',
   END = 'end',
   GOTO = 'goto',
   IF = 'if',
   LET = 'let',
+  LOOP = 'loop',
   MOD = 'mod',
   OR = 'or',
   PRINT = 'print',
   THEN = 'then',
+  UNTIL = 'until',
+  WEND = 'wend',
+  WHILE = 'while',
 }
 
 /** Lexer for QBasic. */
@@ -75,4 +80,3 @@ lexer.next = ((originalLexerNextFn) => () => {
 })(lexer.next.bind(lexer));
 
 export default lexer;
-

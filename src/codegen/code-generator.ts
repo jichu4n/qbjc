@@ -6,6 +6,8 @@ import {
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
+  CondLoopStmt,
+  CondLoopStructure,
   GotoStmt,
   IfStmt,
   LabelStmt,
@@ -154,6 +156,45 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       --this.indent;
       chunks.push(this.generateLabelStmt(null, endIfLabel));
     }
+
+    return this.createSourceNode(node, ...chunks);
+  }
+
+  visitCondLoopStmt(node: CondLoopStmt): SourceNode {
+    const labelPrefix = this.generateLabel();
+    const loopStartLabel = `${labelPrefix}_loop_start`;
+    const loopEndLabel = `${labelPrefix}_loop_end`;
+
+    const cond = node.isCondNegated
+      ? [this.accept(node.condExpr)]
+      : ['!(', this.accept(node.condExpr), ')'];
+    const condStmt = this.createStmtSourceNode(node, () => [
+      'if (',
+      ...cond,
+      `) { ${this.generateGotoCode(loopEndLabel)} }`,
+    ]);
+    ++this.indent;
+    const stmts = this.acceptAll(node.stmts);
+    --this.indent;
+
+    const chunks: SourceChunks = [];
+    chunks.push(this.generateLabelStmt(node, loopStartLabel));
+    switch (node.structure) {
+      case CondLoopStructure.COND_EXPR_BEFORE_STMTS:
+        chunks.push(condStmt, stmts);
+        break;
+      case CondLoopStructure.COND_EXPR_AFTER_STMTS:
+        chunks.push(stmts, condStmt);
+        break;
+      default:
+        throw new Error(`Unexpected loop structure: ${JSON.stringify(node)}`);
+    }
+    chunks.push(
+      this.createStmtSourceNode(node, () =>
+        this.generateGotoCode(loopStartLabel)
+      ),
+      this.generateLabelStmt(node, loopEndLabel)
+    );
 
     return this.createSourceNode(node, ...chunks);
   }

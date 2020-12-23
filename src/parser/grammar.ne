@@ -19,6 +19,8 @@ import {
   GotoStmt,
   AssignStmt,
   IfStmt,
+  CondLoopStructure,
+  CondLoopStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -89,6 +91,11 @@ nonLabelStmt ->
       assignStmt  {% id %}
     | gotoStmt  {% id %}
     | ifStmt  {% id %}
+    | whileStmt  {% id %}
+    | doWhileStmt  {% id %}
+    | doUntilStmt  {% id %}
+    | loopWhileStmt  {% id %}
+    | loopUntilStmt  {% id %}
     | printStmt  {% id %}
 
 labelStmt ->
@@ -146,6 +153,71 @@ blockIfStmt ->
                 ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
               ],
               elseBranch: $7 ? (([$7_1, $7_2]) => $7_2)($7) : [],
+              ...useLoc($1),
+            })
+    %}
+
+whileStmt ->
+    %WHILE expr stmts %WEND  {%
+        ([$1, $2, $3, $4]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $2,
+              isCondNegated: false,
+              stmts: $3,
+              ...useLoc($1),
+            })
+    %}
+
+doWhileStmt ->
+    %DO %WHILE expr stmts %LOOP  {%
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $3,
+              isCondNegated: false,
+              stmts: $4,
+              ...useLoc($1),
+            })
+    %}
+
+doUntilStmt ->
+    %DO %UNTIL expr stmts %LOOP  {%
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $3,
+              isCondNegated: true,
+              stmts: $4,
+              ...useLoc($1),
+            })
+    %}
+
+loopWhileStmt ->
+    %DO stmts %LOOP %WHILE expr  {%
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_AFTER_STMTS,
+              condExpr: $5,
+              isCondNegated: false,
+              stmts: $2,
+              ...useLoc($1),
+            })
+    %}
+
+loopUntilStmt ->
+    %DO stmts %LOOP %UNTIL expr  {%
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_AFTER_STMTS,
+              condExpr: $5,
+              isCondNegated: true,
+              stmts: $2,
               ...useLoc($1),
             })
     %}

@@ -27,13 +27,20 @@ export interface Module {
 // ----
 
 /** A statement. */
-export type Stmt = LabelStmt | AssignStmt | GotoStmt | IfStmt | PrintStmt;
+export type Stmt =
+  | LabelStmt
+  | AssignStmt
+  | GotoStmt
+  | IfStmt
+  | CondLoopStmt
+  | PrintStmt;
 
 export enum StmtType {
   LABEL = 'label',
   ASSIGN = 'assign',
   GOTO = 'goto',
   IF = 'if',
+  COND_LOOP = 'condLoop',
   PRINT = 'print',
 }
 
@@ -62,6 +69,19 @@ export interface IfStmt extends AstNodeBase {
   type: StmtType.IF;
   ifBranches: Array<IfBranch>;
   elseBranch: Stmts;
+}
+
+export enum CondLoopStructure {
+  COND_EXPR_BEFORE_STMTS = 'condExprBeforeStmts',
+  COND_EXPR_AFTER_STMTS = 'condExprAfterStmts',
+}
+
+export interface CondLoopStmt extends AstNodeBase {
+  type: StmtType.COND_LOOP;
+  structure: CondLoopStructure;
+  condExpr: Expr;
+  isCondNegated: boolean;
+  stmts: Stmts;
 }
 
 export enum PrintSep {
@@ -146,6 +166,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitAssignStmt(node: AssignStmt): T;
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
+  protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
@@ -159,10 +180,12 @@ export abstract class AstVisitor<T = any> {
         return this.visitLabelStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
-      case StmtType.IF:
-        return this.visitIfStmt(node);
       case StmtType.GOTO:
         return this.visitGotoStmt(node);
+      case StmtType.IF:
+        return this.visitIfStmt(node);
+      case StmtType.COND_LOOP:
+        return this.visitCondLoopStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case ExprType.LITERAL:

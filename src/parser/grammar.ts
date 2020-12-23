@@ -15,6 +15,11 @@ declare var THEN: any;
 declare var ELSE: any;
 declare var ELSEIF: any;
 declare var END: any;
+declare var WHILE: any;
+declare var WEND: any;
+declare var DO: any;
+declare var LOOP: any;
+declare var UNTIL: any;
 declare var PRINT: any;
 declare var COMMA: any;
 declare var SEMICOLON: any;
@@ -55,6 +60,8 @@ import {
   GotoStmt,
   AssignStmt,
   IfStmt,
+  CondLoopStructure,
+  CondLoopStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -149,6 +156,11 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["whileStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["doWhileStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["doUntilStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["loopWhileStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["loopUntilStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LabelStmt =>
@@ -204,6 +216,61 @@ const grammar: Grammar = {
                 ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
               ],
               elseBranch: $7 ? (([$7_1, $7_2]) => $7_2)($7) : [],
+              ...useLoc($1),
+            })
+            },
+    {"name": "whileStmt", "symbols": [(lexer.has("WHILE") ? {type: "WHILE"} : WHILE), "expr", "stmts", (lexer.has("WEND") ? {type: "WEND"} : WEND)], "postprocess": 
+        ([$1, $2, $3, $4]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $2,
+              isCondNegated: false,
+              stmts: $3,
+              ...useLoc($1),
+            })
+            },
+    {"name": "doWhileStmt", "symbols": [(lexer.has("DO") ? {type: "DO"} : DO), (lexer.has("WHILE") ? {type: "WHILE"} : WHILE), "expr", "stmts", (lexer.has("LOOP") ? {type: "LOOP"} : LOOP)], "postprocess": 
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $3,
+              isCondNegated: false,
+              stmts: $4,
+              ...useLoc($1),
+            })
+            },
+    {"name": "doUntilStmt", "symbols": [(lexer.has("DO") ? {type: "DO"} : DO), (lexer.has("UNTIL") ? {type: "UNTIL"} : UNTIL), "expr", "stmts", (lexer.has("LOOP") ? {type: "LOOP"} : LOOP)], "postprocess": 
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_BEFORE_STMTS,
+              condExpr: $3,
+              isCondNegated: true,
+              stmts: $4,
+              ...useLoc($1),
+            })
+            },
+    {"name": "loopWhileStmt", "symbols": [(lexer.has("DO") ? {type: "DO"} : DO), "stmts", (lexer.has("LOOP") ? {type: "LOOP"} : LOOP), (lexer.has("WHILE") ? {type: "WHILE"} : WHILE), "expr"], "postprocess": 
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_AFTER_STMTS,
+              condExpr: $5,
+              isCondNegated: false,
+              stmts: $2,
+              ...useLoc($1),
+            })
+            },
+    {"name": "loopUntilStmt", "symbols": [(lexer.has("DO") ? {type: "DO"} : DO), "stmts", (lexer.has("LOOP") ? {type: "LOOP"} : LOOP), (lexer.has("UNTIL") ? {type: "UNTIL"} : UNTIL), "expr"], "postprocess": 
+        ([$1, $2, $3, $4, $5]): CondLoopStmt =>
+            ({
+              type: StmtType.COND_LOOP,
+              structure: CondLoopStructure.COND_EXPR_AFTER_STMTS,
+              condExpr: $5,
+              isCondNegated: true,
+              stmts: $2,
               ...useLoc($1),
             })
             },
