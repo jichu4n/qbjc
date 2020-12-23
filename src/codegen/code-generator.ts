@@ -41,6 +41,20 @@ interface ForStmtState {
   endValue: string;
 }
 
+export class CodeGeneratorError extends Error {
+  constructor(
+    message: string,
+    {sourceFileName, node}: {sourceFileName: string; node: AstNode}
+  ) {
+    super(message);
+    if (node.loc.line) {
+      this.message = `${sourceFileName ? `${sourceFileName}:` : ''}${
+        node.loc.line
+      }: ${this.message}`;
+    }
+  }
+}
+
 interface CodeGeneratorOpts {
   sourceFileName?: string;
   indentWidth?: number;
@@ -81,7 +95,14 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
     const sourceNode = new SourceNode();
     sourceNode.add(
-      this.lines('const compiledModule = {', +1, 'stmts: [', '', +1)
+      this.lines(
+        'const compiledModule = {',
+        +1,
+        `sourceFileName: ${JSON.stringify(this.opts.sourceFileName)},`,
+        'stmts: [',
+        '',
+        +1
+      )
     );
     sourceNode.add(this.visitStmts(module.stmts));
     sourceNode.add(this.lines(-1, '],', -1, '};', ''));
@@ -92,15 +113,10 @@ class CodeGenerator extends AstVisitor<SourceNode> {
   private visitStmts(stmts: Stmts) {
     const origOpenForStmtStatesLength = this.openForStmtStates.length;
     const sourceNodes = this.acceptAll(stmts);
-    if (this.openForStmtStates.length !== origOpenForStmtStatesLength) {
-      const danglingOpenForStmtLines = this.openForStmtStates
-        .slice(origOpenForStmtStatesLength)
-        .map(({forStmt}) => forStmt.loc.line);
-      throw new Error(
-        'Error: FOR statement without corresponding NEXT statement on ' +
-          `${
-            danglingOpenForStmtLines.length > 1 ? 'lines' : 'line'
-          } ${danglingOpenForStmtLines.join(', ')}`
+    if (this.openForStmtStates.length > origOpenForStmtStatesLength) {
+      throw this.createError(
+        this.openForStmtStates[this.openForStmtStates.length - 1].forStmt,
+        'FOR statement without corresponding NEXT statement'
       );
     }
     return sourceNodes;
@@ -217,7 +233,10 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         chunks.push(stmts, condStmt);
         break;
       default:
-        throw new Error(`Unexpected loop structure: ${JSON.stringify(node)}`);
+        throw this.createError(
+          node,
+          `Unexpected loop structure: ${JSON.stringify(node)}`
+        );
     }
     chunks.push(
       this.createStmtSourceNode(node, () =>
@@ -284,12 +303,12 @@ class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitNextStmt(node: NextStmt): SourceNode {
-    const locString = `at line ${node.loc.line} col ${node.loc.col}`;
     // Determine how many open FOR statements this NEXT statement will close.
     const numForStmtStatesToClose = node.counterExprs.length || 1;
     if (numForStmtStatesToClose > this.openForStmtStates.length) {
-      throw new Error(
-        `Error: NEXT statement without corresponding FOR statement ${locString}`
+      throw this.createError(
+        node,
+        `NEXT statement without corresponding FOR statement`
       );
     }
     // Verify that the counter expressions match the corresponding FOR statements.
@@ -304,12 +323,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         forStmt.counterExpr
       ).toString();
       if (nextCounterExprString !== forStmtCounterExprString) {
-        throw new Error(
-          `Error: Counter ${
-            i + 1
-          } does not match corresponding FOR statement ${locString}\n` +
-            `\tCounter in FOR statement: ${forStmtCounterExprString}\n` +
-            `\tCounter in NEXT statement: ${nextCounterExprString}`
+        throw this.createError(
+          node,
+          `Counter #${i + 1} does not match corresponding FOR statement`
         );
       }
     }
@@ -345,9 +361,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitExitForStmt(node: ExitForStmt): SourceNode {
     if (this.openForStmtStates.length === 0) {
-      throw new Error(
-        `Error: EXIT FOR statement outside FOR loop on line ${node.loc.line}`
-      );
+      throw this.createError(node, `EXIT FOR statement outside FOR loop`);
     }
     return this.createStmtSourceNode(node, () =>
       this.generateGotoCode(
@@ -395,7 +409,8 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     } else if (typeof node.value === 'number') {
       valueString = `${node.value}`;
     } else {
-      throw new Error(
+      throw this.createError(
+        node,
         `Unrecognized literal value: ${JSON.stringify(node.value)}`
       );
     }
@@ -464,6 +479,13 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       this.accept(node.expr),
       ')'
     );
+  }
+
+  private createError(node: AstNode, message: string) {
+    return new CodeGeneratorError(message, {
+      sourceFileName: this.opts.sourceFileName,
+      node,
+    });
   }
 
   private createSourceNode(node: AstNode, ...chunks: SourceChunks) {

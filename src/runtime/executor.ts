@@ -8,10 +8,15 @@ import {
 import Runtime, {RuntimePlatform} from './runtime';
 
 export class ExecutionError extends Error {
-  constructor(message: string, {stmt}: {stmt?: CompiledStmt} = {}) {
+  constructor(
+    message: string,
+    {module, stmt}: {module?: CompiledModule | null; stmt?: CompiledStmt} = {}
+  ) {
     super(message);
     if (stmt && stmt.loc) {
-      this.message = `${stmt.loc.line}: ${this.message}`;
+      this.message = `${
+        module?.sourceFileName ? `${module.sourceFileName}:` : ''
+      }${stmt.loc.line}: ${this.message}`;
     }
   }
 }
@@ -22,6 +27,7 @@ export default class Executor {
 
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {
+    this.currentModule = module;
     await this.executeStmts(module.stmts);
   }
 
@@ -36,14 +42,15 @@ export default class Executor {
 
     let nextStmtIdx = 0;
     while (nextStmtIdx < stmts.length) {
-      let result: CompiledStmtResult | void;
+      const stmt = stmts[nextStmtIdx];
+      const errorArgs = {module: this.currentModule, stmt};
 
-      const nextStmt = stmts[nextStmtIdx];
-      if ('run' in nextStmt) {
+      let result: CompiledStmtResult | void;
+      if ('run' in stmt) {
         try {
-          result = await nextStmt.run(ctx);
+          result = await stmt.run(ctx);
         } catch (e) {
-          throw new ExecutionError(e.message, {stmt: nextStmt});
+          throw new ExecutionError(e.message, errorArgs);
         }
       }
 
@@ -55,15 +62,16 @@ export default class Executor {
         case CompiledStmtResultType.GOTO:
           nextStmtIdx = labelIdxMap[result.destLabel];
           if (nextStmtIdx === undefined) {
-            throw new ExecutionError(`Label not found: "${result.destLabel}"`, {
-              stmt: nextStmt,
-            });
+            throw new ExecutionError(
+              `Label not found: "${result.destLabel}"`,
+              errorArgs
+            );
           }
           break;
         default:
           throw new ExecutionError(
             `Unrecognized statement result: ${JSON.stringify(result)}`,
-            {stmt: nextStmt}
+            errorArgs
           );
       }
     }
@@ -74,7 +82,8 @@ export default class Executor {
     stmts.forEach((stmt, idx) => {
       if ('label' in stmt) {
         if (stmt.label in labelIdxMap) {
-          throw new ExecutionError(`Found duplicate label "${stmt.label}"`, {
+          throw new ExecutionError(`Duplicate label "${stmt.label}"`, {
+            module: this.currentModule,
             stmt,
           });
         }
@@ -83,4 +92,7 @@ export default class Executor {
     });
     return labelIdxMap;
   }
+
+  /** Current module being executed. */
+  private currentModule: CompiledModule | null = null;
 }

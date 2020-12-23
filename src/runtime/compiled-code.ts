@@ -2,6 +2,7 @@ import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
 export interface CompiledModule {
+  sourceFileName?: string;
   stmts: Array<CompiledStmt>;
 }
 
