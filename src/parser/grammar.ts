@@ -20,8 +20,12 @@ declare var WEND: any;
 declare var DO: any;
 declare var LOOP: any;
 declare var UNTIL: any;
-declare var PRINT: any;
+declare var FOR: any;
+declare var TO: any;
+declare var STEP: any;
+declare var NEXT: any;
 declare var COMMA: any;
+declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var OR: any;
 declare var AND: any;
@@ -53,6 +57,7 @@ import {
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
+  LhsExpr,
   Stmt,
   Stmts,
   StmtType,
@@ -62,6 +67,8 @@ import {
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
+  ForStmt,
+  NextStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -161,6 +168,8 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["doUntilStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["loopWhileStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["loopUntilStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["forStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["nextStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LabelStmt =>
@@ -274,6 +283,25 @@ const grammar: Grammar = {
               ...useLoc($1),
             })
             },
+    {"name": "forStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("STEP") ? {type: "STEP"} : STEP), "expr"]},
+    {"name": "forStmt$ebnf$1", "symbols": ["forStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "forStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "forStmt", "symbols": [(lexer.has("FOR") ? {type: "FOR"} : FOR), "lhsExpr", (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr", (lexer.has("TO") ? {type: "TO"} : TO), "expr", "forStmt$ebnf$1"], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7]): ForStmt => ({
+          type: StmtType.FOR,
+          counterExpr: $2,
+          startExpr: $4,
+          endExpr: $6,
+          stepExpr: $7 ? $7[1] : null,
+          ...useLoc($1),
+        })
+            },
+    {"name": "nextStmt", "symbols": [(lexer.has("NEXT") ? {type: "NEXT"} : NEXT), "nextArgs"], "postprocess": 
+        ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2, ...useLoc($1) })
+            },
+    {"name": "nextArgs", "symbols": [], "postprocess": (): Array<LhsExpr> => []},
+    {"name": "nextArgs", "symbols": ["lhsExpr"], "postprocess": ([$1]) => [$1]},
+    {"name": "nextArgs", "symbols": ["lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "nextArgs"], "postprocess": ([$1, $2, $3]) => [$1, ...$3]},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },

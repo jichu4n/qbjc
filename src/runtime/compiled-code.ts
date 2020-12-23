@@ -41,6 +41,7 @@ export interface GotoResult {
 export interface ExecutionContext {
   runtime: Runtime;
   localVars: {[key: string]: any};
+  tempVars: {[key: string]: any};
 }
 
 /** Type of an argument to print(). */

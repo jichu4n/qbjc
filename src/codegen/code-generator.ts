@@ -8,12 +8,15 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   CondLoopStructure,
+  ForStmt,
   GotoStmt,
   IfStmt,
   LabelStmt,
   LiteralExpr,
   Module,
+  NextStmt,
   PrintStmt,
+  Stmts,
   UnaryOp,
   UnaryOpExpr,
   VarRefExpr,
@@ -27,6 +30,14 @@ const DEFAULT_INDENT_WIDTH = 4;
 
 type SourceChunk = string | SourceNode | Array<string | SourceNode>;
 type SourceChunks = Array<SourceChunk>;
+
+/** Info about an open for loop (one waiting for the corresponding NEXT statement). */
+interface ForStmtState {
+  forStmt: ForStmt;
+  startLabel: string;
+  endLabel: string;
+  stepValue: string;
+}
 
 interface CodeGeneratorOpts {
   sourceFileName?: string;
@@ -70,10 +81,27 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     sourceNode.add(
       this.lines('const compiledModule = {', +1, 'stmts: [', '', +1)
     );
-    sourceNode.add(this.acceptAll(module.stmts));
+    sourceNode.add(this.visitStmts(module.stmts));
     sourceNode.add(this.lines(-1, '],', -1, '};', ''));
 
     return sourceNode;
+  }
+
+  private visitStmts(stmts: Stmts) {
+    const origOpenForStmtStatesLength = this.openForStmtStates.length;
+    const sourceNodes = this.acceptAll(stmts);
+    if (this.openForStmtStates.length !== origOpenForStmtStatesLength) {
+      const danglingOpenForStmtLines = this.openForStmtStates
+        .slice(origOpenForStmtStatesLength)
+        .map(({forStmt}) => forStmt.loc.line);
+      throw new Error(
+        'Error: FOR statement without corresponding NEXT statement on ' +
+          `${
+            danglingOpenForStmtLines.length > 1 ? 'lines' : 'line'
+          } ${danglingOpenForStmtLines.join(', ')}`
+      );
+    }
+    return sourceNodes;
   }
 
   visitLabelStmt(node: LabelStmt): SourceNode {
@@ -108,7 +136,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     for (let i = 1; i < node.ifBranches.length; ++i) {
       branchLabels.push({
         node: node.ifBranches[i].stmts[0],
-        label: `${branchLabelPrefix}_elif_${i}`,
+        label: `${branchLabelPrefix}_elif${i}`,
       });
     }
     if (node.elseBranch.length > 0) {
@@ -136,7 +164,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         ])
       );
       ++this.indent;
-      chunks.push(this.acceptAll(stmts));
+      chunks.push(this.visitStmts(stmts));
       if (nextBranchLabelIdx < branchLabels.length - 1) {
         chunks.push(
           this.createStmtSourceNode(condExpr, () =>
@@ -152,7 +180,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     // Generate code for "else" branch.
     if (node.elseBranch.length > 0) {
       ++this.indent;
-      chunks.push(this.acceptAll(node.elseBranch));
+      chunks.push(this.visitStmts(node.elseBranch));
       --this.indent;
       chunks.push(this.generateLabelStmt(null, endIfLabel));
     }
@@ -162,8 +190,8 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitCondLoopStmt(node: CondLoopStmt): SourceNode {
     const labelPrefix = this.generateLabel();
-    const loopStartLabel = `${labelPrefix}_loop_start`;
-    const loopEndLabel = `${labelPrefix}_loop_end`;
+    const loopStartLabel = `${labelPrefix}_loopStart`;
+    const loopEndLabel = `${labelPrefix}_loopEnd`;
 
     const cond = node.isCondNegated
       ? [this.accept(node.condExpr)]
@@ -174,7 +202,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       `) { ${this.generateGotoCode(loopEndLabel)} }`,
     ]);
     ++this.indent;
-    const stmts = this.acceptAll(node.stmts);
+    const stmts = this.visitStmts(node.stmts);
     --this.indent;
 
     const chunks: SourceChunks = [];
@@ -196,6 +224,112 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       this.generateLabelStmt(node, loopEndLabel)
     );
 
+    return this.createSourceNode(node, ...chunks);
+  }
+
+  /** Stack of open for loops in current context. */
+  private openForStmtStates: Array<ForStmtState> = [];
+
+  visitForStmt(node: ForStmt): SourceNode {
+    const labelPrefix = this.generateLabel();
+    const startLabel = `${labelPrefix}_loopStart`;
+    const endLabel = `${labelPrefix}_loopEnd`;
+    const stepValue = this.generateTempVarRef(`${labelPrefix}_step`);
+    const endValue = this.generateTempVarRef(`${labelPrefix}_end`);
+
+    this.openForStmtStates.push({
+      forStmt: node,
+      startLabel,
+      endLabel,
+      stepValue,
+    });
+
+    const chunks: SourceChunks = [];
+    chunks.push(
+      this.createStmtSourceNode(node, () => [
+        // Set counter = start
+        ...[
+          this.accept(node.counterExpr),
+          ' = ',
+          this.accept(node.startExpr),
+          '; ',
+        ],
+        // Set stepValue = evaluate(stepExpr)
+        ...[
+          `${stepValue} = `,
+          node.stepExpr ? this.accept(node.stepExpr) : '1',
+          '; ',
+        ],
+        // Set endValue = evaluate(endExpr)
+        ...[`${endValue} = `, this.accept(node.endExpr), ';'],
+      ]),
+      this.generateLabelStmt(node, startLabel)
+    );
+    ++this.indent;
+    chunks.push(
+      this.createStmtSourceNode(node, () => [
+        ...[`const counterValue = `, this.accept(node.counterExpr), '; '],
+        ...[
+          'if (',
+          `(${stepValue} >= 0 && counterValue > ${endValue}) || `,
+          `(${stepValue} < 0 && counterValue < ${endValue})`,
+          `) { ${this.generateGotoCode(endLabel)} }`,
+        ],
+      ])
+    );
+    return this.createSourceNode(node, ...chunks);
+  }
+
+  visitNextStmt(node: NextStmt): SourceNode {
+    const locString = `at line ${node.loc.line} col ${node.loc.col}`;
+    // Determine how many open FOR statements this NEXT statement will close.
+    const numForStmtStatesToClose = node.counterExprs.length || 1;
+    if (numForStmtStatesToClose > this.openForStmtStates.length) {
+      throw new Error(
+        `Error: NEXT statement without corresponding FOR statement ${locString}`
+      );
+    }
+    // Verify that the counter expressions match the corresponding FOR statements.
+    for (let i = 0; i < node.counterExprs.length; ++i) {
+      const nextCounterExprString = this.accept(
+        node.counterExprs[i]
+      ).toString();
+      const {forStmt} = this.openForStmtStates[
+        this.openForStmtStates.length - 1 - i
+      ];
+      const forStmtCounterExprString = this.accept(
+        forStmt.counterExpr
+      ).toString();
+      if (nextCounterExprString !== forStmtCounterExprString) {
+        throw new Error(
+          `Error: Counter ${
+            i + 1
+          } does not match corresponding FOR statement ${locString}\n` +
+            `\tCounter in FOR statement: ${forStmtCounterExprString}\n` +
+            `\tCounter in NEXT statement: ${nextCounterExprString}`
+        );
+      }
+    }
+
+    // Generate code.
+    const chunks: SourceChunks = [];
+    for (let i = 0; i < numForStmtStatesToClose; ++i) {
+      const {
+        forStmt,
+        startLabel,
+        endLabel,
+        stepValue,
+      } = this.openForStmtStates.pop()!;
+      chunks.push(
+        this.createStmtSourceNode(node, () => [
+          this.accept(forStmt.counterExpr),
+          ` += ${stepValue}; `,
+          this.generateGotoCode(startLabel),
+        ])
+      );
+      --this.indent;
+      chunks.push(this.generateLabelStmt(forStmt, endLabel));
+    }
     return this.createSourceNode(node, ...chunks);
   }
 
@@ -353,6 +487,10 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
   private generateGotoCode(destLabel: string) {
     return `return { type: 'goto', destLabel: '${destLabel}' };`;
+  }
+
+  private generateTempVarRef(label: string) {
+    return `ctx.tempVars['${label}']`;
   }
 
   private readonly opts: Required<CodeGeneratorOpts>;

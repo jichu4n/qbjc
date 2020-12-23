@@ -12,6 +12,7 @@ import {
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
+  LhsExpr,
   Stmt,
   Stmts,
   StmtType,
@@ -21,6 +22,8 @@ import {
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
+  ForStmt,
+  NextStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -96,6 +99,8 @@ nonLabelStmt ->
     | doUntilStmt  {% id %}
     | loopWhileStmt  {% id %}
     | loopUntilStmt  {% id %}
+    | forStmt  {% id %}
+    | nextStmt  {% id %}
     | printStmt  {% id %}
 
 labelStmt ->
@@ -221,6 +226,29 @@ loopUntilStmt ->
               ...useLoc($1),
             })
     %}
+
+forStmt ->
+    %FOR lhsExpr %EQ expr %TO expr (%STEP expr):?  {%
+        ([$1, $2, $3, $4, $5, $6, $7]): ForStmt => ({
+          type: StmtType.FOR,
+          counterExpr: $2,
+          startExpr: $4,
+          endExpr: $6,
+          stepExpr: $7 ? $7[1] : null,
+          ...useLoc($1),
+        })
+    %}
+
+nextStmt ->
+    %NEXT nextArgs  {%
+        ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2, ...useLoc($1) })
+    %}
+
+nextArgs ->
+      null  {% (): Array<LhsExpr> => [] %}
+    | lhsExpr  {% ([$1]) => [$1] %}
+    | lhsExpr %COMMA nextArgs  {% ([$1, $2, $3]) => [$1, ...$3] %}
+
 
 printStmt ->
     %PRINT printArgs  {%

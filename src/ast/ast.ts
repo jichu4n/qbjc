@@ -33,6 +33,8 @@ export type Stmt =
   | GotoStmt
   | IfStmt
   | CondLoopStmt
+  | ForStmt
+  | NextStmt
   | PrintStmt;
 
 export enum StmtType {
@@ -41,6 +43,8 @@ export enum StmtType {
   GOTO = 'goto',
   IF = 'if',
   COND_LOOP = 'condLoop',
+  FOR = 'for',
+  NEXT = 'next',
   PRINT = 'print',
 }
 
@@ -82,6 +86,19 @@ export interface CondLoopStmt extends AstNodeBase {
   condExpr: Expr;
   isCondNegated: boolean;
   stmts: Stmts;
+}
+
+export interface ForStmt extends AstNodeBase {
+  type: StmtType.FOR;
+  counterExpr: LhsExpr;
+  startExpr: Expr;
+  endExpr: Expr;
+  stepExpr: Expr | null;
+}
+
+export interface NextStmt extends AstNodeBase {
+  type: StmtType.NEXT;
+  counterExprs: Array<LhsExpr>;
 }
 
 export enum PrintSep {
@@ -167,6 +184,8 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
   protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
+  protected abstract visitForStmt(node: ForStmt): T;
+  protected abstract visitNextStmt(node: NextStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
@@ -186,6 +205,10 @@ export abstract class AstVisitor<T = any> {
         return this.visitIfStmt(node);
       case StmtType.COND_LOOP:
         return this.visitCondLoopStmt(node);
+      case StmtType.FOR:
+        return this.visitForStmt(node);
+      case StmtType.NEXT:
+        return this.visitNextStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case ExprType.LITERAL:

@@ -31,6 +31,7 @@ export default class Executor {
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
       localVars: {},
+      tempVars: {},
     };
 
     let nextStmtIdx = 0;
