@@ -35,6 +35,7 @@ export type Stmt =
   | CondLoopStmt
   | ForStmt
   | NextStmt
+  | ExitForStmt
   | PrintStmt;
 
 export enum StmtType {
@@ -45,6 +46,7 @@ export enum StmtType {
   COND_LOOP = 'condLoop',
   FOR = 'for',
   NEXT = 'next',
+  EXIT_FOR = 'exitFor',
   PRINT = 'print',
 }
 
@@ -99,6 +101,10 @@ export interface ForStmt extends AstNodeBase {
 export interface NextStmt extends AstNodeBase {
   type: StmtType.NEXT;
   counterExprs: Array<LhsExpr>;
+}
+
+export interface ExitForStmt extends AstNodeBase {
+  type: StmtType.EXIT_FOR;
 }
 
 export enum PrintSep {
@@ -186,6 +192,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
   protected abstract visitForStmt(node: ForStmt): T;
   protected abstract visitNextStmt(node: NextStmt): T;
+  protected abstract visitExitForStmt(node: ExitForStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
@@ -209,6 +216,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitForStmt(node);
       case StmtType.NEXT:
         return this.visitNextStmt(node);
+      case StmtType.EXIT_FOR:
+        return this.visitExitForStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case ExprType.LITERAL:

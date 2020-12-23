@@ -25,6 +25,7 @@ declare var TO: any;
 declare var STEP: any;
 declare var NEXT: any;
 declare var COMMA: any;
+declare var EXIT: any;
 declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var OR: any;
@@ -69,6 +70,7 @@ import {
   CondLoopStmt,
   ForStmt,
   NextStmt,
+  ExitForStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -170,6 +172,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["loopUntilStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["forStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["nextStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["exitForStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LabelStmt =>
@@ -302,6 +305,7 @@ const grammar: Grammar = {
     {"name": "nextArgs", "symbols": [], "postprocess": (): Array<LhsExpr> => []},
     {"name": "nextArgs", "symbols": ["lhsExpr"], "postprocess": ([$1]) => [$1]},
     {"name": "nextArgs", "symbols": ["lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "nextArgs"], "postprocess": ([$1, $2, $3]) => [$1, ...$3]},
+    {"name": "exitForStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("FOR") ? {type: "FOR"} : FOR)], "postprocess": ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) })},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },

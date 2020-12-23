@@ -10,6 +10,7 @@ export enum Keywords {
   ELSE = 'else',
   ELSEIF = 'elseif',
   END = 'end',
+  EXIT = 'exit',
   FOR = 'for',
   GOTO = 'goto',
   IF = 'if',

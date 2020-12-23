@@ -31,25 +31,23 @@ FOR i = 3 TO t STEP 0 - s
   s = 5    ' This should not affect the loop
 NEXT
 
+FOR i = 1 TO 3
+  FOR j = i * 10 + 1 TO i * 10 + 3
+    PRINT j
+    EXIT FOR
+  NEXT
+  PRINT i
+NEXT
+
 
 ' EXPECT {
 '   "io": [
 '     {"output": "1\n"},
 '     {"output": "2\n"},
 '     {"output": "3\n"},
+'
 '     {"output": "1\n"},
-'     {"output": "1\n"},
-'     {"output": "11\n"},
-'     {"output": "12\n"},
-'     {"output": "13\n"},
-'     {"output": "2\n"},
-'     {"output": "21\n"},
-'     {"output": "22\n"},
-'     {"output": "23\n"},
-'     {"output": "3\n"},
-'     {"output": "31\n"},
-'     {"output": "32\n"},
-'     {"output": "33\n"},
+'
 '     {"output": "1\n"},
 '     {"output": "11\n"},
 '     {"output": "12\n"},
@@ -62,9 +60,30 @@ NEXT
 '     {"output": "31\n"},
 '     {"output": "32\n"},
 '     {"output": "33\n"},
+'
+'     {"output": "1\n"},
+'     {"output": "11\n"},
+'     {"output": "12\n"},
+'     {"output": "13\n"},
+'     {"output": "2\n"},
+'     {"output": "21\n"},
+'     {"output": "22\n"},
+'     {"output": "23\n"},
+'     {"output": "3\n"},
+'     {"output": "31\n"},
+'     {"output": "32\n"},
+'     {"output": "33\n"},
+'
 '     {"output": "3\n"},
 '     {"output": "2\n"},
-'     {"output": "1\n"}
+'     {"output": "1\n"},
+'
+'     {"output": "11\n"},
+'     {"output": "1\n"},
+'     {"output": "21\n"},
+'     {"output": "2\n"},
+'     {"output": "31\n"},
+'     {"output": "3\n"}
 '   ]
 ' }
 

@@ -8,6 +8,7 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   CondLoopStructure,
+  ExitForStmt,
   ForStmt,
   GotoStmt,
   IfStmt,
@@ -31,7 +32,7 @@ const DEFAULT_INDENT_WIDTH = 4;
 type SourceChunk = string | SourceNode | Array<string | SourceNode>;
 type SourceChunks = Array<SourceChunk>;
 
-/** Info about an open for loop (one waiting for the corresponding NEXT statement). */
+/** Temporary state for an open for loop during the codegen process. */
 interface ForStmtState {
   forStmt: ForStmt;
   startLabel: string;
@@ -331,6 +332,19 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       chunks.push(this.generateLabelStmt(forStmt, endLabel));
     }
     return this.createSourceNode(node, ...chunks);
+  }
+
+  visitExitForStmt(node: ExitForStmt): SourceNode {
+    if (this.openForStmtStates.length === 0) {
+      throw new Error(
+        `Error: EXIT FOR statement outside FOR loop on line ${node.loc.line}`
+      );
+    }
+    return this.createStmtSourceNode(node, () =>
+      this.generateGotoCode(
+        this.openForStmtStates[this.openForStmtStates.length - 1].endLabel
+      )
+    );
   }
 
   visitPrintStmt(node: PrintStmt): SourceNode {

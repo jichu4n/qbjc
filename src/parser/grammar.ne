@@ -24,6 +24,7 @@ import {
   CondLoopStmt,
   ForStmt,
   NextStmt,
+  ExitForStmt,
   PrintStmt,
 } from '../ast/ast';
 
@@ -101,6 +102,7 @@ nonLabelStmt ->
     | loopUntilStmt  {% id %}
     | forStmt  {% id %}
     | nextStmt  {% id %}
+    | exitForStmt  {% id %}
     | printStmt  {% id %}
 
 labelStmt ->
@@ -249,6 +251,8 @@ nextArgs ->
     | lhsExpr  {% ([$1]) => [$1] %}
     | lhsExpr %COMMA nextArgs  {% ([$1, $2, $3]) => [$1, ...$3] %}
 
+exitForStmt ->
+    %EXIT %FOR  {% ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) }) %}
 
 printStmt ->
     %PRINT printArgs  {%
