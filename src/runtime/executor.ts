@@ -6,18 +6,14 @@ import {
   ExecutionContext,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
+import ErrorWithLoc from '../lib/error-with-loc';
 
-export class ExecutionError extends Error {
+export class ExecutionError extends ErrorWithLoc {
   constructor(
     message: string,
     {module, stmt}: {module?: CompiledModule | null; stmt?: CompiledStmt} = {}
   ) {
-    super(message);
-    if (stmt && stmt.loc) {
-      this.message = `${
-        module?.sourceFileName ? `${module.sourceFileName}:` : ''
-      }${stmt.loc.line}: ${this.message}`;
-    }
+    super(message, {sourceFileName: module?.sourceFileName, loc: stmt?.loc});
   }
 }
 

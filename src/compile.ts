@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-import codegen from './codegen/code-generator';
-import {parseString} from './parser/parser';
+import codegen from './codegen/codegen';
+import parse from './parser/parser';
 
 export interface CompileResult {
   source: string;
@@ -24,22 +24,15 @@ async function compile({
   const source = await fs.readFile(sourceFilePath, 'utf-8');
 
   // 2. Parse source file to AST.
-  let parseResult: ReturnType<typeof parseString>;
-  parseResult = parseString(source);
-  if (parseResult.length === 0) {
-    throw new Error(`Error: Unexpected end of input`);
-  } else if (parseResult.length !== 1) {
-    throw new Error(`Error: ${parseResult.length} parse trees`);
-  }
-  if (!parseResult[0]) {
-    throw new Error(`Error: Invalid parse tree`);
+  const sourceFileName = path.basename(sourceFilePath);
+  const module = parse(source, {sourceFileName});
+  if (!module) {
+    throw new Error(`Invalid parse tree`);
   }
 
-  // 3. TODO: Type checking
-
-  // 4. Code generation.
-  let {code, map: sourceMap} = codegen(parseResult[0], {
-    sourceFileName: path.basename(sourceFilePath),
+  // 3. Code generation.
+  let {code, map: sourceMap} = codegen(module, {
+    sourceFileName,
     enableBundling,
   });
   const outputFilePath = outputFilePathArg || `${sourceFilePath}.js`;

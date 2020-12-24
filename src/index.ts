@@ -18,6 +18,10 @@ if (require.main === module) {
       .option('-r, --run', 'run the compiled program after compilation')
       .option('--source-map', 'enable source map generation')
       .option('--bundle', 'enable generation of standalone single file bundle')
+      .option(
+        '--debug-trace',
+        `enable stack trace for debugging ${packageJson.name} compilation`
+      )
       .parse(process.argv);
 
     if (program.args.length === 0) {
@@ -42,5 +46,13 @@ if (require.main === module) {
       const executor = new NodeExecutor();
       await executor.executeModule(compiledModule);
     }
-  })();
+  })().catch((e) => {
+    if ('message' in e) {
+      if (program.debugTrace) {
+        console.trace(e);
+      } else {
+        console.error(e.message);
+      }
+    }
+  });
 }

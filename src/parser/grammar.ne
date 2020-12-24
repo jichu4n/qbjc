@@ -59,7 +59,7 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
   return {
     type: ExprType.UNARY_OP,
     op: id($1).type.toLowerCase(),
-    expr: $2,
+    rightExpr: $2,
     ...useLoc($1),
   };
 }

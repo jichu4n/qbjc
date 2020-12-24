@@ -41,27 +41,17 @@ interface ForStmtState {
   endValue: string;
 }
 
-export class CodeGeneratorError extends Error {
-  constructor(
-    message: string,
-    {sourceFileName, node}: {sourceFileName: string; node: AstNode}
-  ) {
-    super(message);
-    if (node.loc.line) {
-      this.message = `${sourceFileName ? `${sourceFileName}:` : ''}${
-        node.loc.line
-      }: ${this.message}`;
-    }
-  }
-}
-
-interface CodeGeneratorOpts {
+export interface CodeGeneratorOpts {
   sourceFileName?: string;
   indentWidth?: number;
   enableBundling?: boolean;
 }
 
-class CodeGenerator extends AstVisitor<SourceNode> {
+/** Code generation pass.
+ *
+ * Depends on semantic analysis info in the AST.
+ */
+export default class CodeGenerator extends AstVisitor<SourceNode> {
   constructor(private readonly module: Module, opts: CodeGeneratorOpts = {}) {
     super();
     this.opts = {
@@ -70,6 +60,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       enableBundling: false,
       ...opts,
     };
+    this.sourceFileName = this.opts.sourceFileName;
   }
 
   run() {
@@ -114,9 +105,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     const origOpenForStmtStatesLength = this.openForStmtStates.length;
     const sourceNodes = this.acceptAll(stmts);
     if (this.openForStmtStates.length > origOpenForStmtStatesLength) {
-      throw this.createError(
-        this.openForStmtStates[this.openForStmtStates.length - 1].forStmt,
-        'FOR statement without corresponding NEXT statement'
+      this.throwError(
+        'FOR statement without corresponding NEXT statement',
+        this.openForStmtStates[this.openForStmtStates.length - 1].forStmt
       );
     }
     return sourceNodes;
@@ -233,9 +224,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         chunks.push(stmts, condStmt);
         break;
       default:
-        throw this.createError(
-          node,
-          `Unexpected loop structure: ${JSON.stringify(node)}`
+        this.throwError(
+          `Unexpected loop structure: ${JSON.stringify(node)}`,
+          node
         );
     }
     chunks.push(
@@ -247,9 +238,6 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
     return this.createSourceNode(node, ...chunks);
   }
-
-  /** Stack of open for loops in current context. */
-  private openForStmtStates: Array<ForStmtState> = [];
 
   visitForStmt(node: ForStmt): SourceNode {
     const labelPrefix = this.generateLabel();
@@ -306,9 +294,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     // Determine how many open FOR statements this NEXT statement will close.
     const numForStmtStatesToClose = node.counterExprs.length || 1;
     if (numForStmtStatesToClose > this.openForStmtStates.length) {
-      throw this.createError(
-        node,
-        `NEXT statement without corresponding FOR statement`
+      this.throwError(
+        `NEXT statement without corresponding FOR statement`,
+        node
       );
     }
     // Verify that the counter expressions match the corresponding FOR statements.
@@ -323,9 +311,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
         forStmt.counterExpr
       ).toString();
       if (nextCounterExprString !== forStmtCounterExprString) {
-        throw this.createError(
-          node,
-          `Counter #${i + 1} does not match corresponding FOR statement`
+        this.throwError(
+          `Counter #${i + 1} does not match corresponding FOR statement`,
+          node
         );
       }
     }
@@ -361,7 +349,7 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitExitForStmt(node: ExitForStmt): SourceNode {
     if (this.openForStmtStates.length === 0) {
-      throw this.createError(node, `EXIT FOR statement outside FOR loop`);
+      this.throwError(`EXIT FOR statement outside FOR loop`, node);
     }
     return this.createStmtSourceNode(node, () =>
       this.generateGotoCode(
@@ -409,16 +397,18 @@ class CodeGenerator extends AstVisitor<SourceNode> {
     } else if (typeof node.value === 'number') {
       valueString = `${node.value}`;
     } else {
-      throw this.createError(
-        node,
-        `Unrecognized literal value: ${JSON.stringify(node.value)}`
+      this.throwError(
+        `Unrecognized literal value: ${JSON.stringify(node.value)}`,
+        node
       );
     }
     return this.createSourceNode(node, valueString);
   }
+
   visitVarRefExpr(node: VarRefExpr): SourceNode {
     return this.createSourceNode(node, `ctx.localVars['${node.name}']`);
   }
+
   visitBinaryOpExpr(node: BinaryOpExpr): SourceNode {
     let chunks: Array<SourceNode | string> = [];
     switch (node.op) {
@@ -476,16 +466,9 @@ class CodeGenerator extends AstVisitor<SourceNode> {
       node,
       '(',
       OP_MAP[node.op],
-      this.accept(node.expr),
+      this.accept(node.rightExpr),
       ')'
     );
-  }
-
-  private createError(node: AstNode, message: string) {
-    return new CodeGeneratorError(message, {
-      sourceFileName: this.opts.sourceFileName,
-      node,
-    });
   }
 
   private createSourceNode(node: AstNode, ...chunks: SourceChunks) {
@@ -540,12 +523,11 @@ class CodeGenerator extends AstVisitor<SourceNode> {
 
   private readonly opts: Required<CodeGeneratorOpts>;
 
+  /** Stack of open for loops in current context. */
+  private openForStmtStates: Array<ForStmtState> = [];
+
   /** Current indentation level. */
   private indent = 0;
   /** Current generated label index. */
   private nextGeneratedLabelIdx = 1;
-}
-
-export default function codegen(module: Module, opts: CodeGeneratorOpts = {}) {
-  return new CodeGenerator(module, opts).run();
 }

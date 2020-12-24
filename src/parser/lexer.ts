@@ -1,4 +1,4 @@
-import moo from 'moo';
+import moo, {Lexer, Token} from 'moo';
 
 /** QBasic keywords.
  *
@@ -29,7 +29,7 @@ export enum Keywords {
 }
 
 /** Lexer for QBasic. */
-const lexer = moo.compile({
+const lexer: Lexer & {lastToken?: Token} = moo.compile({
   WHITESPACE: {
     match: /\s+/,
     type: (text) => (text.includes('\n') ? 'NEWLINE' : ''),
@@ -73,13 +73,16 @@ function caseInsensitiveKeywords(map: {[k: string]: string | string[]}) {
   return (text: string) => keywordsTransformFn(text.toLowerCase());
 }
 
-// Modify generated lexer to discard irrelevant tokens.
+// Modify generated lexer to discard irrelevant tokens and store the last token.
 // Based on https://github.com/no-context/moo/issues/81.
 const TOKEN_TYPES_TO_DISCARD = ['WHITESPACE', 'COMMENT'];
 lexer.next = ((originalLexerNextFn) => () => {
-  let token: moo.Token | undefined;
+  let token: Token | undefined;
   do {
     token = originalLexerNextFn();
+    if (token) {
+      lexer.lastToken = token;
+    }
   } while (token && token.type && TOKEN_TYPES_TO_DISCARD.includes(token.type));
   return token;
 })(lexer.next.bind(lexer));

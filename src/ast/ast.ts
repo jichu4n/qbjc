@@ -1,3 +1,6 @@
+import {DataTypeSpec} from './types';
+import ErrorWithLoc from '../lib/error-with-loc';
+
 /** An AST node. */
 export type AstNode = Stmt | Expr;
 
@@ -135,12 +138,21 @@ export enum ExprType {
   UNARY_OP = 'unaryOp',
 }
 
-export interface LiteralExpr extends AstNodeBase {
+/** Common attributes of expression nodes. */
+interface ExprBase extends AstNodeBase {
+  /** Type of this expression.
+   *
+   * Populated during semantic analysis.
+   */
+  typeSpec?: DataTypeSpec;
+}
+
+export interface LiteralExpr extends ExprBase {
   type: ExprType.LITERAL;
   value: string | number; // TODO
 }
 
-export interface VarRefExpr extends AstNodeBase {
+export interface VarRefExpr extends ExprBase {
   type: ExprType.VAR_REF;
   name: string;
 }
@@ -163,7 +175,7 @@ export enum BinaryOp {
   LTE = 'lte',
 }
 
-export interface BinaryOpExpr extends AstNodeBase {
+export interface BinaryOpExpr extends ExprBase {
   type: ExprType.BINARY_OP;
   op: BinaryOp;
   leftExpr: Expr;
@@ -175,10 +187,20 @@ export enum UnaryOp {
   NEG = 'sub',
 }
 
-export interface UnaryOpExpr extends AstNodeBase {
+export interface UnaryOpExpr extends ExprBase {
   type: ExprType.UNARY_OP;
   op: UnaryOp;
-  expr: Expr;
+  rightExpr: Expr;
+}
+
+/** Error thrown by AST visitors. */
+export class AstVisitorError extends ErrorWithLoc {
+  constructor(
+    message: string,
+    {sourceFileName, node}: {sourceFileName?: string; node?: AstNode} = {}
+  ) {
+    super(message, {sourceFileName, loc: node?.loc});
+  }
 }
 
 /** Base class for AST visitors. */
@@ -200,6 +222,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitBinaryOpExpr(node: BinaryOpExpr): T;
   protected abstract visitUnaryOpExpr(node: UnaryOpExpr): T;
 
+  /** Invokes the visitor method corresponding to the specified AstNode. */
   protected accept(node: AstNode): T {
     switch (node.type) {
       case StmtType.LABEL:
@@ -233,7 +256,19 @@ export abstract class AstVisitor<T = any> {
     }
   }
 
+  /** Invokes the corresponding visitor methods for each of the provided AstNodes. */
   protected acceptAll(nodes: Array<AstNode>): Array<T> {
     return nodes.map((node) => this.accept(node));
   }
+
+  /** Throws an AstVisitorError for the corresponding AstNode. */
+  protected throwError(message: string, node?: AstNode): never {
+    throw new AstVisitorError(message, {
+      sourceFileName: this.sourceFileName,
+      node,
+    });
+  }
+
+  /** Current source file name, used in error messages. */
+  protected sourceFileName?: string;
 }
