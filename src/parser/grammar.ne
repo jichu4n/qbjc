@@ -26,6 +26,7 @@ import {
   NextStmt,
   ExitForStmt,
   PrintStmt,
+  PrintSep,
   InputStmt,
 } from '../ast/ast';
 
@@ -252,19 +253,14 @@ exitForStmt ->
     %EXIT %FOR  {% ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) }) %}
 
 printStmt ->
-    %PRINT printArgs  {%
+    %PRINT printArg:*  {%
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
     %}
 
-printArgs ->
-      printArg  {% id %}
-    | printArgs (%COMMA | %SEMICOLON) printArg  {%
-        ([$1, $2, $3]) => [...$1, id($2).type.toLowerCase(), ...$3]
-    %}
-
 printArg ->
-      null  {% (): Array<Expr> => [] %}
-    | expr  {% ([$1]) => [$1] %}
+      expr  {% ([$1]) => $1 %}
+    | %COMMA  {% () => PrintSep.COMMA %}
+    | %SEMICOLON  {% () => PrintSep.SEMICOLON %}
 
 inputStmt ->
     %INPUT (%STRING_LITERAL inputStmtPromptSep):? lhsExprs  {%

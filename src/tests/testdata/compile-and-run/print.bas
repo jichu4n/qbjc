@@ -6,6 +6,7 @@ PRINT "Hello"; "world";
 PRINT
 PRINT ,,,
 PRINT ,,,"hi"
+PRINT 1 "+" 2;
 
 ' EXPECT {
 '   "io": [
@@ -16,6 +17,7 @@ PRINT ,,,"hi"
 '     {"output": "Helloworld"},
 '     {"output": "\n"},
 '     {"output": "                                          "},
-'     {"output": "                                          hi\n"}
+'     {"output": "                                          hi\n"},
+'     {"output": " 1 + 2 "}
 '   ]
 ' }

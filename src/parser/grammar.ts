@@ -73,6 +73,7 @@ import {
   NextStmt,
   ExitForStmt,
   PrintStmt,
+  PrintSep,
   InputStmt,
 } from '../ast/ast';
 
@@ -308,17 +309,14 @@ const grammar: Grammar = {
         ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2 ?? [], ...useLoc($1) })
             },
     {"name": "exitForStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("FOR") ? {type: "FOR"} : FOR)], "postprocess": ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) })},
-    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
+    {"name": "printStmt$ebnf$1", "symbols": []},
+    {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1", "printArg"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },
-    {"name": "printArgs", "symbols": ["printArg"], "postprocess": id},
-    {"name": "printArgs$subexpression$1", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
-    {"name": "printArgs$subexpression$1", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)]},
-    {"name": "printArgs", "symbols": ["printArgs", "printArgs$subexpression$1", "printArg"], "postprocess": 
-        ([$1, $2, $3]) => [...$1, id($2).type.toLowerCase(), ...$3]
-            },
-    {"name": "printArg", "symbols": [], "postprocess": (): Array<Expr> => []},
-    {"name": "printArg", "symbols": ["expr"], "postprocess": ([$1]) => [$1]},
+    {"name": "printArg", "symbols": ["expr"], "postprocess": ([$1]) => $1},
+    {"name": "printArg", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": () => PrintSep.COMMA},
+    {"name": "printArg", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": () => PrintSep.SEMICOLON},
     {"name": "inputStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("STRING_LITERAL") ? {type: "STRING_LITERAL"} : STRING_LITERAL), "inputStmtPromptSep"]},
     {"name": "inputStmt$ebnf$1", "symbols": ["inputStmt$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "inputStmt$ebnf$1", "symbols": [], "postprocess": () => null},
