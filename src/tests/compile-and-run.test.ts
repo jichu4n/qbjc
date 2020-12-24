@@ -62,7 +62,7 @@ async function testCompileAndRun(testFile: string) {
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
     'output' in ioItem ? [ioItem.output] : []
   );
-  expect(nodePlatformForTest.stdout).toEqual(expectedOutput);
+  expect(nodePlatformForTest.stdout.join('')).toEqual(expectedOutput.join(''));
 }
 
 function parseExpectSpec(source: string): ExpectSpec {

@@ -5,7 +5,7 @@ INPUT "a$,b$"; a$, b$
 PRINT a$; ", "; b$
 
 INPUT "a,b,c ", a, b, c
-PRINT a; ", "; b; ", "; c
+PRINT a; ","; b; ","; c
 
 ' EXPECT {
 '   "io": [
@@ -19,6 +19,6 @@ PRINT a; ", "; b; ", "; c
 '
 '     {"output": "a,b,c "},
 '     {"input": "1,500,-30"},
-'     {"output": "1, 500, -30\n"}
+'     {"output": " 1 , 500 ,-30 \n"}
 '   ]
 ' }

@@ -31,8 +31,15 @@ export default class Runtime {
           line += ' '.repeat(numPaddingChars);
           break;
         case PrintArgType.VALUE:
-          line += `${arg.value}`;
-          break;
+          if (typeof arg.value === 'string') {
+            line += `${arg.value}`;
+            break;
+          } else if (typeof arg.value === 'number') {
+            line += `${arg.value >= 0 ? ' ' : ''}${arg.value} `;
+            break;
+          } else {
+            // Fall through
+          }
         default:
           throw new Error(`Unknown print arg type: '${JSON.stringify(arg)}'`);
       }
