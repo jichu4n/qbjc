@@ -6,6 +6,7 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   ExitForStmt,
+  ExitLoopStmt,
   Expr,
   ForStmt,
   GotoStmt,
@@ -18,6 +19,7 @@ import {
   PrintStmt,
   UnaryOp,
   UnaryOpExpr,
+  UncondLoopStmt,
   VarRefExpr,
 } from '../ast/ast';
 import {
@@ -110,14 +112,23 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitIfStmt(node: IfStmt): void {
-    for (const {condExpr} of node.ifBranches) {
+    for (const {condExpr, stmts} of node.ifBranches) {
       this.requireNumericExpr(condExpr);
+      this.acceptAll(stmts);
     }
+    this.acceptAll(node.elseBranch);
   }
 
   visitCondLoopStmt(node: CondLoopStmt): void {
     this.requireNumericExpr(node.condExpr);
+    this.acceptAll(node.stmts);
   }
+
+  visitUncondLoopStmt(node: UncondLoopStmt): void {
+    this.acceptAll(node.stmts);
+  }
+
+  visitExitLoopStmt(node: ExitLoopStmt): void {}
 
   visitForStmt(node: ForStmt): void {
     this.requireNumericExpr(

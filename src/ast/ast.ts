@@ -36,6 +36,8 @@ export type Stmt =
   | GotoStmt
   | IfStmt
   | CondLoopStmt
+  | UncondLoopStmt
+  | ExitLoopStmt
   | ForStmt
   | NextStmt
   | ExitForStmt
@@ -48,6 +50,8 @@ export enum StmtType {
   GOTO = 'goto',
   IF = 'if',
   COND_LOOP = 'condLoop',
+  UNCOND_LOOP = 'uncondLoop',
+  EXIT_LOOP = 'exitLoop',
   FOR = 'for',
   NEXT = 'next',
   EXIT_FOR = 'exitFor',
@@ -93,6 +97,15 @@ export interface CondLoopStmt extends AstNodeBase {
   condExpr: Expr;
   isCondNegated: boolean;
   stmts: Stmts;
+}
+
+export interface UncondLoopStmt extends AstNodeBase {
+  type: StmtType.UNCOND_LOOP;
+  stmts: Stmts;
+}
+
+export interface ExitLoopStmt extends AstNodeBase {
+  type: StmtType.EXIT_LOOP;
 }
 
 export interface ForStmt extends AstNodeBase {
@@ -220,6 +233,8 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
   protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
+  protected abstract visitUncondLoopStmt(node: UncondLoopStmt): T;
+  protected abstract visitExitLoopStmt(node: ExitLoopStmt): T;
   protected abstract visitForStmt(node: ForStmt): T;
   protected abstract visitNextStmt(node: NextStmt): T;
   protected abstract visitExitForStmt(node: ExitForStmt): T;
@@ -244,6 +259,10 @@ export abstract class AstVisitor<T = any> {
         return this.visitIfStmt(node);
       case StmtType.COND_LOOP:
         return this.visitCondLoopStmt(node);
+      case StmtType.UNCOND_LOOP:
+        return this.visitUncondLoopStmt(node);
+      case StmtType.EXIT_LOOP:
+        return this.visitExitLoopStmt(node);
       case StmtType.FOR:
         return this.visitForStmt(node);
       case StmtType.NEXT:

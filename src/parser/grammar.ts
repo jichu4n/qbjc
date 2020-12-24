@@ -20,11 +20,11 @@ declare var WEND: any;
 declare var DO: any;
 declare var LOOP: any;
 declare var UNTIL: any;
+declare var EXIT: any;
 declare var FOR: any;
 declare var TO: any;
 declare var STEP: any;
 declare var NEXT: any;
-declare var EXIT: any;
 declare var PRINT: any;
 declare var COMMA: any;
 declare var SEMICOLON: any;
@@ -69,6 +69,8 @@ import {
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
+  UncondLoopStmt,
+  ExitLoopStmt,
   ForStmt,
   NextStmt,
   ExitForStmt,
@@ -173,6 +175,8 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["doUntilStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["loopWhileStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["loopUntilStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["doLoopStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["exitLoopStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["forStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["nextStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["exitForStmt"], "postprocess": id},
@@ -290,6 +294,10 @@ const grammar: Grammar = {
               ...useLoc($1),
             })
             },
+    {"name": "doLoopStmt", "symbols": [(lexer.has("DO") ? {type: "DO"} : DO), "stmts", (lexer.has("LOOP") ? {type: "LOOP"} : LOOP)], "postprocess": 
+        ([$1, $2, $3]): UncondLoopStmt => ({ type: StmtType.UNCOND_LOOP, stmts: $2, ...useLoc($1) })
+            },
+    {"name": "exitLoopStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("DO") ? {type: "DO"} : DO)], "postprocess": ([$1, $2]): ExitLoopStmt => ({ type: StmtType.EXIT_LOOP, ...useLoc($1) })},
     {"name": "forStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("STEP") ? {type: "STEP"} : STEP), "expr"]},
     {"name": "forStmt$ebnf$1", "symbols": ["forStmt$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "forStmt$ebnf$1", "symbols": [], "postprocess": () => null},

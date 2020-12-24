@@ -22,6 +22,8 @@ import {
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
+  UncondLoopStmt,
+  ExitLoopStmt,
   ForStmt,
   NextStmt,
   ExitForStmt,
@@ -102,6 +104,8 @@ nonLabelStmt ->
     | doUntilStmt  {% id %}
     | loopWhileStmt  {% id %}
     | loopUntilStmt  {% id %}
+    | doLoopStmt  {% id %}
+    | exitLoopStmt  {% id %}
     | forStmt  {% id %}
     | nextStmt  {% id %}
     | exitForStmt  {% id %}
@@ -231,6 +235,14 @@ loopUntilStmt ->
               ...useLoc($1),
             })
     %}
+
+doLoopStmt ->
+    %DO stmts %LOOP  {%
+        ([$1, $2, $3]): UncondLoopStmt => ({ type: StmtType.UNCOND_LOOP, stmts: $2, ...useLoc($1) })
+    %}
+
+exitLoopStmt ->
+    %EXIT %DO  {% ([$1, $2]): ExitLoopStmt => ({ type: StmtType.EXIT_LOOP, ...useLoc($1) }) %}
 
 forStmt ->
     %FOR lhsExpr %EQ expr %TO expr (%STEP expr):?  {%

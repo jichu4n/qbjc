@@ -28,6 +28,20 @@ DO
   x = x + 1
 LOOP UNTIL x > 45
 
+x = 51
+DO
+  PRINT x
+  IF x >= 55 THEN EXIT DO
+  x = x + 1
+LOOP
+
+x = 61
+DO
+  PRINT x
+  IF x >= 62 THEN EXIT DO
+  x = x + 1
+LOOP UNTIL x > 65
+
 ' EXPECT {
 '   "io": [
 '     {"output": " 1 \n"},
@@ -35,26 +49,39 @@ LOOP UNTIL x > 45
 '     {"output": " 3 \n"},
 '     {"output": " 4 \n"},
 '     {"output": " 5 \n"},
+'
 '     {"output": " 11 \n"},
 '     {"output": " 12 \n"},
 '     {"output": " 13 \n"},
 '     {"output": " 14 \n"},
 '     {"output": " 15 \n"},
+'
 '     {"output": " 21 \n"},
 '     {"output": " 22 \n"},
 '     {"output": " 23 \n"},
 '     {"output": " 24 \n"},
 '     {"output": " 25 \n"},
+'
 '     {"output": " 31 \n"},
 '     {"output": " 32 \n"},
 '     {"output": " 33 \n"},
 '     {"output": " 34 \n"},
 '     {"output": " 35 \n"},
+'
 '     {"output": " 41 \n"},
 '     {"output": " 42 \n"},
 '     {"output": " 43 \n"},
 '     {"output": " 44 \n"},
-'     {"output": " 45 \n"}
+'     {"output": " 45 \n"},
+'
+'     {"output": " 51 \n"},
+'     {"output": " 52 \n"},
+'     {"output": " 53 \n"},
+'     {"output": " 54 \n"},
+'     {"output": " 55 \n"},
+'
+'     {"output": " 61 \n"},
+'     {"output": " 62 \n"}
 '   ]
 ' }
 
