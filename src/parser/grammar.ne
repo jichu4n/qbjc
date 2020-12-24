@@ -26,6 +26,7 @@ import {
   NextStmt,
   ExitForStmt,
   PrintStmt,
+  InputStmt,
 } from '../ast/ast';
 
 // ----
@@ -104,6 +105,7 @@ nonLabelStmt ->
     | nextStmt  {% id %}
     | exitForStmt  {% id %}
     | printStmt  {% id %}
+    | inputStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -159,7 +161,7 @@ blockIfStmt ->
                 { condExpr: $2, stmts: $5 },
                 ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
               ],
-              elseBranch: $7 ? (([$7_1, $7_2]) => $7_2)($7) : [],
+              elseBranch: $7 ? $7[1] : [],
               ...useLoc($1),
             })
     %}
@@ -242,14 +244,9 @@ forStmt ->
     %}
 
 nextStmt ->
-    %NEXT nextArgs  {%
-        ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2, ...useLoc($1) })
+    %NEXT lhsExprs:?  {%
+        ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2 ?? [], ...useLoc($1) })
     %}
-
-nextArgs ->
-      null  {% (): Array<LhsExpr> => [] %}
-    | lhsExpr  {% ([$1]) => [$1] %}
-    | lhsExpr %COMMA nextArgs  {% ([$1, $2, $3]) => [$1, ...$3] %}
 
 exitForStmt ->
     %EXIT %FOR  {% ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) }) %}
@@ -269,10 +266,28 @@ printArg ->
       null  {% (): Array<Expr> => [] %}
     | expr  {% ([$1]) => [$1] %}
 
+inputStmt ->
+    %INPUT (%STRING_LITERAL inputStmtPromptSep):? lhsExprs  {%
+        ([$1, $2, $3]): InputStmt => ({
+          type: StmtType.INPUT,
+          prompt: $2 ? `${$2[0].value}${$2[1] ? '? ': ''}` : '? ',
+          targetExprs: $3,
+          ...useLoc($1),
+        })
+    %}
+
+inputStmtPromptSep ->
+      %COMMA  {% () => false %}
+    | %SEMICOLON  {% () => true %}
+
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%
         ([$1, $2, $3]): Stmts => [$2, ...$3.map(([$3_1, $3_2]: Array<any>) => $3_2)]
     %}
+
+lhsExprs ->
+      lhsExpr  {% ([$1]) => [$1] %}
+    | lhsExprs %COMMA lhsExpr  {% ([$1, $2, $3]) => [...$1, $3] %}
 
 # ----
 # Expressions
@@ -338,12 +353,18 @@ varRefExpr ->
     %}
 
 literalExpr ->
-      %STRING_LITERAL  {%
-          ([$1]): LiteralExpr =>
-              ({ type: ExprType.LITERAL, value: $1.value, ...useLoc($1) })
-      %}
-    | %NUMERIC_LITERAL  {%
-          ([$1]): LiteralExpr =>
-              ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
-      %}
+      stringLiteralExpr  {% id %}
+    | numericLiteralExpr  {% id %}
+
+stringLiteralExpr ->
+    %STRING_LITERAL  {%
+        ([$1]): LiteralExpr =>
+            ({ type: ExprType.LITERAL, value: $1.value, ...useLoc($1) })
+    %}
+
+numericLiteralExpr ->
+    %NUMERIC_LITERAL  {%
+        ([$1]): LiteralExpr =>
+            ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
+    %}
 

@@ -1,8 +1,13 @@
-import {PrintArgType, PrintArg} from './compiled-code';
+import {DataTypeSpec, isNumeric, isString} from '../lib/types';
+import moo, {Token} from 'moo';
+import {PrintArg, PrintArgType} from './compiled-code';
 
 /** Interface for platform-specific runtime functionality. */
 export interface RuntimePlatform {
-  writeStdout(s: string): void;
+  /** Print a string to stdout. */
+  print(s: string): void;
+  /** Reads a line of text from stdin. */
+  inputLine(): Promise<string>;
 }
 
 /** Runtime support library.
@@ -38,6 +43,92 @@ export default class Runtime {
     ) {
       line += '\n';
     }
-    this.platform.writeStdout(line);
+    this.platform.print(line);
   }
+
+  async input(prompt: string, ...resultTypes: Array<DataTypeSpec>) {
+    for (;;) {
+      this.platform.print(prompt);
+
+      const line = await this.platform.inputLine();
+      const tokens = this.lexInput(line);
+      let tokenIdx = 0;
+
+      const results: Array<string | number> = [];
+      let errorMessage: string | null = null;
+      for (let resultIdx = 0; resultIdx < resultTypes.length; ++resultIdx) {
+        const resultType = resultTypes[resultIdx];
+        const errorMessagePrefix = `Error parsing value ${resultIdx + 1}: `;
+        // Consume comma token for result 1+.
+        if (resultIdx > 0) {
+          if (tokenIdx < tokens.length && tokens[tokenIdx].type === 'COMMA') {
+            ++tokenIdx;
+          } else {
+            errorMessage = `${errorMessagePrefix}Comma expected`;
+            break;
+          }
+        }
+        // Consume value.
+        if (tokenIdx < tokens.length && tokens[tokenIdx].type === 'STRING') {
+          const {value: tokenValue} = tokens[tokenIdx];
+          if (isString(resultType)) {
+            results.push(tokenValue);
+          } else if (isNumeric(resultType)) {
+            const numericValue = parseFloat(tokenValue);
+            if (isNaN(numericValue)) {
+              errorMessage = `${errorMessagePrefix}Invalid numeric value "${tokenValue}"`;
+              break;
+            } else {
+              results.push(numericValue);
+            }
+          } else {
+            throw new Error(`Unexpected result type ${resultType.type}`);
+          }
+          ++tokenIdx;
+        } else {
+          errorMessage = `${errorMessagePrefix}No value provided`;
+          break;
+        }
+      }
+
+      if (results.length === resultTypes.length) {
+        return results;
+      } else if (results.length < resultTypes.length) {
+        this.platform.print(
+          `\n${errorMessage ? `${errorMessage}\n` : ''}Redo from start\n`
+        );
+      } else {
+        throw new Error(
+          `Too many results: expected ${resultTypes.length}, got ${results.length}`
+        );
+      }
+    }
+  }
+
+  private lexInput(line: string) {
+    this.inputLexer.reset(line.trim());
+    const tokens: Array<Token> = [];
+    for (;;) {
+      const token = this.inputLexer.next();
+      if (!token) {
+        break;
+      }
+      if (token.type !== 'WHITESPACE') {
+        tokens.push(token);
+      }
+    }
+    return tokens;
+  }
+
+  /** Lexer for input(). */
+  private readonly inputLexer = moo.compile({
+    WHITESPACE: {match: /\s+/, lineBreaks: true},
+    QUOTED_STRING: {
+      match: /"[^"]*"/,
+      value: (text) => text.substr(1, text.length - 2),
+      type: () => 'STRING',
+    },
+    COMMA: ',',
+    STRING: /[^,\s]+/,
+  });
 }

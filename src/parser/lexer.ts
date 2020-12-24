@@ -14,6 +14,7 @@ export enum Keywords {
   FOR = 'for',
   GOTO = 'goto',
   IF = 'if',
+  INPUT = 'input',
   LET = 'let',
   LOOP = 'loop',
   MOD = 'mod',

@@ -1,4 +1,4 @@
-import {DataTypeSpec} from './types';
+import {DataTypeSpec} from '../lib/types';
 import ErrorWithLoc from '../lib/error-with-loc';
 
 /** An AST node. */
@@ -39,7 +39,8 @@ export type Stmt =
   | ForStmt
   | NextStmt
   | ExitForStmt
-  | PrintStmt;
+  | PrintStmt
+  | InputStmt;
 
 export enum StmtType {
   LABEL = 'label',
@@ -51,6 +52,7 @@ export enum StmtType {
   NEXT = 'next',
   EXIT_FOR = 'exitFor',
   PRINT = 'print',
+  INPUT = 'input',
 }
 
 export interface LabelStmt extends AstNodeBase {
@@ -119,6 +121,12 @@ export type PrintArg = Expr | PrintSep;
 export interface PrintStmt extends AstNodeBase {
   type: StmtType.PRINT;
   args: Array<PrintArg>;
+}
+
+export interface InputStmt extends AstNodeBase {
+  type: StmtType.INPUT;
+  prompt: string;
+  targetExprs: Array<LhsExpr>;
 }
 
 // ----
@@ -216,6 +224,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitNextStmt(node: NextStmt): T;
   protected abstract visitExitForStmt(node: ExitForStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
+  protected abstract visitInputStmt(node: InputStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
@@ -243,6 +252,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitExitForStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
+      case StmtType.INPUT:
+        return this.visitInputStmt(node);
       case ExprType.LITERAL:
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:
@@ -262,7 +273,7 @@ export abstract class AstVisitor<T = any> {
   }
 
   /** Throws an AstVisitorError for the corresponding AstNode. */
-  protected throwError(message: string, node?: AstNode): never {
+  protected throwError(message: string, node: AstNode): never {
     throw new AstVisitorError(message, {
       sourceFileName: this.sourceFileName,
       node,

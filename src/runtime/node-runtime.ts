@@ -3,8 +3,18 @@ import Executor from './executor';
 import {RuntimePlatform} from './runtime';
 
 export class NodePlatform implements RuntimePlatform {
-  writeStdout(s: string) {
+  print(s: string) {
     process.stdout.write(s);
+  }
+
+  async inputLine(): Promise<string> {
+    return new Promise<string>((resolve) => {
+      process.stdin.resume();
+      process.stdin.once('data', (chunk) => {
+        process.stdin.pause();
+        resolve(chunk.toString());
+      });
+    });
   }
 }
 

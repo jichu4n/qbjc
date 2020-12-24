@@ -26,11 +26,19 @@ describe('Compile and run', () => {
 });
 
 class NodePlatformForTest extends NodePlatform {
-  writeStdout(s: string) {
+  print(s: string) {
     this.stdout.push(s);
   }
 
+  async inputLine(): Promise<string> {
+    if (this.stdin.length === 0) {
+      throw new Error(`Input exhausted`);
+    }
+    return this.stdin.shift()!;
+  }
+
   stdout: Array<string> = [];
+  stdin: Array<string> = [];
 }
 
 interface ExpectSpec {
@@ -40,13 +48,17 @@ interface ExpectSpec {
 async function testCompileAndRun(testFile: string) {
   const testFilePath = path.join(TEST_SOURCE_DIR_PATH, testFile);
   const {source, code} = await compile({sourceFilePath: testFilePath});
-
   const compiledModule = requireFromString(code).default;
+
+  const expectSpec = parseExpectSpec(source);
   const nodePlatformForTest = new NodePlatformForTest();
+  nodePlatformForTest.stdin = _.flatMap(expectSpec.io ?? [], (ioItem) =>
+    'input' in ioItem ? [ioItem.input] : []
+  );
+
   const executor = new Executor(nodePlatformForTest);
   await executor.executeModule(compiledModule);
 
-  const expectSpec = parseExpectSpec(source);
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
     'output' in ioItem ? [ioItem.output] : []
   );
@@ -60,6 +72,6 @@ function parseExpectSpec(source: string): ExpectSpec {
     return {};
   }
   const expectSpecJson = match[1].replace(/^'\s*/gm, '');
-  const expectSpec = JSON.parse(expectSpecJson) as ExpectSpec;
+  let expectSpec = JSON.parse(expectSpecJson);
   return expectSpec;
 }

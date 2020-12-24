@@ -1,41 +1,37 @@
-import _, {takeRightWhile} from 'lodash';
-import {error} from 'moo';
+import _ from 'lodash';
 import {
   AssignStmt,
-  AstNode,
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
   CondLoopStmt,
-  CondLoopStructure,
   ExitForStmt,
+  Expr,
   ForStmt,
   GotoStmt,
   IfStmt,
+  InputStmt,
   LabelStmt,
   LiteralExpr,
   Module,
   NextStmt,
   PrintStmt,
-  Stmts,
-  Expr,
   UnaryOp,
   UnaryOpExpr,
   VarRefExpr,
 } from '../ast/ast';
 import {
-  integerSpec,
-  longSpec,
-  singleSpec,
-  doubleSpec,
-  stringSpec,
+  areMatchingElementaryTypes,
   DataTypeSpec,
+  doubleSpec,
+  integerSpec,
+  isElementaryType,
   isNumeric,
   isString,
-  DataType,
-  areMatchingElementaryTypes,
-  isElementaryType,
-} from '../ast/types';
+  longSpec,
+  singleSpec,
+  stringSpec,
+} from '../lib/types';
 
 /** Map from variable type declaration suffix to the corresponding type spec. */
 const TYPE_SUFFIX_MAP: {[key: string]: DataTypeSpec} = Object.freeze({
@@ -99,6 +95,20 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
+  private requireElementaryTypeExpr(...exprs: Array<Expr>) {
+    for (const expr of exprs) {
+      this.accept(expr);
+      if (!isElementaryType(expr.typeSpec!)) {
+        this.throwError(
+          `Expected elementary type expression instead of ${
+            expr.typeSpec!.type
+          }`,
+          expr
+        );
+      }
+    }
+  }
+
   visitIfStmt(node: IfStmt): void {
     for (const {condExpr} of node.ifBranches) {
       this.requireNumericExpr(condExpr);
@@ -129,13 +139,12 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       if (typeof arg === 'string') {
         continue;
       }
-      this.accept(arg);
-      if (!isElementaryType(arg.typeSpec!)) {
-        this.throwError(
-          `Expected elementary type instead of ${arg.typeSpec!.type}`
-        );
-      }
+      this.requireElementaryTypeExpr(arg);
     }
+  }
+
+  visitInputStmt(node: InputStmt): void {
+    this.requireElementaryTypeExpr(...node.targetExprs);
   }
 
   visitLiteralExpr(node: LiteralExpr): void {

@@ -12,6 +12,7 @@ import {
   ForStmt,
   GotoStmt,
   IfStmt,
+  InputStmt,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -372,6 +373,18 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
             )
       ),
       ');',
+    ]);
+  }
+
+  visitInputStmt(node: InputStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => [
+      'const results = await ctx.runtime.input(',
+      `${JSON.stringify(node.prompt)}, `,
+      node.targetExprs.map((expr) => JSON.stringify(expr.typeSpec!)).join(', '),
+      '); ',
+      ...node.targetExprs.map((expr, i) =>
+        this.createSourceNode(expr, this.accept(expr), ` = results[${i}]; `)
+      ),
     ]);
   }
 
