@@ -8,6 +8,12 @@ import {
 import Runtime, {RuntimePlatform} from './runtime';
 import ErrorWithLoc from '../lib/error-with-loc';
 
+/** State for a GOSUB invocation. */
+interface GosubState {
+  /** Index of statement to return to. */
+  nextStmtIdx: number;
+}
+
 export class ExecutionError extends ErrorWithLoc {
   constructor(
     message: string,
@@ -35,12 +41,16 @@ export default class Executor {
       localVars: {},
       tempVars: {},
     };
+    /** Return address stack for GOSUB / RETURN. */
+    const gosubStates: Array<GosubState> = [];
 
-    let nextStmtIdx = 0;
-    while (nextStmtIdx < stmts.length) {
-      const stmt = stmts[nextStmtIdx];
+    /** Index of the current statement to execute. */
+    let stmtIdx = 0;
+    while (stmtIdx < stmts.length) {
+      const stmt = stmts[stmtIdx];
       const errorArgs = {module: this.currentModule, stmt};
 
+      // 1. Execute statement.
       let result: CompiledStmtResult | void;
       if ('run' in stmt) {
         try {
@@ -51,18 +61,39 @@ export default class Executor {
       }
 
       if (!result) {
-        ++nextStmtIdx;
+        ++stmtIdx;
         continue;
       }
+
+      const gotoLabel = (label: string) => {
+        stmtIdx = labelIdxMap[label];
+        if (stmtIdx === undefined) {
+          throw new ExecutionError(`Label not found: "${label}"`, errorArgs);
+        }
+      };
       switch (result.type) {
+        case CompiledStmtResultType.GOSUB:
+          gosubStates.push({
+            nextStmtIdx: stmtIdx + 1,
+          });
+          gotoLabel(result.destLabel);
+          break;
         case CompiledStmtResultType.GOTO:
-          nextStmtIdx = labelIdxMap[result.destLabel];
-          if (nextStmtIdx === undefined) {
-            throw new ExecutionError(
-              `Label not found: "${result.destLabel}"`,
-              errorArgs
-            );
+          gotoLabel(result.destLabel);
+          break;
+        case CompiledStmtResultType.RETURN:
+          if (gosubStates.length === 0) {
+            throw new ExecutionError(`RETURN without prior GOSUB`, errorArgs);
           }
+          const gosubState = gosubStates.pop()!;
+          if (result.destLabel) {
+            gotoLabel(result.destLabel);
+          } else {
+            stmtIdx = gosubState.nextStmtIdx;
+          }
+          break;
+        case CompiledStmtResultType.END:
+          stmtIdx = stmts.length;
           break;
         default:
           throw new ExecutionError(

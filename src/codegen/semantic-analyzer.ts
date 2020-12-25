@@ -5,10 +5,12 @@ import {
   BinaryOp,
   BinaryOpExpr,
   CondLoopStmt,
+  EndStmt,
   ExitForStmt,
   ExitLoopStmt,
   Expr,
   ForStmt,
+  GosubStmt,
   GotoStmt,
   IfStmt,
   InputStmt,
@@ -17,6 +19,7 @@ import {
   Module,
   NextStmt,
   PrintStmt,
+  ReturnStmt,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -144,6 +147,12 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitExitForStmt(node: ExitForStmt): void {}
+
+  visitGosubStmt(node: GosubStmt): void {}
+
+  visitReturnStmt(node: ReturnStmt): void {}
+
+  visitEndStmt(node: EndStmt): void {}
 
   visitPrintStmt(node: PrintStmt): void {
     for (const arg of node.args) {

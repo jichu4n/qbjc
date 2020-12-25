@@ -25,6 +25,8 @@ declare var FOR: any;
 declare var TO: any;
 declare var STEP: any;
 declare var NEXT: any;
+declare var GOSUB: any;
+declare var RETURN: any;
 declare var PRINT: any;
 declare var COMMA: any;
 declare var SEMICOLON: any;
@@ -74,6 +76,9 @@ import {
   ForStmt,
   NextStmt,
   ExitForStmt,
+  GosubStmt,
+  ReturnStmt,
+  EndStmt,
   PrintStmt,
   PrintSep,
   InputStmt,
@@ -180,6 +185,9 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["forStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["nextStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["exitForStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["gosubStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["returnStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["endStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
@@ -201,11 +209,9 @@ const grammar: Grammar = {
               ...useLoc($1 || $2),
             })
             },
-    {"name": "gotoStmt$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
-    {"name": "gotoStmt$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
-    {"name": "gotoStmt", "symbols": [(lexer.has("GOTO") ? {type: "GOTO"} : GOTO), "gotoStmt$subexpression$1"], "postprocess": 
+    {"name": "gotoStmt", "symbols": [(lexer.has("GOTO") ? {type: "GOTO"} : GOTO), "labelRef"], "postprocess": 
         ([$1, $2]): GotoStmt =>
-            ({ type: StmtType.GOTO, destLabel: id($2).value, ...useLoc($1) })
+            ({ type: StmtType.GOTO, destLabel: $2, ...useLoc($1) })
             },
     {"name": "ifStmt", "symbols": ["singleLineIfStmt"], "postprocess": id},
     {"name": "ifStmt", "symbols": ["blockIfStmt"], "postprocess": id},
@@ -317,6 +323,17 @@ const grammar: Grammar = {
         ([$1, $2]): NextStmt => ({ type: StmtType.NEXT, counterExprs: $2 ?? [], ...useLoc($1) })
             },
     {"name": "exitForStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("FOR") ? {type: "FOR"} : FOR)], "postprocess": ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) })},
+    {"name": "gosubStmt", "symbols": [(lexer.has("GOSUB") ? {type: "GOSUB"} : GOSUB), "labelRef"], "postprocess": 
+        ([$1, $2]): GosubStmt =>
+            ({ type: StmtType.GOSUB, destLabel: $2, ...useLoc($1) })
+            },
+    {"name": "returnStmt$ebnf$1", "symbols": ["labelRef"], "postprocess": id},
+    {"name": "returnStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "returnStmt", "symbols": [(lexer.has("RETURN") ? {type: "RETURN"} : RETURN), "returnStmt$ebnf$1"], "postprocess": 
+        ([$1, $2]): ReturnStmt =>
+            ({ type: StmtType.RETURN, destLabel: $2, ...useLoc($1) })
+            },
+    {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
     {"name": "printStmt$ebnf$1", "symbols": []},
     {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1", "printArg"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
@@ -350,6 +367,9 @@ const grammar: Grammar = {
             },
     {"name": "lhsExprs", "symbols": ["lhsExpr"], "postprocess": ([$1]) => [$1]},
     {"name": "lhsExprs", "symbols": ["lhsExprs", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "lhsExpr"], "postprocess": ([$1, $2, $3]) => [...$1, $3]},
+    {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
+    {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
+    {"name": "labelRef", "symbols": ["labelRef$subexpression$1"], "postprocess": ([$1]) => id($1).value},
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "expr10", "symbols": ["expr9"], "postprocess": id},

@@ -25,17 +25,41 @@ export interface CompiledCodeStmt extends CompiledStmtBase {
 }
 
 /** Return value from a compiled statement. */
-export type CompiledStmtResult = GotoResult;
+export type CompiledStmtResult =
+  | GotoResult
+  | GosubResult
+  | ReturnResult
+  | EndResult;
 
 /** Type of a StatementResult. */
 export enum CompiledStmtResultType {
   GOTO = 'goto',
+  GOSUB = 'gosub',
+  RETURN = 'return',
+  END = 'end',
 }
 
 /** Jump to a label. */
 export interface GotoResult {
   type: CompiledStmtResultType.GOTO;
   destLabel: string;
+}
+
+/** Push return address and jump to a label. */
+export interface GosubResult {
+  type: CompiledStmtResultType.GOSUB;
+  destLabel: string;
+}
+
+/** Pop return address and jump to it (or another label if provided). */
+export interface ReturnResult {
+  type: CompiledStmtResultType.RETURN;
+  destLabel?: string;
+}
+
+/** End execution. */
+export interface EndResult {
+  type: CompiledStmtResultType.END;
 }
 
 /** Compiled statement execution context. */

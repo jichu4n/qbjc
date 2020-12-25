@@ -8,9 +8,11 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   CondLoopStructure,
+  EndStmt,
   ExitForStmt,
   ExitLoopStmt,
   ForStmt,
+  GosubStmt,
   GotoStmt,
   IfStmt,
   InputStmt,
@@ -19,6 +21,7 @@ import {
   Module,
   NextStmt,
   PrintStmt,
+  ReturnStmt,
   Stmts,
   UnaryOp,
   UnaryOpExpr,
@@ -406,6 +409,27 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         this.openForStmtStates[this.openForStmtStates.length - 1].endLabel
       )
     );
+  }
+
+  visitGosubStmt(node: GosubStmt): SourceNode {
+    return this.createStmtSourceNode(
+      node,
+      () => `return { type: 'gosub', destLabel: '${node.destLabel}' };`
+    );
+  }
+
+  visitReturnStmt(node: ReturnStmt): SourceNode {
+    return this.createStmtSourceNode(
+      node,
+      () =>
+        `return { type: 'return'${
+          node.destLabel ? `, destLabel: '${node.destLabel}'` : ''
+        } };`
+    );
+  }
+
+  visitEndStmt(node: EndStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => `return { type: 'end' };`);
   }
 
   visitPrintStmt(node: PrintStmt): SourceNode {

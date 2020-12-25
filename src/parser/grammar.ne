@@ -27,6 +27,9 @@ import {
   ForStmt,
   NextStmt,
   ExitForStmt,
+  GosubStmt,
+  ReturnStmt,
+  EndStmt,
   PrintStmt,
   PrintSep,
   InputStmt,
@@ -109,6 +112,9 @@ nonLabelStmt ->
     | forStmt  {% id %}
     | nextStmt  {% id %}
     | exitForStmt  {% id %}
+    | gosubStmt  {% id %}
+    | returnStmt  {% id %}
+    | endStmt  {% id %}
     | printStmt  {% id %}
     | inputStmt  {% id %}
 
@@ -134,9 +140,9 @@ assignStmt ->
     %}
 
 gotoStmt ->
-    %GOTO (%IDENTIFIER | %NUMERIC_LITERAL)  {%
+    %GOTO labelRef  {%
         ([$1, $2]): GotoStmt =>
-            ({ type: StmtType.GOTO, destLabel: id($2).value, ...useLoc($1) })
+            ({ type: StmtType.GOTO, destLabel: $2, ...useLoc($1) })
     %}
 
 ifStmt ->
@@ -264,6 +270,21 @@ nextStmt ->
 exitForStmt ->
     %EXIT %FOR  {% ([$1, $2]): ExitForStmt => ({ type: StmtType.EXIT_FOR, ...useLoc($1) }) %}
 
+gosubStmt ->
+    %GOSUB labelRef  {%
+        ([$1, $2]): GosubStmt =>
+            ({ type: StmtType.GOSUB, destLabel: $2, ...useLoc($1) })
+    %}
+
+returnStmt ->
+    %RETURN labelRef:?  {%
+        ([$1, $2]): ReturnStmt =>
+            ({ type: StmtType.RETURN, destLabel: $2, ...useLoc($1) })
+    %}
+
+endStmt ->
+    %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}
+
 printStmt ->
     %PRINT printArg:*  {%
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
@@ -296,6 +317,9 @@ singleLineStmts ->
 lhsExprs ->
       lhsExpr  {% ([$1]) => [$1] %}
     | lhsExprs %COMMA lhsExpr  {% ([$1, $2, $3]) => [...$1, $3] %}
+
+labelRef ->
+    (%IDENTIFIER | %NUMERIC_LITERAL)  {% ([$1]) => id($1).value %}
 
 # ----
 # Expressions

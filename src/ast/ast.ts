@@ -41,6 +41,9 @@ export type Stmt =
   | ForStmt
   | NextStmt
   | ExitForStmt
+  | GosubStmt
+  | ReturnStmt
+  | EndStmt
   | PrintStmt
   | InputStmt;
 
@@ -55,6 +58,9 @@ export enum StmtType {
   FOR = 'for',
   NEXT = 'next',
   EXIT_FOR = 'exitFor',
+  GOSUB = 'gosub',
+  RETURN = 'return',
+  END = 'end',
   PRINT = 'print',
   INPUT = 'input',
 }
@@ -123,6 +129,20 @@ export interface NextStmt extends AstNodeBase {
 
 export interface ExitForStmt extends AstNodeBase {
   type: StmtType.EXIT_FOR;
+}
+
+export interface GosubStmt extends AstNodeBase {
+  type: StmtType.GOSUB;
+  destLabel: string;
+}
+
+export interface ReturnStmt extends AstNodeBase {
+  type: StmtType.RETURN;
+  destLabel?: string;
+}
+
+export interface EndStmt extends AstNodeBase {
+  type: StmtType.END;
 }
 
 export enum PrintSep {
@@ -238,6 +258,9 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitForStmt(node: ForStmt): T;
   protected abstract visitNextStmt(node: NextStmt): T;
   protected abstract visitExitForStmt(node: ExitForStmt): T;
+  protected abstract visitGosubStmt(node: GosubStmt): T;
+  protected abstract visitReturnStmt(node: ReturnStmt): T;
+  protected abstract visitEndStmt(node: EndStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
 
@@ -269,6 +292,12 @@ export abstract class AstVisitor<T = any> {
         return this.visitNextStmt(node);
       case StmtType.EXIT_FOR:
         return this.visitExitForStmt(node);
+      case StmtType.GOSUB:
+        return this.visitGosubStmt(node);
+      case StmtType.RETURN:
+        return this.visitReturnStmt(node);
+      case StmtType.END:
+        return this.visitEndStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case StmtType.INPUT:
