@@ -4,35 +4,47 @@ import Runtime from './runtime';
 export interface CompiledModule {
   sourceFileName?: string;
   stmts: Array<CompiledStmt>;
+  procs: Array<CompiledProc>;
 }
 
-/** A compiled statement produced by CodeGenerator. */
+interface CompiledComponentBase {
+  /** Location of this statement in the source code. */
+  loc?: [number, number];
+}
+
+/** A compiled procedure (SUB or FUNCTION). */
+export interface CompiledProc {
+  type: CompiledProcType.FN;
+  name: string;
+  stmts: Array<CompiledStmt>;
+}
+
+export enum CompiledProcType {
+  SUB = 'sub',
+  FN = 'fn',
+}
+
+/** A compiled statement. */
 export type CompiledStmt = CompiledLabelStmt | CompiledCodeStmt;
 
-interface CompiledStmtBase {
-  /** Location of this statement in the source code. */
-  loc?: {line: number; col: number};
-}
-
 /** A label in the compiled program. */
-export interface CompiledLabelStmt extends CompiledStmtBase {
+export interface CompiledLabelStmt extends CompiledComponentBase {
   label: string;
 }
 
 /** A compiled statement with executable code. */
-export interface CompiledCodeStmt extends CompiledStmtBase {
-  run(ctx: ExecutionContext): Promise<CompiledStmtResult | void>;
+export interface CompiledCodeStmt extends CompiledComponentBase {
+  run(ctx: ExecutionContext): Promise<ExecutionDirective | void>;
 }
 
 /** Return value from a compiled statement. */
-export type CompiledStmtResult =
-  | GotoResult
-  | GosubResult
-  | ReturnResult
-  | EndResult;
+export type ExecutionDirective =
+  | GotoDirective
+  | GosubDirective
+  | ReturnDirective
+  | EndDirective;
 
-/** Type of a StatementResult. */
-export enum CompiledStmtResultType {
+export enum ExecutionDirectiveType {
   GOTO = 'goto',
   GOSUB = 'gosub',
   RETURN = 'return',
@@ -40,26 +52,26 @@ export enum CompiledStmtResultType {
 }
 
 /** Jump to a label. */
-export interface GotoResult {
-  type: CompiledStmtResultType.GOTO;
+export interface GotoDirective {
+  type: ExecutionDirectiveType.GOTO;
   destLabel: string;
 }
 
 /** Push return address and jump to a label. */
-export interface GosubResult {
-  type: CompiledStmtResultType.GOSUB;
+export interface GosubDirective {
+  type: ExecutionDirectiveType.GOSUB;
   destLabel: string;
 }
 
 /** Pop return address and jump to it (or another label if provided). */
-export interface ReturnResult {
-  type: CompiledStmtResultType.RETURN;
+export interface ReturnDirective {
+  type: ExecutionDirectiveType.RETURN;
   destLabel?: string;
 }
 
 /** End execution. */
-export interface EndResult {
-  type: CompiledStmtResultType.END;
+export interface EndDirective {
+  type: ExecutionDirectiveType.END;
 }
 
 /** Compiled statement execution context. */

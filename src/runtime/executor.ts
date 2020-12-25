@@ -1,12 +1,12 @@
+import ErrorWithLoc from '../lib/error-with-loc';
 import {
   CompiledModule,
   CompiledStmt,
-  CompiledStmtResult,
-  CompiledStmtResultType,
   ExecutionContext,
+  ExecutionDirective,
+  ExecutionDirectiveType,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
-import ErrorWithLoc from '../lib/error-with-loc';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
@@ -19,7 +19,10 @@ export class ExecutionError extends ErrorWithLoc {
     message: string,
     {module, stmt}: {module?: CompiledModule | null; stmt?: CompiledStmt} = {}
   ) {
-    super(message, {sourceFileName: module?.sourceFileName, loc: stmt?.loc});
+    super(message, {
+      sourceFileName: module?.sourceFileName,
+      loc: stmt?.loc ? {line: stmt.loc[0], col: stmt.loc[1]} : undefined,
+    });
   }
 }
 
@@ -51,16 +54,16 @@ export default class Executor {
       const errorArgs = {module: this.currentModule, stmt};
 
       // 1. Execute statement.
-      let result: CompiledStmtResult | void;
+      let directive: ExecutionDirective | void;
       if ('run' in stmt) {
         try {
-          result = await stmt.run(ctx);
+          directive = await stmt.run(ctx);
         } catch (e) {
           throw new ExecutionError(e.message, errorArgs);
         }
       }
 
-      if (!result) {
+      if (!directive) {
         ++stmtIdx;
         continue;
       }
@@ -71,33 +74,33 @@ export default class Executor {
           throw new ExecutionError(`Label not found: "${label}"`, errorArgs);
         }
       };
-      switch (result.type) {
-        case CompiledStmtResultType.GOSUB:
+      switch (directive.type) {
+        case ExecutionDirectiveType.GOSUB:
           gosubStates.push({
             nextStmtIdx: stmtIdx + 1,
           });
-          gotoLabel(result.destLabel);
+          gotoLabel(directive.destLabel);
           break;
-        case CompiledStmtResultType.GOTO:
-          gotoLabel(result.destLabel);
+        case ExecutionDirectiveType.GOTO:
+          gotoLabel(directive.destLabel);
           break;
-        case CompiledStmtResultType.RETURN:
+        case ExecutionDirectiveType.RETURN:
           if (gosubStates.length === 0) {
             throw new ExecutionError(`RETURN without prior GOSUB`, errorArgs);
           }
           const gosubState = gosubStates.pop()!;
-          if (result.destLabel) {
-            gotoLabel(result.destLabel);
+          if (directive.destLabel) {
+            gotoLabel(directive.destLabel);
           } else {
             stmtIdx = gosubState.nextStmtIdx;
           }
           break;
-        case CompiledStmtResultType.END:
+        case ExecutionDirectiveType.END:
           stmtIdx = stmts.length;
           break;
         default:
           throw new ExecutionError(
-            `Unrecognized statement result: ${JSON.stringify(result)}`,
+            `Unrecognized execution directive: ${JSON.stringify(directive)}`,
             errorArgs
           );
       }

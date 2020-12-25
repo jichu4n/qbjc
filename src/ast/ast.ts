@@ -2,7 +2,7 @@ import {DataTypeSpec} from '../lib/types';
 import ErrorWithLoc from '../lib/error-with-loc';
 
 /** An AST node. */
-export type AstNode = Stmt | Expr;
+export type AstNode = Proc | Stmt | Expr;
 
 /** Common properties of AST nodes. */
 export interface AstNodeBase {
@@ -287,6 +287,7 @@ export class AstVisitorError extends ErrorWithLoc {
 /** Base class for AST visitors. */
 export abstract class AstVisitor<T = any> {
   protected abstract visitModule(module: Module): T;
+  protected abstract visitFnProc(fnProc: FnProc): T;
 
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
@@ -312,6 +313,8 @@ export abstract class AstVisitor<T = any> {
   /** Invokes the visitor method corresponding to the specified AstNode. */
   protected accept(node: AstNode): T {
     switch (node.type) {
+      case ProcType.FN:
+        return this.visitFnProc(node);
       case StmtType.LABEL:
         return this.visitLabelStmt(node);
       case StmtType.ASSIGN:

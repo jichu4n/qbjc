@@ -9,6 +9,7 @@ import {
   ExitForStmt,
   ExitLoopStmt,
   Expr,
+  FnProc,
   ForStmt,
   GosubStmt,
   GotoStmt,
@@ -69,6 +70,11 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitModule(module: Module): void {
     this.acceptAll(module.stmts);
+    this.acceptAll(module.procs);
+  }
+
+  visitFnProc(node: FnProc): void {
+    this.acceptAll(node.stmts);
   }
 
   visitLabelStmt(node: LabelStmt): void {}
