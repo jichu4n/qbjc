@@ -4,7 +4,7 @@ import ErrorWithLoc from '../lib/error-with-loc';
 /** An AST node. */
 export type AstNode = Stmt | Expr;
 
-/** Common properties of all AST nodes. */
+/** Common properties of AST nodes. */
 export interface AstNodeBase {
   loc: AstNodeLocation;
 }
@@ -18,12 +18,52 @@ export interface AstNodeLocation {
 // ----
 // Program structure
 // ----
-
-export type Stmts = Array<Stmt>;
-
 export interface Module {
   stmts: Stmts;
+  procs: Array<Proc>;
 }
+
+/** A procedure definition (a SUB or a FUNCTION). */
+export type Proc = SubProc | FnProc;
+
+export enum ProcType {
+  SUB = 'sub',
+  FN = 'fn',
+}
+
+/** Common properties of procedure definitions. */
+interface ProcBase extends AstNodeBase {
+  name: string;
+  params: Array<Param>;
+  stmts: Stmts;
+}
+
+/** A SUB procedure. */
+export interface SubProc extends ProcBase {
+  type: ProcType.SUB;
+}
+
+/** A FUNCTION procedure. */
+export interface FnProc extends ProcBase {
+  type: ProcType.FN;
+  /** Return type of this function.
+   *
+   * Populated during semantic analysis.
+   */
+  returnTypeSpec?: DataTypeSpec;
+}
+
+/** A function parameter. */
+export interface Param {
+  name: string;
+  /** Type of this parameter.
+   *
+   * May be populated during parsing (if AS type is provided) or during semantic analysis.
+   */
+  typeSpec?: DataTypeSpec;
+}
+
+export type Stmts = Array<Stmt>;
 
 // ----
 // Statements

@@ -3,10 +3,15 @@
 // Bypasses TS6133. Allow declared but unused functions.
 // @ts-ignore
 function id(d: any[]): any { return d[0]; }
+declare var FUNCTION: any;
+declare var IDENTIFIER: any;
+declare var LPAREN: any;
+declare var RPAREN: any;
+declare var END: any;
+declare var COMMA: any;
 declare var COLON: any;
 declare var NEWLINE: any;
 declare var NUMERIC_LITERAL: any;
-declare var IDENTIFIER: any;
 declare var LET: any;
 declare var EQ: any;
 declare var GOTO: any;
@@ -14,7 +19,6 @@ declare var IF: any;
 declare var THEN: any;
 declare var ELSE: any;
 declare var ELSEIF: any;
-declare var END: any;
 declare var WHILE: any;
 declare var WEND: any;
 declare var DO: any;
@@ -28,7 +32,6 @@ declare var NEXT: any;
 declare var GOSUB: any;
 declare var RETURN: any;
 declare var PRINT: any;
-declare var COMMA: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
 declare var STRING_LITERAL: any;
@@ -47,14 +50,15 @@ declare var INTDIV: any;
 declare var MUL: any;
 declare var DIV: any;
 declare var EXP: any;
-declare var LPAREN: any;
-declare var RPAREN: any;
 
 import {Token} from 'moo';
 import lexer from './lexer';
 import {
   AstNode,
   Module,
+  ProcType,
+  FnProc,
+  Param,
   Expr,
   ExprType,
   BinaryOpExpr,
@@ -155,7 +159,47 @@ interface Grammar {
 const grammar: Grammar = {
   Lexer: lexer,
   ParserRules: [
-    {"name": "module", "symbols": ["stmts"], "postprocess": ([$1]): Module => ({ stmts: $1 })},
+    {"name": "module$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "module$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "module$ebnf$2", "symbols": ["moduleComponentWithSep"]},
+    {"name": "module$ebnf$2", "symbols": ["module$ebnf$2", "moduleComponentWithSep"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "module", "symbols": ["module$ebnf$1", "module$ebnf$2"], "postprocess": 
+        ([$1, $2]): Module => $2.reduce((a: Module, b: Module) => ({
+          stmts: [...a.stmts, ...b.stmts],
+          procs: [...a.procs, ...b.procs],
+        }))
+            },
+    {"name": "moduleComponentWithSep", "symbols": ["stmtWithSep"], "postprocess": 
+        ([$1]): Module => ({
+          stmts: [$1],
+          procs: [],
+        })
+              },
+    {"name": "moduleComponentWithSep", "symbols": ["proc", "stmtSep"], "postprocess": 
+        ([$1, $2]): Module => ({
+          stmts: [],
+          procs: [$1],
+        })
+            },
+    {"name": "proc", "symbols": ["fnProc"], "postprocess": id},
+    {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
+    {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "fnProc$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "fnProc", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "fnProc$ebnf$1", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6]): FnProc => ({
+          type: ProcType.FN,
+          name: $2.value,
+          params: $3 ? id($3)[1] : [],
+          stmts: $4,
+          ...useLoc($1),
+        })
+            },
+    {"name": "params", "symbols": [], "postprocess": (): Array<Param> => []},
+    {"name": "params$ebnf$1", "symbols": []},
+    {"name": "params$ebnf$1$subexpression$1", "symbols": ["param", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "params$ebnf$1", "symbols": ["params$ebnf$1", "params$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]},
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]): Param => ({ name: $1.value })},
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmts$ebnf$2", "symbols": []},
@@ -365,8 +409,10 @@ const grammar: Grammar = {
     {"name": "singleLineStmts", "symbols": ["singleLineStmts$ebnf$1", "nonLabelStmt", "singleLineStmts$ebnf$2"], "postprocess": 
         ([$1, $2, $3]): Stmts => [$2, ...$3.map(([$3_1, $3_2]: Array<any>) => $3_2)]
             },
-    {"name": "lhsExprs", "symbols": ["lhsExpr"], "postprocess": ([$1]) => [$1]},
-    {"name": "lhsExprs", "symbols": ["lhsExprs", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "lhsExpr"], "postprocess": ([$1, $2, $3]) => [...$1, $3]},
+    {"name": "lhsExprs$ebnf$1", "symbols": []},
+    {"name": "lhsExprs$ebnf$1$subexpression$1", "symbols": ["lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "lhsExprs$ebnf$1", "symbols": ["lhsExprs$ebnf$1", "lhsExprs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "lhsExprs", "symbols": ["lhsExprs$ebnf$1", "lhsExpr"], "postprocess": ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]},
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
     {"name": "labelRef", "symbols": ["labelRef$subexpression$1"], "postprocess": ([$1]) => id($1).value},

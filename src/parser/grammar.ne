@@ -6,6 +6,9 @@ import lexer from './lexer';
 import {
   AstNode,
   Module,
+  ProcType,
+  FnProc,
+  Param,
   Expr,
   ExprType,
   BinaryOpExpr,
@@ -83,7 +86,48 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
 # Program structure
 # ----
 
-module -> stmts  {% ([$1]): Module => ({ stmts: $1 }) %}
+module ->
+    stmtSep:? moduleComponentWithSep:+  {%
+        ([$1, $2]): Module => $2.reduce((a: Module, b: Module) => ({
+          stmts: [...a.stmts, ...b.stmts],
+          procs: [...a.procs, ...b.procs],
+        }))
+    %}
+
+moduleComponentWithSep ->
+      stmtWithSep  {%
+          ([$1]): Module => ({
+            stmts: [$1],
+            procs: [],
+          })
+      %}
+    | proc stmtSep  {%
+          ([$1, $2]): Module => ({
+            stmts: [],
+            procs: [$1],
+          })
+    %}
+
+proc ->
+    fnProc  {% id %}
+
+fnProc ->
+    %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? stmts %END %FUNCTION  {%
+        ([$1, $2, $3, $4, $5, $6]): FnProc => ({
+          type: ProcType.FN,
+          name: $2.value,
+          params: $3 ? id($3)[1] : [],
+          stmts: $4,
+          ...useLoc($1),
+        })
+    %}
+
+params ->
+      null  {% (): Array<Param> => [] %}
+    | (param %COMMA):* param  {% ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2] %}
+
+param ->
+    %IDENTIFIER  {% ([$1]): Param => ({ name: $1.value }) %}
 
 # ----
 # Statements
@@ -315,8 +359,7 @@ singleLineStmts ->
     %}
 
 lhsExprs ->
-      lhsExpr  {% ([$1]) => [$1] %}
-    | lhsExprs %COMMA lhsExpr  {% ([$1, $2, $3]) => [...$1, $3] %}
+      (lhsExpr %COMMA):* lhsExpr  {% ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2] %}
 
 labelRef ->
     (%IDENTIFIER | %NUMERIC_LITERAL)  {% ([$1]) => id($1).value %}
