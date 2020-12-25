@@ -15,6 +15,7 @@ import {
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
+  FnCallExpr,
   LhsExpr,
   Stmt,
   Stmts,
@@ -418,6 +419,7 @@ expr1 ->
 
 expr0 ->
       varRefExpr  {% id %}
+    | fnCallExpr  {% id %}
     | literalExpr  {% id %}
     | %LPAREN expr %RPAREN  {% ([$1, $2, $3]) => ({ ...$2, ...useLoc($1) }) %}
 
@@ -425,6 +427,15 @@ varRefExpr ->
     %IDENTIFIER  {%
         ([$1]): VarRefExpr =>
             ({ type: ExprType.VAR_REF, name: $1.value, ...useLoc($1) })
+    %}
+
+fnCallExpr ->
+    %IDENTIFIER %LPAREN %RPAREN  {%
+        ([$1, $2, $3]): FnCallExpr => ({
+          type: ExprType.FN_CALL,
+          name: $1.value,
+          ...useLoc($1),
+        })
     %}
 
 literalExpr ->

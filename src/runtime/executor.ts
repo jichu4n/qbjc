@@ -1,6 +1,7 @@
 import ErrorWithLoc from '../lib/error-with-loc';
 import {
   CompiledModule,
+  CompiledProcType,
   CompiledStmt,
   ExecutionContext,
   ExecutionDirective,
@@ -33,17 +34,39 @@ export default class Executor {
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {
     this.currentModule = module;
-    await this.executeStmts(module.stmts);
-  }
-
-  private async executeStmts(stmts: Array<CompiledStmt>) {
-    const labelIdxMap = this.buildLabelIdxMap(stmts);
-
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
+      executeProc: this.executeProc.bind(this),
       localVars: {},
       tempVars: {},
     };
+    await this.executeStmts(ctx, module.stmts);
+  }
+
+  private async executeProc(prevCtx: ExecutionContext, name: string) {
+    // TODO: Cache this.
+    const fn = (this.currentModule?.procs ?? []).find(
+      (proc) => proc.name === name && proc.type === CompiledProcType.FN
+    );
+    if (!fn) {
+      throw new Error(`Function not found: "${name}"`);
+    }
+    const ctx: ExecutionContext = {
+      ...prevCtx,
+      localVars: {},
+      tempVars: {},
+    };
+    await this.executeStmts(ctx, fn.stmts);
+    return ctx.localVars[name];
+  }
+
+  private async executeStmts(
+    ctx: ExecutionContext,
+    stmts: Array<CompiledStmt>
+  ) {
+    // TODO: Cache this.
+    const labelIdxMap = this.buildLabelIdxMap(stmts);
+
     /** Return address stack for GOSUB / RETURN. */
     const gosubStates: Array<GosubState> = [];
 

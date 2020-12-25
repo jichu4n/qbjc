@@ -207,7 +207,12 @@ export interface InputStmt extends AstNodeBase {
 // ----
 
 /** An expression. */
-export type Expr = LiteralExpr | VarRefExpr | BinaryOpExpr | UnaryOpExpr;
+export type Expr =
+  | LiteralExpr
+  | VarRefExpr
+  | FnCallExpr
+  | BinaryOpExpr
+  | UnaryOpExpr;
 
 /** An expression that can be assigned to. */
 export type LhsExpr = VarRefExpr;
@@ -215,6 +220,7 @@ export type LhsExpr = VarRefExpr;
 export enum ExprType {
   LITERAL = 'literal',
   VAR_REF = 'varRef',
+  FN_CALL = 'fnCall',
   BINARY_OP = 'binaryOp',
   UNARY_OP = 'unaryOp',
 }
@@ -236,6 +242,12 @@ export interface LiteralExpr extends ExprBase {
 export interface VarRefExpr extends ExprBase {
   type: ExprType.VAR_REF;
   name: string;
+}
+
+export interface FnCallExpr extends ExprBase {
+  type: ExprType.FN_CALL;
+  name: string;
+  // TODO: args
 }
 
 export enum BinaryOp {
@@ -307,6 +319,7 @@ export abstract class AstVisitor<T = any> {
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
+  protected abstract visitFnCallExpr(node: FnCallExpr): T;
   protected abstract visitBinaryOpExpr(node: BinaryOpExpr): T;
   protected abstract visitUnaryOpExpr(node: UnaryOpExpr): T;
 
@@ -349,6 +362,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:
         return this.visitVarRefExpr(node);
+      case ExprType.FN_CALL:
+        return this.visitFnCallExpr(node);
       case ExprType.BINARY_OP:
         return this.visitBinaryOpExpr(node);
       case ExprType.UNARY_OP:

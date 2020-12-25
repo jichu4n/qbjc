@@ -77,6 +77,7 @@ export interface EndDirective {
 /** Compiled statement execution context. */
 export interface ExecutionContext {
   runtime: Runtime;
+  executeProc: (prevCtx: ExecutionContext, name: string) => Promise<any>;
   localVars: {[key: string]: any};
   tempVars: {[key: string]: any};
 }

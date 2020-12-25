@@ -9,6 +9,7 @@ import {
   ExitForStmt,
   ExitLoopStmt,
   Expr,
+  FnCallExpr,
   FnProc,
   ForStmt,
   GosubStmt,
@@ -188,6 +189,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitVarRefExpr(node: VarRefExpr): void {
+    // TODO: Symbol table lookup.
+    const lastCharInName = node.name[node.name.length - 1];
+    // TODO: Support DEFINT etc.
+    node.typeSpec = TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+  }
+
+  visitFnCallExpr(node: FnCallExpr): void {
     // TODO: Symbol table lookup.
     const lastCharInName = node.name[node.name.length - 1];
     // TODO: Support DEFINT etc.

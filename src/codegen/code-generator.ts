@@ -11,6 +11,7 @@ import {
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
+  FnCallExpr,
   FnProc,
   ForStmt,
   GosubStmt,
@@ -539,6 +540,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitVarRefExpr(node: VarRefExpr): SourceNode {
     return this.createSourceNode(node, `ctx.localVars['${node.name}']`);
+  }
+
+  visitFnCallExpr(node: FnCallExpr): SourceNode {
+    return this.createSourceNode(
+      node,
+      `(await ctx.executeProc(ctx, '${node.name}'))`
+    );
   }
 
   visitBinaryOpExpr(node: BinaryOpExpr): SourceNode {
