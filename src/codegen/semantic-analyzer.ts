@@ -21,12 +21,14 @@ import {
   Module,
   NextStmt,
   PrintStmt,
+  Proc,
   ReturnStmt,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
 } from '../ast/ast';
+import {lookupSymbol, addSymbol, VarSymbol, VarType} from '../ast/symbol-table';
 import {
   areMatchingElementaryTypes,
   DataTypeSpec,
@@ -70,12 +72,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitModule(module: Module): void {
+    this.currentProc = null;
+    module.localSymbols = [];
+    module.globalSymbols = [];
+
     this.acceptAll(module.stmts);
     this.acceptAll(module.procs);
   }
 
   visitFnProc(node: FnProc): void {
+    this.currentProc = node;
+    this.currentProc.localSymbols = [];
     this.acceptAll(node.stmts);
+    this.currentProc = null;
   }
 
   visitLabelStmt(node: LabelStmt): void {}
@@ -189,10 +198,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitVarRefExpr(node: VarRefExpr): void {
-    // TODO: Symbol table lookup.
-    const lastCharInName = node.name[node.name.length - 1];
-    // TODO: Support DEFINT etc.
-    node.typeSpec = TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+    let symbol = this.lookupSymbol(node.name);
+    if (!symbol) {
+      const lastCharInName = node.name[node.name.length - 1];
+      // TODO: Support DEFINT etc.
+      const typeSpec = TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+      symbol = {
+        name: node.name,
+        type: VarType.VAR,
+        typeSpec,
+      };
+      this.addLocalSymbol(symbol);
+    }
+    node.typeSpec = symbol.typeSpec;
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
@@ -328,4 +346,24 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
     return resultTypeSpec;
   }
+
+  private getLocalSymbols() {
+    return this.currentProc
+      ? this.currentProc.localSymbols!
+      : this.module.localSymbols!;
+  }
+
+  private lookupSymbol(name: string) {
+    return (
+      lookupSymbol(this.getLocalSymbols(), name) ||
+      lookupSymbol(this.module.globalSymbols!, name)
+    );
+  }
+
+  private addLocalSymbol(...args: Array<VarSymbol>) {
+    return addSymbol(this.getLocalSymbols(), ...args);
+  }
+
+  /** The current proc being visited, or null if currently visiting module-level nodes. */
+  private currentProc: Proc | null = null;
 }

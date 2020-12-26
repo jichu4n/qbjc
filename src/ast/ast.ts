@@ -1,4 +1,5 @@
 import {DataTypeSpec} from '../lib/types';
+import {VarSymbolTable} from './symbol-table';
 import ErrorWithLoc from '../lib/error-with-loc';
 
 /** An AST node. */
@@ -19,8 +20,21 @@ export interface AstNodeLocation {
 // Program structure
 // ----
 export interface Module {
+  /** Module-level statements. */
   stmts: Stmts;
+  /** Procedure definitions (SUBs and FUNCTIONs). */
   procs: Array<Proc>;
+
+  /** Local variable symbol table.
+   *
+   * Populated during semantic analysis.
+   */
+  localSymbols?: VarSymbolTable;
+  /** Global (shared) variable symbol table.
+   *
+   * Populated during semantic analysis.
+   */
+  globalSymbols?: VarSymbolTable;
 }
 
 /** A procedure definition (a SUB or a FUNCTION). */
@@ -36,6 +50,12 @@ interface ProcBase extends AstNodeBase {
   name: string;
   params: Array<Param>;
   stmts: Stmts;
+
+  /** Local variable symbol table.
+   *
+   * Populated during semantic analysis.
+   */
+  localSymbols?: VarSymbolTable;
 }
 
 /** A SUB procedure. */

@@ -1,11 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
+import {Module} from './ast/ast';
 import codegen from './codegen/codegen';
 import parse from './parser/parser';
 
 export interface CompileResult {
   source: string;
   code: string;
+  astModule: Module;
   outputFilePath: string;
 }
 
@@ -25,13 +27,13 @@ async function compile({
 
   // 2. Parse source file to AST.
   const sourceFileName = path.basename(sourceFilePath);
-  const module = parse(source, {sourceFileName});
-  if (!module) {
+  const astModule = parse(source, {sourceFileName});
+  if (!astModule) {
     throw new Error(`Invalid parse tree`);
   }
 
   // 3. Code generation.
-  let {code, map: sourceMap} = codegen(module, {
+  let {code, map: sourceMap} = codegen(astModule, {
     sourceFileName,
     enableBundling,
   });
@@ -53,6 +55,7 @@ async function compile({
   const result: CompileResult = {
     source,
     code,
+    astModule,
     outputFilePath,
   };
 

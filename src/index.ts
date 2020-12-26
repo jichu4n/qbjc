@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from 'fs-extra';
 import {program} from 'commander';
 import requireFromString from 'require-from-string';
 import compile from './compile';
@@ -19,9 +20,10 @@ if (require.main === module) {
       .option('--source-map', 'enable source map generation')
       .option('--bundle', 'enable generation of standalone single file bundle')
       .option(
-        '--debug-trace',
-        `enable stack trace for debugging ${packageJson.name} compilation`
+        '--debug-ast',
+        'enable generation of AST file for debugging compilation'
       )
+      .option('--debug-trace', `enable stack trace for debugging compilation`)
       .parse(process.argv);
 
     if (program.args.length === 0) {
@@ -39,6 +41,12 @@ if (require.main === module) {
       enableSourceMap: program.sourceMap,
       enableBundling: program.bundle,
     });
+
+    if (program.debugAst) {
+      await fs.writeJson(`${sourceFilePath}.ast.json`, result.astModule, {
+        spaces: 4,
+      });
+    }
 
     if (program.run) {
       const compiledModule = requireFromString(result.code)
