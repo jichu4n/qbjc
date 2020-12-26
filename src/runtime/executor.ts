@@ -1,11 +1,13 @@
 import ErrorWithLoc from '../lib/error-with-loc';
 import {
+  ArgsContainer,
   CompiledModule,
   CompiledProcType,
   CompiledStmt,
   ExecutionContext,
   ExecutionDirective,
   ExecutionDirectiveType,
+  Ptr,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
 
@@ -37,13 +39,18 @@ export default class Executor {
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
       executeProc: this.executeProc.bind(this),
+      args: {},
       localVars: {},
       tempVars: {},
     };
     await this.executeStmts(ctx, module.stmts);
   }
 
-  private async executeProc(prevCtx: ExecutionContext, name: string) {
+  private async executeProc(
+    prevCtx: ExecutionContext,
+    name: string,
+    ...argPtrs: Array<Ptr>
+  ) {
     // TODO: Cache this.
     const fn = (this.currentModule?.procs ?? []).find(
       (proc) => proc.name === name && proc.type === CompiledProcType.FN
@@ -51,12 +58,29 @@ export default class Executor {
     if (!fn) {
       throw new Error(`Function not found: "${name}"`);
     }
+
+    if (argPtrs.length !== fn.params.length) {
+      throw new Error(
+        `Incorrect number of arguments to function ${fn.name}: ` +
+          `expected ${fn.params.length}, got ${argPtrs.length}`
+      );
+    }
+    const args: ArgsContainer = {};
+    for (let i = 0; i < argPtrs.length; ++i) {
+      args[fn.params[i].name] = argPtrs[i];
+    }
+
     const ctx: ExecutionContext = {
       ...prevCtx,
+      args,
       localVars: {},
       tempVars: {},
     };
     await this.executeStmts(ctx, fn.stmts);
+
+    if (!(name in ctx.localVars)) {
+      throw new Error(`Function ${fn.name} did not return a value`);
+    }
     return ctx.localVars[name];
   }
 

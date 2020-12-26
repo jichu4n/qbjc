@@ -1,6 +1,7 @@
 @preprocessor typescript
 
 @{%
+import _ from 'lodash';
 import {Token} from 'moo';
 import lexer from './lexer';
 import {
@@ -117,7 +118,7 @@ fnProc ->
         ([$1, $2, $3, $4, $5, $6]): FnProc => ({
           type: ProcType.FN,
           name: $2.value,
-          params: $3 ? id($3)[1] : [],
+          params: $3 ? $3[1] : [],
           stmts: $4,
           ...useLoc($1),
         })
@@ -125,7 +126,9 @@ fnProc ->
 
 params ->
       null  {% (): Array<Param> => [] %}
-    | (param %COMMA):* param  {% ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2] %}
+    | (param %COMMA):* param  {%
+        ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+    %}
 
 param ->
     %IDENTIFIER  {% ([$1]): Param => ({ name: $1.value }) %}
@@ -331,13 +334,22 @@ endStmt ->
     %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}
 
 printStmt ->
-    %PRINT printArg:*  {%
+    %PRINT printArgs  {%
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
     %}
 
-printArg ->
-      expr  {% ([$1]) => $1 %}
-    | %COMMA  {% () => PrintSep.COMMA %}
+printArgs ->
+      null  {% () => [] %}
+    | expr  {% ([$1]) => [$1] %}
+    | (expr:? printSep):+ expr:?  {% 
+        ([$1, $2]) => [
+          ..._.flatMap($1, ([$1_1, $1_2]) => [...($1_1 ? [$1_1]: []), $1_2]),
+          ...($2 ? [$2] : []),
+        ]
+    %}
+
+printSep ->
+      %COMMA  {% () => PrintSep.COMMA %}
     | %SEMICOLON  {% () => PrintSep.SEMICOLON %}
 
 inputStmt ->
@@ -360,7 +372,9 @@ singleLineStmts ->
     %}
 
 lhsExprs ->
-      (lhsExpr %COMMA):* lhsExpr  {% ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2] %}
+      (lhsExpr %COMMA):* lhsExpr  {%
+          ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+      %}
 
 labelRef ->
     (%IDENTIFIER | %NUMERIC_LITERAL)  {% ([$1]) => id($1).value %}
@@ -430,10 +444,11 @@ varRefExpr ->
     %}
 
 fnCallExpr ->
-    %IDENTIFIER %LPAREN %RPAREN  {%
-        ([$1, $2, $3]): FnCallExpr => ({
+    %IDENTIFIER %LPAREN exprs %RPAREN  {%
+        ([$1, $2, $3, $4]): FnCallExpr => ({
           type: ExprType.FN_CALL,
           name: $1.value,
+          argExprs: $3,
           ...useLoc($1),
         })
     %}
@@ -454,3 +469,9 @@ numericLiteralExpr ->
             ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
     %}
 
+exprs ->
+      null  {% (): Array<Expr> => [] %}
+    | (expr %COMMA):* expr  {%
+          ([$1, $2]): Array<Expr> =>
+              [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+      %}

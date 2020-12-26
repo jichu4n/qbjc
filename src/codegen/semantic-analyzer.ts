@@ -28,7 +28,13 @@ import {
   UncondLoopStmt,
   VarRefExpr,
 } from '../ast/ast';
-import {lookupSymbol, addSymbol, VarSymbol, VarType} from '../ast/symbol-table';
+import {
+  lookupSymbol,
+  addSymbol,
+  VarSymbol,
+  VarType,
+  VarScope,
+} from '../ast/symbol-table';
 import {
   areMatchingElementaryTypes,
   DataTypeSpec,
@@ -81,8 +87,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitFnProc(node: FnProc): void {
+    node.localSymbols = [];
+    node.paramSymbols = node.params.map((param) => ({
+      name: param.name,
+      type: VarType.ARG,
+      typeSpec: this.getTypeSpecFromSuffix(param.name),
+    }));
+    node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
     this.currentProc = node;
-    this.currentProc.localSymbols = [];
     this.acceptAll(node.stmts);
     this.currentProc = null;
   }
@@ -198,22 +210,26 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitVarRefExpr(node: VarRefExpr): void {
-    let symbol = this.lookupSymbol(node.name);
-    if (!symbol) {
-      const lastCharInName = node.name[node.name.length - 1];
-      // TODO: Support DEFINT etc.
-      const typeSpec = TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
-      symbol = {
-        name: node.name,
-        type: VarType.VAR,
-        typeSpec,
+    let resolvedSymbol = this.lookupSymbol(node.name);
+    if (!resolvedSymbol) {
+      resolvedSymbol = {
+        symbol: {
+          name: node.name,
+          type: VarType.VAR,
+          typeSpec: this.getTypeSpecFromSuffix(node.name),
+        },
+        scope: VarScope.LOCAL,
       };
-      this.addLocalSymbol(symbol);
+      this.addLocalSymbol(resolvedSymbol.symbol);
     }
-    node.typeSpec = symbol.typeSpec;
+    node.typeSpec = resolvedSymbol.symbol.typeSpec;
+    node.varType = resolvedSymbol.symbol.type;
+    node.varScope = resolvedSymbol.scope;
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
+    this.acceptAll(node.argExprs);
+
     // TODO: Symbol table lookup.
     const lastCharInName = node.name[node.name.length - 1];
     // TODO: Support DEFINT etc.
@@ -354,14 +370,32 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private lookupSymbol(name: string) {
-    return (
-      lookupSymbol(this.getLocalSymbols(), name) ||
-      lookupSymbol(this.module.globalSymbols!, name)
-    );
+    let symbol: VarSymbol | null = null;
+    if (this.currentProc) {
+      symbol = lookupSymbol(this.currentProc.paramSymbols!, name);
+      if (symbol) {
+        return {symbol, scope: VarScope.LOCAL};
+      }
+    }
+    symbol = lookupSymbol(this.getLocalSymbols(), name);
+    if (symbol) {
+      return {symbol, scope: VarScope.LOCAL};
+    }
+    symbol = lookupSymbol(this.module.globalSymbols!, name);
+    if (symbol) {
+      return {symbol, scope: VarScope.GLOBAL};
+    }
+    return null;
   }
 
   private addLocalSymbol(...args: Array<VarSymbol>) {
     return addSymbol(this.getLocalSymbols(), ...args);
+  }
+
+  private getTypeSpecFromSuffix(name: string) {
+    const lastCharInName = name[name.length - 1];
+    // TODO: Support DEFINT etc.
+    return TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
   }
 
   /** The current proc being visited, or null if currently visiting module-level nodes. */

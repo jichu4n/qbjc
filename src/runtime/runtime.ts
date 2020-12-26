@@ -41,7 +41,7 @@ export default class Runtime {
             // Fall through
           }
         default:
-          throw new Error(`Unknown print arg type: '${JSON.stringify(arg)}'`);
+          throw new Error(`Unknown print arg: '${JSON.stringify(arg)}'`);
       }
     }
     if (

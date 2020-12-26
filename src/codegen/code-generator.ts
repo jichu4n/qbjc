@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import {SourceNode} from 'source-map';
+import {VarScope, VarType} from '../ast/symbol-table';
 import {
   AssignStmt,
   AstNode,
@@ -11,6 +12,8 @@ import {
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
+  Expr,
+  ExprType,
   FnCallExpr,
   FnProc,
   ForStmt,
@@ -145,6 +148,14 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         this.generateLoc(node),
         `type: '${CompiledProcType.FN}',`,
         `name: '${node.name}',`,
+        'params: [',
+        +1,
+        ...node.paramSymbols!.map(
+          ({name, typeSpec}) =>
+            `{ name: '${name}', typeSpec: ${JSON.stringify(typeSpec)} },`
+        ),
+        -1,
+        '],',
         'stmts: [',
         '',
         +1
@@ -539,13 +550,64 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitVarRefExpr(node: VarRefExpr): SourceNode {
-    return this.createSourceNode(node, `ctx.localVars['${node.name}']`);
+    let chunk = '';
+    if (node.varType === VarType.ARG) {
+      chunk = `ctx.args['${node.name}'][0][ctx.args['${node.name}'][1]]`;
+    } else if (node.varScope === VarScope.LOCAL) {
+      chunk = `ctx.localVars['${node.name}']`;
+    } else {
+      this.throwError(
+        `Unknown variable type or scope: ${JSON.stringify(node)}`,
+        node
+      );
+    }
+    return this.createSourceNode(node, chunk);
   }
 
   visitFnCallExpr(node: FnCallExpr): SourceNode {
+    const argPtrs: SourceChunks = [];
+    const tempVars: Array<{name: string; expr: Expr}> = [];
+    let tempVarPrefix: string | null = null;
+    let tempVarIdx = 0;
+
+    for (const argExpr of node.argExprs) {
+      if (argExpr.type === ExprType.VAR_REF) {
+        let text = '';
+        if (argExpr.varType === VarType.ARG) {
+          text = `ctx.args['${argExpr.name}']`;
+        } else {
+          // TODO: Global
+          text = `[ctx.localVars, '${argExpr.name}']`;
+        }
+        argPtrs.push(this.createSourceNode(argExpr, text));
+      } else {
+        if (!tempVarPrefix) {
+          tempVarPrefix = this.generateLabel();
+        }
+        const tempVarName = `${tempVarPrefix}_${tempVarIdx++}`;
+        tempVars.push({name: tempVarName, expr: argExpr});
+        argPtrs.push(`[ctx.tempVars, '${tempVarName}']`);
+      }
+    }
+
     return this.createSourceNode(
       node,
-      `(await ctx.executeProc(ctx, '${node.name}'))`
+      '(await (async () => {\n',
+      this.lines(+1),
+      ...tempVars.map(({name, expr}) => [
+        this.lines(`${this.generateTempVarRef(name)} = `),
+        this.accept(expr),
+        ';\n',
+      ]),
+      this.lines(
+        `const result = await ctx.executeProc(ctx, '${
+          node.name
+        }', ${argPtrs.join(', ')});`,
+        ...tempVars.map(({name}) => `delete ${this.generateTempVarRef(name)};`),
+        'return result;',
+        -1,
+        '})())'
+      )
     );
   }
 

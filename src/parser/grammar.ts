@@ -51,6 +51,7 @@ declare var MUL: any;
 declare var DIV: any;
 declare var EXP: any;
 
+import _ from 'lodash';
 import {Token} from 'moo';
 import lexer from './lexer';
 import {
@@ -190,7 +191,7 @@ const grammar: Grammar = {
         ([$1, $2, $3, $4, $5, $6]): FnProc => ({
           type: ProcType.FN,
           name: $2.value,
-          params: $3 ? id($3)[1] : [],
+          params: $3 ? $3[1] : [],
           stmts: $4,
           ...useLoc($1),
         })
@@ -199,7 +200,9 @@ const grammar: Grammar = {
     {"name": "params$ebnf$1", "symbols": []},
     {"name": "params$ebnf$1$subexpression$1", "symbols": ["param", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
     {"name": "params$ebnf$1", "symbols": ["params$ebnf$1", "params$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]},
+    {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": 
+        ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+            },
     {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]): Param => ({ name: $1.value })},
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
@@ -379,14 +382,29 @@ const grammar: Grammar = {
             ({ type: StmtType.RETURN, destLabel: $2, ...useLoc($1) })
             },
     {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
-    {"name": "printStmt$ebnf$1", "symbols": []},
-    {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1", "printArg"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1"], "postprocess": 
+    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },
-    {"name": "printArg", "symbols": ["expr"], "postprocess": ([$1]) => $1},
-    {"name": "printArg", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": () => PrintSep.COMMA},
-    {"name": "printArg", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": () => PrintSep.SEMICOLON},
+    {"name": "printArgs", "symbols": [], "postprocess": () => []},
+    {"name": "printArgs", "symbols": ["expr"], "postprocess": ([$1]) => [$1]},
+    {"name": "printArgs$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
+    {"name": "printArgs$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["printArgs$ebnf$1$subexpression$1$ebnf$1", "printSep"]},
+    {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1$subexpression$1"]},
+    {"name": "printArgs$ebnf$1$subexpression$2$ebnf$1", "symbols": ["expr"], "postprocess": id},
+    {"name": "printArgs$ebnf$1$subexpression$2$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "printArgs$ebnf$1$subexpression$2", "symbols": ["printArgs$ebnf$1$subexpression$2$ebnf$1", "printSep"]},
+    {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$1$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "printArgs$ebnf$2", "symbols": ["expr"], "postprocess": id},
+    {"name": "printArgs$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "printArgs", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$2"], "postprocess":  
+        ([$1, $2]) => [
+          ..._.flatMap($1, ([$1_1, $1_2]) => [...($1_1 ? [$1_1]: []), $1_2]),
+          ...($2 ? [$2] : []),
+        ]
+            },
+    {"name": "printSep", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": () => PrintSep.COMMA},
+    {"name": "printSep", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": () => PrintSep.SEMICOLON},
     {"name": "inputStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("STRING_LITERAL") ? {type: "STRING_LITERAL"} : STRING_LITERAL), "inputStmtPromptSep"]},
     {"name": "inputStmt$ebnf$1", "symbols": ["inputStmt$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "inputStmt$ebnf$1", "symbols": [], "postprocess": () => null},
@@ -413,7 +431,9 @@ const grammar: Grammar = {
     {"name": "lhsExprs$ebnf$1", "symbols": []},
     {"name": "lhsExprs$ebnf$1$subexpression$1", "symbols": ["lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
     {"name": "lhsExprs$ebnf$1", "symbols": ["lhsExprs$ebnf$1", "lhsExprs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "lhsExprs", "symbols": ["lhsExprs$ebnf$1", "lhsExpr"], "postprocess": ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]},
+    {"name": "lhsExprs", "symbols": ["lhsExprs$ebnf$1", "lhsExpr"], "postprocess": 
+        ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+              },
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
     {"name": "labelRef", "symbols": ["labelRef$subexpression$1"], "postprocess": ([$1]) => id($1).value},
@@ -464,10 +484,11 @@ const grammar: Grammar = {
         ([$1]): VarRefExpr =>
             ({ type: ExprType.VAR_REF, name: $1.value, ...useLoc($1) })
             },
-    {"name": "fnCallExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)], "postprocess": 
-        ([$1, $2, $3]): FnCallExpr => ({
+    {"name": "fnCallExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "exprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)], "postprocess": 
+        ([$1, $2, $3, $4]): FnCallExpr => ({
           type: ExprType.FN_CALL,
           name: $1.value,
+          argExprs: $3,
           ...useLoc($1),
         })
             },
@@ -480,7 +501,15 @@ const grammar: Grammar = {
     {"name": "numericLiteralExpr", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LiteralExpr =>
             ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
-            }
+            },
+    {"name": "exprs", "symbols": [], "postprocess": (): Array<Expr> => []},
+    {"name": "exprs$ebnf$1", "symbols": []},
+    {"name": "exprs$ebnf$1$subexpression$1", "symbols": ["expr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "exprs$ebnf$1", "symbols": ["exprs$ebnf$1", "exprs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "exprs", "symbols": ["exprs$ebnf$1", "expr"], "postprocess": 
+        ([$1, $2]): Array<Expr> =>
+            [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+              }
   ],
   ParserStart: "module",
 };

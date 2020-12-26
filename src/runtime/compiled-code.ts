@@ -1,3 +1,4 @@
+import {DataTypeSpec} from '../lib/types';
 import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
@@ -16,12 +17,18 @@ interface CompiledComponentBase {
 export interface CompiledProc {
   type: CompiledProcType.FN;
   name: string;
+  params: Array<CompiledProcParam>;
   stmts: Array<CompiledStmt>;
 }
 
 export enum CompiledProcType {
   SUB = 'sub',
   FN = 'fn',
+}
+
+export interface CompiledProcParam {
+  name: string;
+  typeSpec: DataTypeSpec;
 }
 
 /** A compiled statement. */
@@ -74,12 +81,29 @@ export interface EndDirective {
   type: ExecutionDirectiveType.END;
 }
 
+/** A map holding variables at runtime, indexed by variable name. */
+export type VarContainer = {[name: string]: any};
+
+/** Pointer to a variable.
+ *
+ * The underlying variable can be referenced with ptr[0][ptr[1]].
+ */
+export type Ptr = [VarContainer, string];
+
+/** Arguments to a procedure. */
+export type ArgsContainer = {[name: string]: Ptr};
+
 /** Compiled statement execution context. */
 export interface ExecutionContext {
   runtime: Runtime;
-  executeProc: (prevCtx: ExecutionContext, name: string) => Promise<any>;
-  localVars: {[key: string]: any};
-  tempVars: {[key: string]: any};
+  executeProc: (
+    prevCtx: ExecutionContext,
+    name: string,
+    ...args: Array<Ptr>
+  ) => Promise<any>;
+  args: ArgsContainer;
+  localVars: VarContainer;
+  tempVars: VarContainer;
 }
 
 /** Type of an argument to print(). */

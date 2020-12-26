@@ -1,5 +1,5 @@
 import {DataTypeSpec} from '../lib/types';
-import {VarSymbolTable} from './symbol-table';
+import {VarSymbolTable, VarType, VarScope} from './symbol-table';
 import ErrorWithLoc from '../lib/error-with-loc';
 
 /** An AST node. */
@@ -56,6 +56,11 @@ interface ProcBase extends AstNodeBase {
    * Populated during semantic analysis.
    */
   localSymbols?: VarSymbolTable;
+  /** Arguments symbol table.
+   *
+   * Populated during semantic analysis.
+   */
+  paramSymbols?: VarSymbolTable;
 }
 
 /** A SUB procedure. */
@@ -262,12 +267,22 @@ export interface LiteralExpr extends ExprBase {
 export interface VarRefExpr extends ExprBase {
   type: ExprType.VAR_REF;
   name: string;
+  /** Resolved variable type.
+   *
+   * Populated during semantic analysis.
+   */
+  varType?: VarType;
+  /** Resolved variable scope.
+   *
+   * Populated during semantic analysis.
+   */
+  varScope?: VarScope;
 }
 
 export interface FnCallExpr extends ExprBase {
   type: ExprType.FN_CALL;
   name: string;
-  // TODO: args
+  argExprs: Array<Expr>;
 }
 
 export enum BinaryOp {

@@ -6,7 +6,7 @@ PRINT "Hello"; "world";
 PRINT
 PRINT ,,,
 PRINT ,,,"hi"
-PRINT 1 "+" 2;
+PRINT 1; "+"; 2;
 
 ' EXPECT {
 '   "io": [

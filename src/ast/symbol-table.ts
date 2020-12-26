@@ -10,6 +10,12 @@ export enum VarType {
   ARG = 'arg',
 }
 
+/** Scope of a variable symbol. */
+export enum VarScope {
+  LOCAL = 'local',
+  GLOBAL = 'global',
+}
+
 /** A variable in a symbol table. */
 export interface VarSymbol {
   name: string;

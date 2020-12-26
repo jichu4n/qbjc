@@ -41,10 +41,19 @@ export default function parse(
       loc: lexer.lastToken,
     });
   } else if (parser.results.length !== 1) {
-    throw new ErrorWithLoc(`${parser.results.length} parse trees`, {
-      sourceFileName: opts?.sourceFileName,
-      loc: lexer.lastToken,
-    });
+    throw new ErrorWithLoc(
+      `${parser.results.length} parse trees:\n\n` +
+        parser.results
+          .map(
+            (tree, idx) =>
+              `Parse tree #${idx + 1}:\n${JSON.stringify(tree, null, 4)}`
+          )
+          .join('\n\n'),
+      {
+        sourceFileName: opts?.sourceFileName,
+        loc: lexer.lastToken,
+      }
+    );
   }
   return parser.results[0];
 }
