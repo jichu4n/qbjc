@@ -663,6 +663,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     const OP_MAP = {
       [UnaryOp.NEG]: '-',
       [UnaryOp.NOT]: '!',
+      [UnaryOp.PARENS]: '',
     };
     return this.createSourceNode(
       node,

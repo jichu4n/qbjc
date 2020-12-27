@@ -13,6 +13,7 @@ import {
   Expr,
   ExprType,
   BinaryOpExpr,
+  UnaryOp,
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
@@ -435,7 +436,14 @@ expr0 ->
       varRefExpr  {% id %}
     | fnCallExpr  {% id %}
     | literalExpr  {% id %}
-    | %LPAREN expr %RPAREN  {% ([$1, $2, $3]) => ({ ...$2, ...useLoc($1) }) %}
+    | %LPAREN expr %RPAREN  {%
+        ([$1, $2, $3]): UnaryOpExpr => ({
+          type: ExprType.UNARY_OP,
+          op: UnaryOp.PARENS,
+          rightExpr: $2,
+          ...useLoc($1),
+        })
+    %}
 
 varRefExpr ->
     %IDENTIFIER  {%

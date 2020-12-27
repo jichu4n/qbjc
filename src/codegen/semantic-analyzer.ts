@@ -299,18 +299,17 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitUnaryOpExpr(node: UnaryOpExpr): void {
     this.accept(node.rightExpr);
     const rightTypeSpec = node.rightExpr.typeSpec!;
-    if (!isNumeric(rightTypeSpec)) {
-      this.throwError(
-        `Incompatible types for ${node.op} operator: ${rightTypeSpec.type}`,
-        node
-      );
-    }
     switch (node.op) {
       case UnaryOp.NEG:
+        this.requireNumericExpr(node.rightExpr);
         node.typeSpec = rightTypeSpec;
         break;
       case UnaryOp.NOT:
+        this.requireNumericExpr(node.rightExpr);
         node.typeSpec = integerSpec();
+        break;
+      case UnaryOp.PARENS:
+        node.typeSpec = rightTypeSpec;
         break;
       default:
         this.throwError(`Unknown operator ${node.op}`, node);

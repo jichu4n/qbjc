@@ -63,6 +63,7 @@ import {
   Expr,
   ExprType,
   BinaryOpExpr,
+  UnaryOp,
   UnaryOpExpr,
   LiteralExpr,
   VarRefExpr,
@@ -479,7 +480,14 @@ const grammar: Grammar = {
     {"name": "expr0", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "expr0", "symbols": ["fnCallExpr"], "postprocess": id},
     {"name": "expr0", "symbols": ["literalExpr"], "postprocess": id},
-    {"name": "expr0", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "expr", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)], "postprocess": ([$1, $2, $3]) => ({ ...$2, ...useLoc($1) })},
+    {"name": "expr0", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "expr", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)], "postprocess": 
+        ([$1, $2, $3]): UnaryOpExpr => ({
+          type: ExprType.UNARY_OP,
+          op: UnaryOp.PARENS,
+          rightExpr: $2,
+          ...useLoc($1),
+        })
+            },
     {"name": "varRefExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": 
         ([$1]): VarRefExpr =>
             ({ type: ExprType.VAR_REF, name: $1.value, ...useLoc($1) })

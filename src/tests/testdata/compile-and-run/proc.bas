@@ -25,13 +25,29 @@ FUNCTION f3 (a)
   f3 = a
 END FUNCTION
 
+' Pass by value with parentheses.
+FUNCTION f4(a)
+  a = 0
+  f4 = a
+END FUNCTION
+x = 42
+PRINT f4(x);
+PRINT x
+y = 42
+PRINT f4((y));
+PRINT y
+
 ' EXPECT {
 '   "io": [
 '     {"output": "answer = 42 \n"},
 '     {"output": " 142  142 \n"},
+'
 '     {"output": " 0 \n"},
 '     {"output": " 0 \n"},
 '     {"output": " 0 \n"},
-'     {"output": "result = 0 \n"}
+'     {"output": "result = 0 \n"},
+'
+'     {"output": " 0  0 \n"},
+'     {"output": " 0  42 \n"}
 '   ]
 ' }

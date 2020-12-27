@@ -313,6 +313,7 @@ export interface BinaryOpExpr extends ExprBase {
 export enum UnaryOp {
   NOT = 'not',
   NEG = 'sub',
+  PARENS = 'parens',
 }
 
 export interface UnaryOpExpr extends ExprBase {
