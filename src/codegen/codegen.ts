@@ -1,4 +1,4 @@
-import {Module} from '../ast/ast';
+import {Module} from '../lib/ast';
 import CodeGenerator, {CodeGeneratorOpts} from './code-generator';
 import SemanticAnalyzer from './semantic-analyzer';
 

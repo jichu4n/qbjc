@@ -32,7 +32,7 @@ import {
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
-} from '../ast/ast';
+} from '../lib/ast';
 import {
   CompiledProcType,
   ExecutionDirectiveType,

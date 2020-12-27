@@ -39,7 +39,7 @@ import {
   PrintStmt,
   PrintSep,
   InputStmt,
-} from '../ast/ast';
+} from '../lib/ast';
 
 // ----
 // Helper functions.

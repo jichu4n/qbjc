@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import {Module} from './ast/ast';
+import {Module} from './lib/ast';
 import codegen from './codegen/codegen';
 import parse from './parser/parser';
 

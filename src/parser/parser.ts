@@ -1,5 +1,5 @@
 import {Grammar, Parser, ParserOptions} from 'nearley';
-import {Module} from '../ast/ast';
+import {Module} from '../lib/ast';
 import grammar from './grammar';
 import lexer from './lexer';
 import ErrorWithLoc from '../lib/error-with-loc';

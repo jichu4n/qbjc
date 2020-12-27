@@ -29,7 +29,7 @@ import {
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
-} from '../ast/ast';
+} from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
   areMatchingElementaryTypes,

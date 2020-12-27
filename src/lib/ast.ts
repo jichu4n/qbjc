@@ -1,6 +1,6 @@
-import {DataTypeSpec} from '../lib/types';
-import {VarSymbolTable, VarType, VarScope} from '../lib/symbol-table';
-import ErrorWithLoc from '../lib/error-with-loc';
+import {DataTypeSpec} from './types';
+import {VarSymbolTable, VarType, VarScope} from './symbol-table';
+import ErrorWithLoc from './error-with-loc';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
