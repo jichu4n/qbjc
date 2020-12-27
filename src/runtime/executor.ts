@@ -10,6 +10,7 @@ import {
   Ptr,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
+import {lookupSymbol} from '../lib/symbol-table';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
@@ -51,17 +52,13 @@ export default class Executor {
     name: string,
     ...argPtrs: Array<Ptr>
   ) {
-    // TODO: Cache this.
-    const fn = (this.currentModule?.procs ?? []).find(
-      (proc) => proc.name === name && proc.type === CompiledProcType.FN
-    );
-    if (!fn) {
+    const fn = lookupSymbol(this.currentModule?.procs ?? [], name);
+    if (!fn || fn.type !== CompiledProcType.FN) {
       throw new Error(`Function not found: "${name}"`);
     }
-
     if (argPtrs.length !== fn.paramSymbols.length) {
       throw new Error(
-        `Incorrect number of arguments to function ${fn.name}: ` +
+        `Incorrect number of arguments to function "${fn.name}": ` +
           `expected ${fn.paramSymbols.length}, got ${argPtrs.length}`
       );
     }

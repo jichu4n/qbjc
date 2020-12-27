@@ -22,6 +22,7 @@ import {
   NextStmt,
   PrintStmt,
   Proc,
+  ProcType,
   ReturnStmt,
   UnaryOp,
   UnaryOpExpr,
@@ -72,6 +73,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitModule(module: Module): void {
+    module.procs.forEach(this.preprocessProc.bind(this));
+
     this.currentProc = null;
     module.localSymbols = [];
     module.globalSymbols = [];
@@ -80,14 +83,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.acceptAll(module.procs);
   }
 
-  visitFnProc(node: FnProc): void {
-    node.localSymbols = [];
+  private preprocessProc(node: Proc) {
     node.paramSymbols = node.params.map((param) => ({
       name: param.name,
       type: VarType.ARG,
       typeSpec: this.getTypeSpecFromSuffix(param.name),
     }));
-    node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+    if (node.type === ProcType.FN) {
+      node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+    }
+  }
+
+  visitFnProc(node: FnProc): void {
+    node.localSymbols = [];
     this.currentProc = node;
     this.acceptAll(node.stmts);
     this.currentProc = null;
@@ -222,12 +230,30 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
+    const proc = lookupSymbol(this.module.procs, node.name);
+    if (!proc || proc.type !== ProcType.FN) {
+      this.throwError(`Function not found: "${node.name}"`, node);
+    }
+    if (proc.paramSymbols!.length !== node.argExprs.length) {
+      this.throwError(
+        `Incorrect number of arguments to function "${node.name}": ` +
+          `expected ${proc.paramSymbols!.length}, got ${node.argExprs.length}`,
+        node
+      );
+    }
     this.acceptAll(node.argExprs);
-
-    // TODO: Symbol table lookup.
-    const lastCharInName = node.name[node.name.length - 1];
-    // TODO: Support DEFINT etc.
-    node.typeSpec = TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+    for (let i = 0; i < node.argExprs.length; ++i) {
+      const paramTypeSpec = proc.paramSymbols![i].typeSpec;
+      const argTypeSpec = node.argExprs[i].typeSpec!;
+      if (!areMatchingElementaryTypes(paramTypeSpec, argTypeSpec)) {
+        this.throwError(
+          `Incompatible argument ${i + 1} to function "${node.name}": ` +
+            `expected ${paramTypeSpec.type}, got ${argTypeSpec.type}`,
+          node
+        );
+      }
+    }
+    node.typeSpec = proc.returnTypeSpec!;
   }
 
   visitBinaryOpExpr(node: BinaryOpExpr): void {

@@ -26,6 +26,9 @@ export interface VarSymbol {
 /** Symbol table for variables. */
 export type VarSymbolTable = Array<VarSymbol>;
 
-export function lookupSymbol(varSymbolTable: VarSymbolTable, name: string) {
-  return varSymbolTable.find((symbol) => symbol.name === name) ?? null;
+export function lookupSymbol<T extends {name: string}>(
+  symbolTable: Array<T>,
+  name: string
+) {
+  return symbolTable.find((symbol) => symbol.name === name) ?? null;
 }
