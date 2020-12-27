@@ -1,4 +1,3 @@
-import {DataTypeSpec} from '../lib/types';
 import {VarSymbolTable} from '../lib/symbol-table';
 import Runtime from './runtime';
 

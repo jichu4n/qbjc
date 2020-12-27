@@ -7,7 +7,7 @@ export enum DataType {
   /** 32-bit floating point. */
   SINGLE = 'single',
   /** 64-bit floating point. */
-  DOUBLE = 'fp64',
+  DOUBLE = 'double',
   /** String. */
   STRING = 'string',
   /** Array. Multi-dimensional arrays are represented as arrays of arrays. */

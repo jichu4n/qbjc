@@ -533,7 +533,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   visitLiteralExpr(node: LiteralExpr): SourceNode {
     let valueString: string;
     if (typeof node.value === 'string') {
-      valueString = `'${node.value}'`; // TODO: Escape literals
+      valueString = JSON.stringify(node.value);
     } else if (typeof node.value === 'number') {
       valueString = `${node.value}`;
     } else {

@@ -8,15 +8,26 @@ import {
   ExecutionDirective,
   ExecutionDirectiveType,
   Ptr,
+  VarContainer,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
-import {lookupSymbol} from '../lib/symbol-table';
+import {lookupSymbol, VarSymbolTable} from '../lib/symbol-table';
+import {DataType} from '../lib/types';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
   /** Index of statement to return to. */
   nextStmtIdx: number;
 }
+
+/** Initial value for each data type. */
+const INIT_VALUE_MAP = {
+  [DataType.INTEGER]: 0,
+  [DataType.LONG]: 0,
+  [DataType.SINGLE]: 0.0,
+  [DataType.DOUBLE]: 0.0,
+  [DataType.STRING]: '',
+};
 
 export class ExecutionError extends ErrorWithLoc {
   constructor(
@@ -41,7 +52,7 @@ export default class Executor {
       runtime: new Runtime(this.platform),
       executeProc: this.executeProc.bind(this),
       args: {},
-      localVars: {},
+      localVars: this.initVars(module.localSymbols),
       tempVars: {},
     };
     await this.executeStmts(ctx, module.stmts);
@@ -70,7 +81,7 @@ export default class Executor {
     const ctx: ExecutionContext = {
       ...prevCtx,
       args,
-      localVars: {},
+      localVars: this.initVars(fn.localSymbols),
       tempVars: {},
     };
     await this.executeStmts(ctx, fn.stmts);
@@ -79,6 +90,20 @@ export default class Executor {
       throw new Error(`Function ${fn.name} did not return a value`);
     }
     return ctx.localVars[name];
+  }
+
+  private initVars(varSymbolTable: VarSymbolTable): VarContainer {
+    const container: VarContainer = {};
+    for (const symbol of varSymbolTable) {
+      const {type} = symbol.typeSpec;
+      if (type in INIT_VALUE_MAP) {
+        container[symbol.name] =
+          INIT_VALUE_MAP[type as keyof typeof INIT_VALUE_MAP];
+      } else {
+        throw new Error(`Symbol "${symbol.name}" has type: ${symbol.typeSpec}`);
+      }
+    }
+    return container;
   }
 
   private async executeStmts(
