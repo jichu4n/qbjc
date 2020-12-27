@@ -1,4 +1,5 @@
 ' Function without args.
+PRINT f1
 PRINT f1()
 FUNCTION f1
   PRINT "answer =";
@@ -39,6 +40,7 @@ PRINT y
 
 ' EXPECT {
 '   "io": [
+'     {"output": "answer = 42 \n"},
 '     {"output": "answer = 42 \n"},
 '     {"output": " 142  142 \n"},
 '

@@ -9,6 +9,7 @@ import {
   ExitForStmt,
   ExitLoopStmt,
   Expr,
+  ExprType,
   FnCallExpr,
   FnProc,
   ForStmt,
@@ -89,13 +90,18 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       type: VarType.ARG,
       typeSpec: this.getTypeSpecFromSuffix(param.name),
     }));
+    node.localSymbols = [];
     if (node.type === ProcType.FN) {
       node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+      node.localSymbols.push({
+        name: node.name,
+        type: VarType.VAR,
+        typeSpec: node.returnTypeSpec,
+      });
     }
   }
 
   visitFnProc(node: FnProc): void {
-    node.localSymbols = [];
     this.currentProc = node;
     this.acceptAll(node.stmts);
     this.currentProc = null;
@@ -214,6 +220,24 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitVarRefExpr(node: VarRefExpr): void {
     let resolvedSymbol = this.lookupSymbol(node.name);
     if (!resolvedSymbol) {
+      // VarRef may actually be a function invocation without args.
+      let proc = lookupSymbol(this.module.procs, node.name);
+      if (proc) {
+        if (proc.type === ProcType.FN) {
+          const fnCallExpr: FnCallExpr = {
+            type: ExprType.FN_CALL,
+            name: node.name,
+            argExprs: [],
+            loc: node.loc,
+          };
+          this.accept(fnCallExpr);
+          Object.assign(node, fnCallExpr);
+          return;
+        } else {
+          this.throwError(`Procedure "${proc.name}" is not a function`, node);
+        }
+      }
+
       resolvedSymbol = {
         symbol: {
           name: node.name,

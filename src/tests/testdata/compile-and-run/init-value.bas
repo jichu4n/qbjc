@@ -1,7 +1,7 @@
 PRINT a; "'"; b$; "'"
-PRINT f()
+PRINT f
 
-FUNCTION f()
+FUNCTION f
   f = x
 END FUNCTION
 
