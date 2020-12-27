@@ -9,6 +9,7 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   CondLoopStructure,
+  DimStmt,
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
@@ -182,6 +183,10 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     );
   }
 
+  visitDimStmt(node: DimStmt): SourceNode {
+    return new SourceNode();
+  }
+
   visitAssignStmt(node: AssignStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
       this.accept(node.targetExpr),
@@ -210,9 +215,9 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         label: `${branchLabelPrefix}_elif${i}`,
       });
     }
-    if (node.elseBranch.length > 0) {
+    if (node.elseBranchStmts.length > 0) {
       branchLabels.push({
-        node: node.elseBranch[0],
+        node: node.elseBranchStmts[0],
         label: `${branchLabelPrefix}_else`,
       });
     }
@@ -249,9 +254,9 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     }
 
     // Generate code for "else" branch.
-    if (node.elseBranch.length > 0) {
+    if (node.elseBranchStmts.length > 0) {
       ++this.indent;
-      chunks.push(this.visitStmts(node.elseBranch));
+      chunks.push(this.visitStmts(node.elseBranchStmts));
       --this.indent;
       chunks.push(this.generateLabelStmt(null, endIfLabel));
     }
@@ -551,6 +556,8 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       chunk = `ctx.args['${node.name}'][0][ctx.args['${node.name}'][1]]`;
     } else if (node.varScope === VarScope.LOCAL) {
       chunk = `ctx.localVars['${node.name}']`;
+    } else if (node.varScope === VarScope.GLOBAL) {
+      chunk = `ctx.globalVars['${node.name}']`;
     } else {
       this.throwError(
         `Unknown variable type or scope: ${JSON.stringify(node)}`,

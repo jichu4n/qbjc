@@ -12,6 +12,8 @@ declare var COMMA: any;
 declare var COLON: any;
 declare var NEWLINE: any;
 declare var NUMERIC_LITERAL: any;
+declare var DIM: any;
+declare var SHARED: any;
 declare var LET: any;
 declare var EQ: any;
 declare var GOTO: any;
@@ -35,6 +37,12 @@ declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
 declare var STRING_LITERAL: any;
+declare var INTEGER: any;
+declare var LONG: any;
+declare var SINGLE: any;
+declare var DOUBLE: any;
+declare var STRING: any;
+declare var AS: any;
 declare var OR: any;
 declare var AND: any;
 declare var NOT: any;
@@ -73,6 +81,8 @@ import {
   Stmts,
   StmtType,
   LabelStmt,
+  DimStmt,
+  VarDecl,
   GotoStmt,
   AssignStmt,
   IfStmt,
@@ -90,6 +100,13 @@ import {
   PrintSep,
   InputStmt,
 } from '../lib/ast';
+import {
+  integerSpec,
+  longSpec,
+  singleSpec,
+  doubleSpec,
+  stringSpec,
+} from '../lib/types';
 
 // ----
 // Helper functions.
@@ -221,6 +238,7 @@ const grammar: Grammar = {
     {"name": "stmtWithSep$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmtWithSep", "symbols": ["labelStmt", "stmtWithSep$ebnf$1"], "postprocess": id},
     {"name": "stmtWithSep", "symbols": ["nonLabelStmt", "stmtSep"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["dimStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
@@ -247,6 +265,34 @@ const grammar: Grammar = {
         ([$1, $2]): LabelStmt =>
             ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
             },
+    {"name": "dimStmt$ebnf$1", "symbols": [(lexer.has("SHARED") ? {type: "SHARED"} : SHARED)], "postprocess": id},
+    {"name": "dimStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "dimStmt", "symbols": [(lexer.has("DIM") ? {type: "DIM"} : DIM), "dimStmt$ebnf$1", "varDecls"], "postprocess": 
+        ([$1, $2, $3]): DimStmt => ({
+          type: StmtType.DIM,
+          isShared: !!$2,
+          varDecls: $3,
+          ...useLoc($1),
+        })
+            },
+    {"name": "varDecls$ebnf$1", "symbols": []},
+    {"name": "varDecls$ebnf$1$subexpression$1", "symbols": ["varDecl", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "varDecls$ebnf$1", "symbols": ["varDecls$ebnf$1", "varDecls$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "varDecls", "symbols": ["varDecls$ebnf$1", "varDecl"], "postprocess": 
+        ([$1, $2]): Array<VarDecl> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+            },
+    {"name": "varDecl$ebnf$1", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "varDecl$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "varDecl$ebnf$1"], "postprocess": 
+        ([$1, $2]): VarDecl => ({
+          name: $1.value,
+          typeSpec: $2,
+          ...useLoc($1),
+        })
+            },
     {"name": "assignStmt$ebnf$1", "symbols": [(lexer.has("LET") ? {type: "LET"} : LET)], "postprocess": id},
     {"name": "assignStmt$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "assignStmt", "symbols": ["assignStmt$ebnf$1", "lhsExpr", (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"], "postprocess": 
@@ -272,7 +318,7 @@ const grammar: Grammar = {
             ({
               type: StmtType.IF,
               ifBranches: [ { condExpr: $2, stmts: $4 } ],
-              elseBranch: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              elseBranchStmts: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
               ...useLoc($1),
             })
             },
@@ -290,7 +336,7 @@ const grammar: Grammar = {
                 { condExpr: $2, stmts: $5 },
                 ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
               ],
-              elseBranch: $7 ? $7[1] : [],
+              elseBranchStmts: $7 ? $7[1] : [],
               ...useLoc($1),
             })
             },
@@ -438,6 +484,12 @@ const grammar: Grammar = {
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
     {"name": "labelRef", "symbols": ["labelRef$subexpression$1"], "postprocess": ([$1]) => id($1).value},
+    {"name": "typeName", "symbols": [(lexer.has("INTEGER") ? {type: "INTEGER"} : INTEGER)], "postprocess": () => integerSpec()},
+    {"name": "typeName", "symbols": [(lexer.has("LONG") ? {type: "LONG"} : LONG)], "postprocess": () => longSpec()},
+    {"name": "typeName", "symbols": [(lexer.has("SINGLE") ? {type: "SINGLE"} : SINGLE)], "postprocess": () => singleSpec()},
+    {"name": "typeName", "symbols": [(lexer.has("DOUBLE") ? {type: "DOUBLE"} : DOUBLE)], "postprocess": () => doubleSpec()},
+    {"name": "typeName", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING)], "postprocess": () => stringSpec()},
+    {"name": "asTypeName", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "typeName"], "postprocess": ([$1, $2]) => $2},
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "expr10", "symbols": ["expr9"], "postprocess": id},

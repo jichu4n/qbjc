@@ -53,6 +53,7 @@ export default class Executor {
       executeProc: this.executeProc.bind(this),
       args: {},
       localVars: this.initVars(module.localSymbols),
+      globalVars: this.initVars(module.globalSymbols),
       tempVars: {},
     };
     await this.executeStmts(ctx, module.stmts);

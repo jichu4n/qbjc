@@ -5,6 +5,7 @@ import {
   BinaryOp,
   BinaryOpExpr,
   CondLoopStmt,
+  DimStmt,
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
@@ -109,6 +110,37 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitLabelStmt(node: LabelStmt): void {}
 
+  visitDimStmt(node: DimStmt): void {
+    for (const varDecl of node.varDecls) {
+      const resolvedSymbol = this.lookupSymbol(varDecl.name);
+      if (resolvedSymbol) {
+        if (resolvedSymbol.scope === VarScope.LOCAL) {
+          this.throwError(
+            `Variable already defined in local scope: "${varDecl.name}"`,
+            node
+          );
+        } else if (resolvedSymbol.scope === VarScope.GLOBAL && node.isShared) {
+          this.throwError(
+            `Variable already defined in global scope: "${varDecl.name}"`,
+            node
+          );
+        }
+      }
+      const typeSpec =
+        varDecl.typeSpec ?? this.getTypeSpecFromSuffix(varDecl.name);
+      const symbol: VarSymbol = {
+        name: varDecl.name,
+        type: VarType.VAR,
+        typeSpec,
+      };
+      if (node.isShared) {
+        this.module.globalSymbols!.push(symbol);
+      } else {
+        this.addLocalSymbol(symbol);
+      }
+    }
+  }
+
   visitAssignStmt(node: AssignStmt): void {
     this.accept(node.targetExpr);
     this.accept(node.valueExpr);
@@ -116,7 +148,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const valueTypeSpec = node.valueExpr.typeSpec!;
     if (!areMatchingElementaryTypes(targetTypeSpec, valueTypeSpec)) {
       this.throwError(
-        `Incompatible types in assignment: ${targetTypeSpec.type} and ${valueTypeSpec.type}`,
+        `Cannot assign ${valueTypeSpec.type} value to ${targetTypeSpec.type} variable`,
         node
       );
     }
@@ -155,7 +187,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.requireNumericExpr(condExpr);
       this.acceptAll(stmts);
     }
-    this.acceptAll(node.elseBranch);
+    this.acceptAll(node.elseBranchStmts);
   }
 
   visitCondLoopStmt(node: CondLoopStmt): void {

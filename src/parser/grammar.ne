@@ -23,6 +23,8 @@ import {
   Stmts,
   StmtType,
   LabelStmt,
+  DimStmt,
+  VarDecl,
   GotoStmt,
   AssignStmt,
   IfStmt,
@@ -40,6 +42,13 @@ import {
   PrintSep,
   InputStmt,
 } from '../lib/ast';
+import {
+  integerSpec,
+  longSpec,
+  singleSpec,
+  doubleSpec,
+  stringSpec,
+} from '../lib/types';
 
 // ----
 // Helper functions.
@@ -148,7 +157,8 @@ stmtWithSep ->
     | nonLabelStmt stmtSep  {% id %}
 
 nonLabelStmt ->
-      assignStmt  {% id %}
+      dimStmt  {% id %}
+    | assignStmt  {% id %}
     | gotoStmt  {% id %}
     | ifStmt  {% id %}
     | whileStmt  {% id %}
@@ -175,6 +185,33 @@ labelStmt ->
     | %IDENTIFIER %COLON  {%
         ([$1, $2]): LabelStmt =>
             ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+    %}
+
+dimStmt ->
+    %DIM %SHARED:? varDecls  {%
+        ([$1, $2, $3]): DimStmt => ({
+          type: StmtType.DIM,
+          isShared: !!$2,
+          varDecls: $3,
+          ...useLoc($1),
+        })
+    %}
+
+varDecls ->
+    (varDecl %COMMA):* varDecl  {%
+        ([$1, $2]): Array<VarDecl> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+    %}
+
+varDecl ->
+    %IDENTIFIER asTypeName:?  {%
+        ([$1, $2]): VarDecl => ({
+          name: $1.value,
+          typeSpec: $2,
+          ...useLoc($1),
+        })
     %}
 
 assignStmt ->
@@ -204,7 +241,7 @@ singleLineIfStmt ->
             ({
               type: StmtType.IF,
               ifBranches: [ { condExpr: $2, stmts: $4 } ],
-              elseBranch: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              elseBranchStmts: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
               ...useLoc($1),
             })
     %}
@@ -221,7 +258,7 @@ blockIfStmt ->
                 { condExpr: $2, stmts: $5 },
                 ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
               ],
-              elseBranch: $7 ? $7[1] : [],
+              elseBranchStmts: $7 ? $7[1] : [],
               ...useLoc($1),
             })
     %}
@@ -379,6 +416,16 @@ lhsExprs ->
 
 labelRef ->
     (%IDENTIFIER | %NUMERIC_LITERAL)  {% ([$1]) => id($1).value %}
+
+typeName ->
+      %INTEGER  {% () => integerSpec() %}
+    | %LONG  {% () => longSpec() %}
+    | %SINGLE  {% () => singleSpec() %}
+    | %DOUBLE  {% () => doubleSpec() %}
+    | %STRING  {% () => stringSpec() %}
+
+asTypeName ->
+    %AS typeName  {% ([$1, $2]) => $2 %}
 
 # ----
 # Expressions

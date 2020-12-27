@@ -97,6 +97,7 @@ export type Stmts = Array<Stmt>;
 /** A statement. */
 export type Stmt =
   | LabelStmt
+  | DimStmt
   | AssignStmt
   | GotoStmt
   | IfStmt
@@ -114,6 +115,7 @@ export type Stmt =
 
 export enum StmtType {
   LABEL = 'label',
+  DIM = 'dim',
   ASSIGN = 'assign',
   GOTO = 'goto',
   IF = 'if',
@@ -135,6 +137,18 @@ export interface LabelStmt extends AstNodeBase {
   label: string;
 }
 
+export interface DimStmt extends AstNodeBase {
+  type: StmtType.DIM;
+  isShared: boolean;
+  varDecls: Array<VarDecl>;
+}
+
+/** A variable declaration inside a DIM statement. */
+export interface VarDecl {
+  name: string;
+  typeSpec?: DataTypeSpec;
+}
+
 export interface AssignStmt extends AstNodeBase {
   type: StmtType.ASSIGN;
   targetExpr: LhsExpr;
@@ -154,7 +168,7 @@ export interface IfBranch {
 export interface IfStmt extends AstNodeBase {
   type: StmtType.IF;
   ifBranches: Array<IfBranch>;
-  elseBranch: Stmts;
+  elseBranchStmts: Stmts;
 }
 
 export enum CondLoopStructure {
@@ -338,6 +352,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitFnProc(fnProc: FnProc): T;
 
   protected abstract visitLabelStmt(node: LabelStmt): T;
+  protected abstract visitDimStmt(node: DimStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
@@ -366,6 +381,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitFnProc(node);
       case StmtType.LABEL:
         return this.visitLabelStmt(node);
+      case StmtType.DIM:
+        return this.visitDimStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
       case StmtType.GOTO:
