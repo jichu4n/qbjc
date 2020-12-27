@@ -205,12 +205,15 @@ const grammar: Grammar = {
     {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "fnProc$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "fnProc", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "fnProc$ebnf$1", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)], "postprocess": 
-        ([$1, $2, $3, $4, $5, $6]): FnProc => ({
+    {"name": "fnProc$ebnf$2", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "fnProc$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "fnProc", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "fnProc$ebnf$1", "fnProc$ebnf$2", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7]): FnProc => ({
           type: ProcType.FN,
           name: $2.value,
           params: $3 ? $3[1] : [],
-          stmts: $4,
+          stmts: $5,
+          returnTypeSpec: $4,
           ...useLoc($1),
         })
             },
@@ -221,7 +224,9 @@ const grammar: Grammar = {
     {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": 
         ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
             },
-    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]): Param => ({ name: $1.value })},
+    {"name": "param$ebnf$1", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "param$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 })},
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmts$ebnf$2", "symbols": []},

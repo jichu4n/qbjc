@@ -73,7 +73,7 @@ export interface FnProc extends ProcBase {
   type: ProcType.FN;
   /** Return type of this function.
    *
-   * Populated during semantic analysis.
+   * Populated during parsing (if AS <type> provided) or during semantic analysis.
    */
   returnTypeSpec?: DataTypeSpec;
 }
@@ -83,7 +83,7 @@ export interface Param {
   name: string;
   /** Type of this parameter.
    *
-   * May be populated during parsing (if AS type is provided) or during semantic analysis.
+   * May be populated during parsing (if AS <type> provided) or during semantic analysis.
    */
   typeSpec?: DataTypeSpec;
 }

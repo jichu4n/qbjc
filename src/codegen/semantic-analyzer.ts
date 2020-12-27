@@ -89,11 +89,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     node.paramSymbols = node.params.map((param) => ({
       name: param.name,
       type: VarType.ARG,
-      typeSpec: this.getTypeSpecFromSuffix(param.name),
+      typeSpec: param.typeSpec ?? this.getTypeSpecFromSuffix(param.name),
     }));
     node.localSymbols = [];
     if (node.type === ProcType.FN) {
-      node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+      if (!node.returnTypeSpec) {
+        node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+      }
       node.localSymbols.push({
         name: node.name,
         type: VarType.VAR,

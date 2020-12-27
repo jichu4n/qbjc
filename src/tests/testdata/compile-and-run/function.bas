@@ -38,6 +38,12 @@ y = 42
 PRINT f4((y));
 PRINT y
 
+' Explicit type declarations.
+FUNCTION f5(x AS STRING) AS STRING
+  f5 = x + x
+END FUNCTION
+PRINT f5("aaa")
+
 ' EXPECT {
 '   "io": [
 '     {"output": "answer = 42 \n"},
@@ -50,6 +56,8 @@ PRINT y
 '     {"output": "result = 0 \n"},
 '
 '     {"output": " 0  0 \n"},
-'     {"output": " 0  42 \n"}
+'     {"output": " 0  42 \n"},
+'
+'     {"output": "aaaaaa\n"}
 '   ]
 ' }

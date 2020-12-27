@@ -124,12 +124,13 @@ proc ->
     fnProc  {% id %}
 
 fnProc ->
-    %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? stmts %END %FUNCTION  {%
-        ([$1, $2, $3, $4, $5, $6]): FnProc => ({
+    %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? asTypeName:? stmts %END %FUNCTION  {%
+        ([$1, $2, $3, $4, $5, $6, $7]): FnProc => ({
           type: ProcType.FN,
           name: $2.value,
           params: $3 ? $3[1] : [],
-          stmts: $4,
+          stmts: $5,
+          returnTypeSpec: $4,
           ...useLoc($1),
         })
     %}
@@ -141,7 +142,7 @@ params ->
     %}
 
 param ->
-    %IDENTIFIER  {% ([$1]): Param => ({ name: $1.value }) %}
+    %IDENTIFIER asTypeName:?  {% ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 }) %}
 
 # ----
 # Statements
