@@ -9,6 +9,7 @@ import {
   BinaryOpExpr,
   CondLoopStmt,
   CondLoopStructure,
+  ConstStmt,
   DimStmt,
   EndStmt,
   ExitForStmt,
@@ -27,6 +28,7 @@ import {
   Module,
   NextStmt,
   PrintStmt,
+  Proc,
   ReturnStmt,
   Stmts,
   UnaryOp,
@@ -106,6 +108,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitModule(module: Module): SourceNode {
     this.indent = 0;
+    this.currentProc = null;
 
     const chunks: SourceChunks = [];
     chunks.push(
@@ -142,6 +145,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitFnProc(node: FnProc): SourceNode {
+    this.currentProc = node;
     const chunks: SourceChunks = [];
 
     chunks.push(
@@ -161,6 +165,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       this.lines(-1, '],', -1, '},', '')
     );
 
+    this.currentProc = null;
     return this.createSourceNode(node, ...chunks);
   }
 
@@ -193,6 +198,18 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       ' = ',
       this.accept(node.valueExpr),
       ';',
+    ]);
+  }
+
+  visitConstStmt(node: ConstStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => [
+      ..._.flatMap(node.constDefs, (constDef) => [
+        `ctx.${
+          constDef.varScope! === VarScope.GLOBAL ? 'globalVars' : 'localVars'
+        }['${constDef.name}'] = `,
+        this.accept(constDef.valueExpr),
+        '; ',
+      ]),
     ]);
   }
 
@@ -732,6 +749,9 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   private readonly opts: Required<CodeGeneratorOpts>;
+
+  /** The current proc being visited, or null if currently visiting module-level nodes. */
+  private currentProc: Proc | null = null;
 
   /** Stack of open for loops in current context. */
   private openForStmtStates: Array<ForStmtState> = [];

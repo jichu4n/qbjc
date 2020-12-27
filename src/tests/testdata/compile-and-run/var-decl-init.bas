@@ -1,9 +1,11 @@
+' Test initial values for undeclared variables.
 PRINT a; "'"; b$; "'"
 PRINT f1
 FUNCTION f1
   f1 = x
 END FUNCTION
 
+' Test declaring local and global variables via DIM
 DIM c AS STRING
 DIM SHARED d AS STRING
 PRINT "'"; c; "' '"; d; "'"
@@ -15,6 +17,15 @@ FUNCTION f2
 END FUNCTION
 PRINT "'"; c; "' '"; d; "'"
 
+' Test CONST.
+CONST e = "test", f = 500
+LET z = f3
+FUNCTION f3
+  CONST g = 42
+  PRINT e; f; g
+END FUNCTION
+PRINT e; f; g
+
 ' EXPECT {
 '   "io": [
 '     {"output": " 0 ''\n"},
@@ -22,6 +33,9 @@ PRINT "'"; c; "' '"; d; "'"
 '
 '     {"output": "'' ''\n"},
 '     {"output": "' 0 ' 'hello'\n"},
-'     {"output": "'foo' 'hello'\n"}
+'     {"output": "'foo' 'hello'\n"},
+'
+'     {"output": "test 500  42 \n"},
+'     {"output": "test 500  0 \n"}
 '   ]
 ' }

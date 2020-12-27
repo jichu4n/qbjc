@@ -99,6 +99,7 @@ export type Stmt =
   | LabelStmt
   | DimStmt
   | AssignStmt
+  | ConstStmt
   | GotoStmt
   | IfStmt
   | CondLoopStmt
@@ -117,6 +118,7 @@ export enum StmtType {
   LABEL = 'label',
   DIM = 'dim',
   ASSIGN = 'assign',
+  CONST = 'const',
   GOTO = 'goto',
   IF = 'if',
   COND_LOOP = 'condLoop',
@@ -153,6 +155,21 @@ export interface AssignStmt extends AstNodeBase {
   type: StmtType.ASSIGN;
   targetExpr: LhsExpr;
   valueExpr: Expr;
+}
+
+export interface ConstStmt extends AstNodeBase {
+  type: StmtType.CONST;
+  constDefs: Array<ConstDef>;
+}
+
+export interface ConstDef {
+  name: string;
+  valueExpr: Expr;
+  /** Resolved variable scope.
+   *
+   * Populated during semantic analysis.
+   */
+  varScope?: VarScope;
 }
 
 export interface GotoStmt extends AstNodeBase {
@@ -354,6 +371,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitDimStmt(node: DimStmt): T;
   protected abstract visitAssignStmt(node: AssignStmt): T;
+  protected abstract visitConstStmt(node: ConstStmt): T;
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
   protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
@@ -385,6 +403,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitDimStmt(node);
       case StmtType.ASSIGN:
         return this.visitAssignStmt(node);
+      case StmtType.CONST:
+        return this.visitConstStmt(node);
       case StmtType.GOTO:
         return this.visitGotoStmt(node);
       case StmtType.IF:

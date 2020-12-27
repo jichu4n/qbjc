@@ -7,6 +7,7 @@ import moo, {Lexer, Token} from 'moo';
 export enum Keywords {
   AND = 'and',
   AS = 'as',
+  CONST = 'const',
   DIM = 'dim',
   DO = 'do',
   DOUBLE = 'double',

@@ -5,6 +5,7 @@ import {
   BinaryOp,
   BinaryOpExpr,
   CondLoopStmt,
+  ConstStmt,
   DimStmt,
   EndStmt,
   ExitForStmt,
@@ -153,6 +154,41 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         `Cannot assign ${valueTypeSpec.type} value to ${targetTypeSpec.type} variable`,
         node
       );
+    }
+  }
+
+  visitConstStmt(node: ConstStmt): void {
+    for (const constDef of node.constDefs) {
+      this.accept(constDef.valueExpr);
+      const resolvedSymbol = this.lookupSymbol(constDef.name);
+      if (resolvedSymbol) {
+        if (resolvedSymbol.scope === VarScope.LOCAL) {
+          this.throwError(
+            `Constant already defined in local scope: "${constDef.name}"`,
+            node
+          );
+        } else if (
+          resolvedSymbol.scope === VarScope.GLOBAL &&
+          !this.currentProc
+        ) {
+          this.throwError(
+            `Constant already defined in global scope: "${constDef.name}"`,
+            node
+          );
+        }
+      }
+      const symbol: VarSymbol = {
+        name: constDef.name,
+        type: VarType.CONST,
+        typeSpec: constDef.valueExpr.typeSpec!,
+      };
+      if (this.currentProc) {
+        this.addLocalSymbol(symbol);
+        constDef.varScope = VarScope.LOCAL;
+      } else {
+        this.module.globalSymbols!.push(symbol);
+        constDef.varScope = VarScope.GLOBAL;
+      }
     }
   }
 

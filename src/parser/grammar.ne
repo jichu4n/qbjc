@@ -27,6 +27,8 @@ import {
   VarDecl,
   GotoStmt,
   AssignStmt,
+  ConstStmt,
+  ConstDef,
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
@@ -160,6 +162,7 @@ stmtWithSep ->
 nonLabelStmt ->
       dimStmt  {% id %}
     | assignStmt  {% id %}
+    | constStmt  {% id %}
     | gotoStmt  {% id %}
     | ifStmt  {% id %}
     | whileStmt  {% id %}
@@ -224,6 +227,24 @@ assignStmt ->
               valueExpr: $4,
               ...useLoc($1 || $2),
             })
+    %}
+
+constStmt ->
+    %CONST constDefs  {%
+        ([$1, $2]): ConstStmt => ({ type: StmtType.CONST, constDefs: $2, ...useLoc($1) })
+    %}
+
+constDefs ->
+    (constDef %COMMA):* constDef  {%
+        ([$1, $2]): Array<ConstDef> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+    %}
+
+constDef ->
+    %IDENTIFIER %EQ expr  {%
+        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3 })
     %}
 
 gotoStmt ->

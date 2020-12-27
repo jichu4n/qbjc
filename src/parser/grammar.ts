@@ -16,6 +16,7 @@ declare var DIM: any;
 declare var SHARED: any;
 declare var LET: any;
 declare var EQ: any;
+declare var CONST: any;
 declare var GOTO: any;
 declare var IF: any;
 declare var THEN: any;
@@ -85,6 +86,8 @@ import {
   VarDecl,
   GotoStmt,
   AssignStmt,
+  ConstStmt,
+  ConstDef,
   IfStmt,
   CondLoopStructure,
   CondLoopStmt,
@@ -245,6 +248,7 @@ const grammar: Grammar = {
     {"name": "stmtWithSep", "symbols": ["nonLabelStmt", "stmtSep"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["dimStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["constStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["whileStmt"], "postprocess": id},
@@ -308,6 +312,21 @@ const grammar: Grammar = {
               valueExpr: $4,
               ...useLoc($1 || $2),
             })
+            },
+    {"name": "constStmt", "symbols": [(lexer.has("CONST") ? {type: "CONST"} : CONST), "constDefs"], "postprocess": 
+        ([$1, $2]): ConstStmt => ({ type: StmtType.CONST, constDefs: $2, ...useLoc($1) })
+            },
+    {"name": "constDefs$ebnf$1", "symbols": []},
+    {"name": "constDefs$ebnf$1$subexpression$1", "symbols": ["constDef", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "constDefs$ebnf$1", "symbols": ["constDefs$ebnf$1", "constDefs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "constDefs", "symbols": ["constDefs$ebnf$1", "constDef"], "postprocess": 
+        ([$1, $2]): Array<ConstDef> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+            },
+    {"name": "constDef", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"], "postprocess": 
+        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3 })
             },
     {"name": "gotoStmt", "symbols": [(lexer.has("GOTO") ? {type: "GOTO"} : GOTO), "labelRef"], "postprocess": 
         ([$1, $2]): GotoStmt =>
