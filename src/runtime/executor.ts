@@ -64,33 +64,35 @@ export default class Executor {
     name: string,
     ...argPtrs: Array<Ptr>
   ) {
-    const fn = lookupSymbol(this.currentModule?.procs ?? [], name);
-    if (!fn || fn.type !== CompiledProcType.FN) {
-      throw new Error(`Function not found: "${name}"`);
+    const proc = lookupSymbol(this.currentModule?.procs ?? [], name);
+    if (!proc) {
+      throw new Error(`Procedure not found: "${name}"`);
     }
-    if (argPtrs.length !== fn.paramSymbols.length) {
+    if (argPtrs.length !== proc.paramSymbols.length) {
       throw new Error(
-        `Incorrect number of arguments to function "${fn.name}": ` +
-          `expected ${fn.paramSymbols.length}, got ${argPtrs.length}`
+        `Incorrect number of arguments to "${proc.name}": ` +
+          `expected ${proc.paramSymbols.length}, got ${argPtrs.length}`
       );
     }
     const args: ArgsContainer = {};
     for (let i = 0; i < argPtrs.length; ++i) {
-      args[fn.paramSymbols[i].name] = argPtrs[i];
+      args[proc.paramSymbols[i].name] = argPtrs[i];
     }
 
     const ctx: ExecutionContext = {
       ...prevCtx,
       args,
-      localVars: this.initVars(fn.localSymbols),
+      localVars: this.initVars(proc.localSymbols),
       tempVars: {},
     };
-    await this.executeStmts(ctx, fn.stmts);
+    await this.executeStmts(ctx, proc.stmts);
 
-    if (!(name in ctx.localVars)) {
-      throw new Error(`Function ${fn.name} did not return a value`);
+    if (proc.type === CompiledProcType.FN) {
+      if (!(name in ctx.localVars)) {
+        throw new Error(`Function ${proc.name} did not return a value`);
+      }
+      return ctx.localVars[name];
     }
-    return ctx.localVars[name];
   }
 
   private initVars(varSymbolTable: VarSymbolTable): VarContainer {

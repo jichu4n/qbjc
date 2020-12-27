@@ -4,6 +4,7 @@ import {
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
+  CallStmt,
   CondLoopStmt,
   ConstStmt,
   DimStmt,
@@ -27,6 +28,7 @@ import {
   Proc,
   ProcType,
   ReturnStmt,
+  SubProc,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -106,6 +108,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitFnProc(node: FnProc): void {
+    this.visitProc(node);
+  }
+
+  visitSubProc(node: SubProc): void {
+    this.visitProc(node);
+  }
+
+  private visitProc(node: Proc) {
     this.currentProc = node;
     this.acceptAll(node.stmts);
     this.currentProc = null;
@@ -258,6 +268,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitReturnStmt(node: ReturnStmt): void {}
 
+  visitCallStmt(node: CallStmt): void {
+    const proc = lookupSymbol(this.module.procs, node.name);
+    if (!proc || proc.type !== ProcType.SUB) {
+      this.throwError(`Sub not found: "${node.name}"`, node);
+    }
+    this.visitProcCall(proc, node);
+  }
+
   visitEndStmt(node: EndStmt): void {}
 
   visitPrintStmt(node: PrintStmt): void {
@@ -304,7 +322,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           Object.assign(node, fnCallExpr);
           return;
         } else {
-          this.throwError(`Procedure "${proc.name}" is not a function`, node);
+          this.throwError(`Function not found: "${proc.name}"`, node);
         }
       }
 
@@ -328,25 +346,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     if (!proc || proc.type !== ProcType.FN) {
       this.throwError(`Function not found: "${node.name}"`, node);
     }
-    if (proc.paramSymbols!.length !== node.argExprs.length) {
-      this.throwError(
-        `Incorrect number of arguments to function "${node.name}": ` +
-          `expected ${proc.paramSymbols!.length}, got ${node.argExprs.length}`,
-        node
-      );
-    }
-    this.acceptAll(node.argExprs);
-    for (let i = 0; i < node.argExprs.length; ++i) {
-      const paramTypeSpec = proc.paramSymbols![i].typeSpec;
-      const argTypeSpec = node.argExprs[i].typeSpec!;
-      if (!areMatchingElementaryTypes(paramTypeSpec, argTypeSpec)) {
-        this.throwError(
-          `Incompatible argument ${i + 1} to function "${node.name}": ` +
-            `expected ${paramTypeSpec.type}, got ${argTypeSpec.type}`,
-          node
-        );
-      }
-    }
+    this.visitProcCall(proc, node);
     node.typeSpec = proc.returnTypeSpec!;
   }
 
@@ -427,6 +427,28 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         break;
       default:
         this.throwError(`Unknown operator ${node.op}`, node);
+    }
+  }
+
+  private visitProcCall(proc: Proc, node: FnCallExpr | CallStmt) {
+    if (proc.paramSymbols!.length !== node.argExprs.length) {
+      this.throwError(
+        `Incorrect number of arguments to "${node.name}": ` +
+          `expected ${proc.paramSymbols!.length}, got ${node.argExprs.length}`,
+        node
+      );
+    }
+    this.acceptAll(node.argExprs);
+    for (let i = 0; i < node.argExprs.length; ++i) {
+      const paramTypeSpec = proc.paramSymbols![i].typeSpec;
+      const argTypeSpec = node.argExprs[i].typeSpec!;
+      if (!areMatchingElementaryTypes(paramTypeSpec, argTypeSpec)) {
+        this.throwError(
+          `Incompatible argument ${i + 1} to function "${node.name}": ` +
+            `expected ${paramTypeSpec.type}, got ${argTypeSpec.type}`,
+          node
+        );
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import {
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
+  CallStmt,
   CondLoopStmt,
   CondLoopStructure,
   ConstStmt,
@@ -31,6 +32,7 @@ import {
   Proc,
   ReturnStmt,
   Stmts,
+  SubProc,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -145,6 +147,14 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitFnProc(node: FnProc): SourceNode {
+    return this.visitProc(node, CompiledProcType.FN);
+  }
+
+  visitSubProc(node: SubProc): SourceNode {
+    return this.visitProc(node, CompiledProcType.SUB);
+  }
+
+  private visitProc(node: Proc, procType: CompiledProcType): SourceNode {
     this.currentProc = node;
     const chunks: SourceChunks = [];
 
@@ -153,7 +163,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         '{',
         +1,
         this.generateLoc(node),
-        `type: '${CompiledProcType.FN}',`,
+        `type: '${procType}',`,
         `name: '${node.name}',`,
         `localSymbols: ${JSON.stringify(node.localSymbols)},`,
         `paramSymbols: ${JSON.stringify(node.paramSymbols)},`,
@@ -501,6 +511,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     );
   }
 
+  visitCallStmt(node: CallStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => [
+      this.visitProcCall(node),
+      ';',
+    ]);
+  }
+
   visitEndStmt(node: EndStmt): SourceNode {
     return this.createStmtSourceNode(
       node,
@@ -585,50 +602,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitFnCallExpr(node: FnCallExpr): SourceNode {
-    const argPtrs: SourceChunks = [];
-    const tempVars: Array<{name: string; expr: Expr}> = [];
-    let tempVarPrefix: string | null = null;
-    let tempVarIdx = 0;
-
-    for (const argExpr of node.argExprs) {
-      if (argExpr.type === ExprType.VAR_REF) {
-        let text = '';
-        if (argExpr.varType === VarType.ARG) {
-          text = `ctx.args['${argExpr.name}']`;
-        } else {
-          // TODO: Global
-          text = `[ctx.localVars, '${argExpr.name}']`;
-        }
-        argPtrs.push(this.createSourceNode(argExpr, text));
-      } else {
-        if (!tempVarPrefix) {
-          tempVarPrefix = this.generateLabel();
-        }
-        const tempVarName = `${tempVarPrefix}_${tempVarIdx++}`;
-        tempVars.push({name: tempVarName, expr: argExpr});
-        argPtrs.push(`[ctx.tempVars, '${tempVarName}']`);
-      }
-    }
-
-    return this.createSourceNode(
-      node,
-      '(await (async () => {\n',
-      this.lines(+1),
-      ...tempVars.map(({name, expr}) => [
-        this.lines(`${this.generateTempVarRef(name)} = `),
-        this.accept(expr),
-        ';\n',
-      ]),
-      this.lines(
-        `const result = await ctx.executeProc(ctx, '${
-          node.name
-        }', ${argPtrs.join(', ')});`,
-        ...tempVars.map(({name}) => `delete ${this.generateTempVarRef(name)};`),
-        'return result;',
-        -1,
-        '})())'
-      )
-    );
+    return this.visitProcCall(node);
   }
 
   visitBinaryOpExpr(node: BinaryOpExpr): SourceNode {
@@ -679,6 +653,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     }
     return this.createSourceNode(node, ...chunks);
   }
+
   visitUnaryOpExpr(node: UnaryOpExpr): SourceNode {
     const OP_MAP = {
       [UnaryOp.NEG]: '-',
@@ -691,6 +666,53 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       OP_MAP[node.op],
       this.accept(node.rightExpr),
       ')'
+    );
+  }
+
+  private visitProcCall(node: FnCallExpr | CallStmt): SourceNode {
+    const argPtrs: SourceChunks = [];
+    const tempVars: Array<{name: string; expr: Expr}> = [];
+    let tempVarPrefix: string | null = null;
+    let tempVarIdx = 0;
+
+    for (const argExpr of node.argExprs) {
+      if (argExpr.type === ExprType.VAR_REF) {
+        let text = '';
+        if (argExpr.varType === VarType.ARG) {
+          text = `ctx.args['${argExpr.name}']`;
+        } else {
+          // TODO: Global
+          text = `[ctx.localVars, '${argExpr.name}']`;
+        }
+        argPtrs.push(this.createSourceNode(argExpr, text));
+      } else {
+        if (!tempVarPrefix) {
+          tempVarPrefix = this.generateLabel();
+        }
+        const tempVarName = `${tempVarPrefix}_${tempVarIdx++}`;
+        tempVars.push({name: tempVarName, expr: argExpr});
+        argPtrs.push(`[ctx.tempVars, '${tempVarName}']`);
+      }
+    }
+
+    return this.createSourceNode(
+      node,
+      '(await (async () => {\n',
+      this.lines(+1),
+      ...tempVars.map(({name, expr}) => [
+        this.lines(`${this.generateTempVarRef(name)} = `),
+        this.accept(expr),
+        ';\n',
+      ]),
+      this.lines(
+        `const result = await ctx.executeProc(ctx, '${
+          node.name
+        }', ${argPtrs.join(', ')});`,
+        ...tempVars.map(({name}) => `delete ${this.generateTempVarRef(name)};`),
+        'return result;',
+        -1,
+        '})())'
+      )
     );
   }
 

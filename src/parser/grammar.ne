@@ -9,6 +9,7 @@ import {
   Module,
   ProcType,
   FnProc,
+  SubProc,
   Param,
   Expr,
   ExprType,
@@ -39,6 +40,7 @@ import {
   ExitForStmt,
   GosubStmt,
   ReturnStmt,
+  CallStmt,
   EndStmt,
   PrintStmt,
   PrintSep,
@@ -123,7 +125,8 @@ moduleComponentWithSep ->
     %}
 
 proc ->
-    fnProc  {% id %}
+      fnProc  {% id %}
+    | subProc  {% id %}
 
 fnProc ->
     %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? asTypeName:? stmts %END %FUNCTION  {%
@@ -133,6 +136,17 @@ fnProc ->
           params: $3 ? $3[1] : [],
           stmts: $5,
           returnTypeSpec: $4,
+          ...useLoc($1),
+        })
+    %}
+
+subProc ->
+    %SUB %IDENTIFIER (%LPAREN params %RPAREN):? stmts %END %SUB  {%
+        ([$1, $2, $3, $4, $5, $6]): SubProc => ({
+          type: ProcType.SUB,
+          name: $2.value,
+          params: $3 ? $3[1] : [],
+          stmts: $4,
           ...useLoc($1),
         })
     %}
@@ -177,6 +191,7 @@ nonLabelStmt ->
     | exitForStmt  {% id %}
     | gosubStmt  {% id %}
     | returnStmt  {% id %}
+    | callStmt  {% id %}
     | endStmt  {% id %}
     | printStmt  {% id %}
     | inputStmt  {% id %}
@@ -389,6 +404,16 @@ returnStmt ->
         ([$1, $2]): ReturnStmt =>
             ({ type: StmtType.RETURN, destLabel: $2, ...useLoc($1) })
     %}
+
+callStmt ->
+      %CALL %IDENTIFIER (%LPAREN exprs %RPAREN):?  {%
+          ([$1, $2, $3]): CallStmt => ({
+            type: StmtType.CALL,
+            name: $2.value,
+            argExprs: $3 ? $3[1] : [],
+            ...useLoc($1),
+          })
+      %}
 
 endStmt ->
     %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}

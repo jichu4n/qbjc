@@ -8,6 +8,7 @@ declare var IDENTIFIER: any;
 declare var LPAREN: any;
 declare var RPAREN: any;
 declare var END: any;
+declare var SUB: any;
 declare var COMMA: any;
 declare var COLON: any;
 declare var NEWLINE: any;
@@ -34,6 +35,7 @@ declare var STEP: any;
 declare var NEXT: any;
 declare var GOSUB: any;
 declare var RETURN: any;
+declare var CALL: any;
 declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
@@ -53,7 +55,6 @@ declare var GTE: any;
 declare var LT: any;
 declare var LTE: any;
 declare var ADD: any;
-declare var SUB: any;
 declare var MOD: any;
 declare var INTDIV: any;
 declare var MUL: any;
@@ -68,6 +69,7 @@ import {
   Module,
   ProcType,
   FnProc,
+  SubProc,
   Param,
   Expr,
   ExprType,
@@ -98,6 +100,7 @@ import {
   ExitForStmt,
   GosubStmt,
   ReturnStmt,
+  CallStmt,
   EndStmt,
   PrintStmt,
   PrintSep,
@@ -205,6 +208,7 @@ const grammar: Grammar = {
         })
             },
     {"name": "proc", "symbols": ["fnProc"], "postprocess": id},
+    {"name": "proc", "symbols": ["subProc"], "postprocess": id},
     {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "fnProc$ebnf$1", "symbols": [], "postprocess": () => null},
@@ -217,6 +221,18 @@ const grammar: Grammar = {
           params: $3 ? $3[1] : [],
           stmts: $5,
           returnTypeSpec: $4,
+          ...useLoc($1),
+        })
+            },
+    {"name": "subProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
+    {"name": "subProc$ebnf$1", "symbols": ["subProc$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "subProc$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "subProc", "symbols": [(lexer.has("SUB") ? {type: "SUB"} : SUB), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "subProc$ebnf$1", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("SUB") ? {type: "SUB"} : SUB)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6]): SubProc => ({
+          type: ProcType.SUB,
+          name: $2.value,
+          params: $3 ? $3[1] : [],
+          stmts: $4,
           ...useLoc($1),
         })
             },
@@ -263,6 +279,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["exitForStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gosubStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["returnStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["callStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["endStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
@@ -452,6 +469,17 @@ const grammar: Grammar = {
         ([$1, $2]): ReturnStmt =>
             ({ type: StmtType.RETURN, destLabel: $2, ...useLoc($1) })
             },
+    {"name": "callStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "exprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
+    {"name": "callStmt$ebnf$1", "symbols": ["callStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "callStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "callStmt", "symbols": [(lexer.has("CALL") ? {type: "CALL"} : CALL), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "callStmt$ebnf$1"], "postprocess": 
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: $2.value,
+          argExprs: $3 ? $3[1] : [],
+          ...useLoc($1),
+        })
+              },
     {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })

@@ -110,6 +110,7 @@ export type Stmt =
   | ExitForStmt
   | GosubStmt
   | ReturnStmt
+  | CallStmt
   | EndStmt
   | PrintStmt
   | InputStmt;
@@ -129,6 +130,7 @@ export enum StmtType {
   EXIT_FOR = 'exitFor',
   GOSUB = 'gosub',
   RETURN = 'return',
+  CALL = 'call',
   END = 'end',
   PRINT = 'print',
   INPUT = 'input',
@@ -235,6 +237,12 @@ export interface GosubStmt extends AstNodeBase {
 export interface ReturnStmt extends AstNodeBase {
   type: StmtType.RETURN;
   destLabel?: string;
+}
+
+export interface CallStmt extends AstNodeBase {
+  type: StmtType.CALL;
+  name: string;
+  argExprs: Array<Expr>;
 }
 
 export interface EndStmt extends AstNodeBase {
@@ -366,7 +374,8 @@ export class AstVisitorError extends ErrorWithLoc {
 /** Base class for AST visitors. */
 export abstract class AstVisitor<T = any> {
   protected abstract visitModule(module: Module): T;
-  protected abstract visitFnProc(fnProc: FnProc): T;
+  protected abstract visitFnProc(node: FnProc): T;
+  protected abstract visitSubProc(node: SubProc): T;
 
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitDimStmt(node: DimStmt): T;
@@ -382,6 +391,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitExitForStmt(node: ExitForStmt): T;
   protected abstract visitGosubStmt(node: GosubStmt): T;
   protected abstract visitReturnStmt(node: ReturnStmt): T;
+  protected abstract visitCallStmt(node: CallStmt): T;
   protected abstract visitEndStmt(node: EndStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
@@ -397,6 +407,8 @@ export abstract class AstVisitor<T = any> {
     switch (node.type) {
       case ProcType.FN:
         return this.visitFnProc(node);
+      case ProcType.SUB:
+        return this.visitSubProc(node);
       case StmtType.LABEL:
         return this.visitLabelStmt(node);
       case StmtType.DIM:
@@ -425,6 +437,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitGosubStmt(node);
       case StmtType.RETURN:
         return this.visitReturnStmt(node);
+      case StmtType.CALL:
+        return this.visitCallStmt(node);
       case StmtType.END:
         return this.visitEndStmt(node);
       case StmtType.PRINT:
