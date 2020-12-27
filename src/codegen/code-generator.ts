@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {SourceNode} from 'source-map';
-import {VarScope, VarType} from '../ast/symbol-table';
+import {VarScope, VarType} from '../lib/symbol-table';
 import {
   AssignStmt,
   AstNode,
@@ -112,6 +112,8 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         'const compiledModule = {',
         +1,
         `sourceFileName: ${JSON.stringify(this.opts.sourceFileName)},`,
+        `localSymbols: ${JSON.stringify(module.localSymbols)},`,
+        `globalSymbols: ${JSON.stringify(module.globalSymbols)},`,
         ''
       )
     );
@@ -148,14 +150,8 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         this.generateLoc(node),
         `type: '${CompiledProcType.FN}',`,
         `name: '${node.name}',`,
-        'params: [',
-        +1,
-        ...node.paramSymbols!.map(
-          ({name, typeSpec}) =>
-            `{ name: '${name}', typeSpec: ${JSON.stringify(typeSpec)} },`
-        ),
-        -1,
-        '],',
+        `localSymbols: ${JSON.stringify(node.localSymbols)},`,
+        `paramSymbols: ${JSON.stringify(node.paramSymbols)},`,
         'stmts: [',
         '',
         +1
@@ -495,12 +491,12 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       'ctx.runtime.print(',
       ...node.args.map((arg) =>
         typeof arg === 'string'
-          ? `{ type: '${arg}' },`
+          ? `{ type: '${arg}' }, `
           : this.createSourceNode(
               arg,
               `{ type: '${PrintArgType.VALUE}', value: `,
               this.accept(arg),
-              ' },'
+              ' }, '
             )
       ),
       ');',

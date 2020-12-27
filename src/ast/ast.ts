@@ -1,5 +1,5 @@
 import {DataTypeSpec} from '../lib/types';
-import {VarSymbolTable, VarType, VarScope} from './symbol-table';
+import {VarSymbolTable, VarType, VarScope} from '../lib/symbol-table';
 import ErrorWithLoc from '../lib/error-with-loc';
 
 /** An AST node. */

@@ -28,13 +28,7 @@ import {
   UncondLoopStmt,
   VarRefExpr,
 } from '../ast/ast';
-import {
-  lookupSymbol,
-  addSymbol,
-  VarSymbol,
-  VarType,
-  VarScope,
-} from '../ast/symbol-table';
+import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
   areMatchingElementaryTypes,
   DataTypeSpec,
@@ -81,8 +75,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.currentProc = null;
     module.localSymbols = [];
     module.globalSymbols = [];
-
     this.acceptAll(module.stmts);
+
     this.acceptAll(module.procs);
   }
 
@@ -388,7 +382,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private addLocalSymbol(...args: Array<VarSymbol>) {
-    return addSymbol(this.getLocalSymbols(), ...args);
+    return this.getLocalSymbols().push(...args);
   }
 
   private getTypeSpecFromSuffix(name: string) {

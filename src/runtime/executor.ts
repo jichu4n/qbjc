@@ -59,15 +59,15 @@ export default class Executor {
       throw new Error(`Function not found: "${name}"`);
     }
 
-    if (argPtrs.length !== fn.params.length) {
+    if (argPtrs.length !== fn.paramSymbols.length) {
       throw new Error(
         `Incorrect number of arguments to function ${fn.name}: ` +
-          `expected ${fn.params.length}, got ${argPtrs.length}`
+          `expected ${fn.paramSymbols.length}, got ${argPtrs.length}`
       );
     }
     const args: ArgsContainer = {};
     for (let i = 0; i < argPtrs.length; ++i) {
-      args[fn.params[i].name] = argPtrs[i];
+      args[fn.paramSymbols[i].name] = argPtrs[i];
     }
 
     const ctx: ExecutionContext = {

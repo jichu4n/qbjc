@@ -1,9 +1,12 @@
 import {DataTypeSpec} from '../lib/types';
+import {VarSymbolTable} from '../lib/symbol-table';
 import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
 export interface CompiledModule {
   sourceFileName?: string;
+  localSymbols: VarSymbolTable;
+  globalSymbols: VarSymbolTable;
   stmts: Array<CompiledStmt>;
   procs: Array<CompiledProc>;
 }
@@ -17,18 +20,14 @@ interface CompiledComponentBase {
 export interface CompiledProc {
   type: CompiledProcType.FN;
   name: string;
-  params: Array<CompiledProcParam>;
+  localSymbols: VarSymbolTable;
+  paramSymbols: VarSymbolTable;
   stmts: Array<CompiledStmt>;
 }
 
 export enum CompiledProcType {
   SUB = 'sub',
   FN = 'fn',
-}
-
-export interface CompiledProcParam {
-  name: string;
-  typeSpec: DataTypeSpec;
 }
 
 /** A compiled statement. */
