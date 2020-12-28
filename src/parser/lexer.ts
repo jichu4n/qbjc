@@ -1,4 +1,4 @@
-import moo, {Lexer, Token} from 'moo';
+import moo from 'moo';
 
 /** QBasic keywords.
  *
@@ -43,8 +43,11 @@ export enum Keywords {
   WHILE = 'while',
 }
 
-/** Lexer for QBasic. */
-const lexer: Lexer & {lastToken?: Token} = moo.compile({
+/** moo lexer used internally by Lexer. */
+const mooLexer: moo.Lexer & {
+  lastToken?: Token;
+  isFirstTokenOnLine?: boolean;
+} = moo.compile({
   WHITESPACE: {
     match: /\s+/,
     type: (text) => (text.includes('\n') ? 'NEWLINE' : ''),
@@ -82,24 +85,86 @@ const lexer: Lexer & {lastToken?: Token} = moo.compile({
   LT: '<',
 });
 
+const TOKEN_TYPES_TO_DISCARD = ['WHITESPACE', 'COMMENT'];
+
+/** Extended token. */
+export interface Token extends moo.Token {
+  isFirstTokenOnLine?: boolean;
+}
+
+/** Lexer for QBasic.
+ *
+ * This class wraps the moo lexer with some additional capabilities:
+ *
+ *   - Discard irrelevant tokens, based on https://github.com/no-context/moo/issues/81.
+ *   - Set isFirstTokenOnLine flag on tokens to help disambiguate labels from statements.
+ *   - Support lookahead with peek().
+ *   - Store the last token for debugging output.
+ */
+class Lexer {
+  constructor(private readonly mooLexer: moo.Lexer) {}
+
+  next(): Token | undefined {
+    if (this.tokenQueue.length > 0) {
+      return this.tokenQueue.pop();
+    }
+
+    let token: Token | undefined;
+    do {
+      token = this.mooLexer.next();
+      if (token) {
+        this.lastToken = token;
+        token.isFirstTokenOnLine = this.isNextTokenFirstOnLine;
+        if (token.type === 'NEWLINE') {
+          this.isNextTokenFirstOnLine = true;
+        } else {
+          this.isNextTokenFirstOnLine = false;
+        }
+      }
+    } while (
+      token &&
+      token.type &&
+      TOKEN_TYPES_TO_DISCARD.includes(token.type)
+    );
+    return token;
+  }
+
+  peek(): Token | undefined {
+    const token = this.next();
+    this.tokenQueue.push(token);
+    return token;
+  }
+
+  save(): moo.LexerState {
+    return this.mooLexer.save();
+  }
+
+  reset(chunk?: string, state?: moo.LexerState) {
+    this.mooLexer.reset(chunk, state);
+    this.isNextTokenFirstOnLine = true;
+    this.lastToken = undefined;
+    this.tokenQueue = [];
+    return this;
+  }
+
+  formatError(token: Token, message?: string) {
+    return this.mooLexer.formatError(token, message);
+  }
+
+  has(tokenType: string) {
+    return this.mooLexer.has(tokenType);
+  }
+
+  lastToken: Token | undefined = undefined;
+  private isNextTokenFirstOnLine: boolean = true;
+  private tokenQueue: Array<Token | undefined> = [];
+}
+
 // Based on https://github.com/no-context/moo/pull/85#issue-178701835
 function caseInsensitiveKeywords(map: {[k: string]: string | string[]}) {
   const keywordsTransformFn = moo.keywords(map);
   return (text: string) => keywordsTransformFn(text.toLowerCase());
 }
 
-// Modify generated lexer to discard irrelevant tokens and store the last token.
-// Based on https://github.com/no-context/moo/issues/81.
-const TOKEN_TYPES_TO_DISCARD = ['WHITESPACE', 'COMMENT'];
-lexer.next = ((originalLexerNextFn) => () => {
-  let token: Token | undefined;
-  do {
-    token = originalLexerNextFn();
-    if (token) {
-      lexer.lastToken = token;
-    }
-  } while (token && token.type && TOKEN_TYPES_TO_DISCARD.includes(token.type));
-  return token;
-})(lexer.next.bind(lexer));
-
+const lexer = new Lexer(mooLexer);
 export default lexer;

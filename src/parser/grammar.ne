@@ -90,6 +90,9 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
   };
 }
 
+/** Type of the 'reject' parameter passed to postprocessors. */
+type Reject = Object | undefined;
+
 // ----
 // Generated grammer for QBasic
 // ----
@@ -198,12 +201,22 @@ nonLabelStmt ->
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
-        ([$1]): LabelStmt =>
-            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+        ([$1], _, reject): LabelStmt | Reject =>
+            $1.isFirstTokenOnLine ? {
+              type: StmtType.LABEL,
+              label: $1.value,
+              ...useLoc($1),
+            } : reject
     %}
     | %IDENTIFIER %COLON  {%
-        ([$1, $2]): LabelStmt =>
-            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+        ([$1, $2], _, reject): LabelStmt | Reject =>
+          // A line like "f: f:" should parse as a label "f" followed by an invocation of the
+          // sub "f", so need to explicitly disambiguate here.
+          $1.isFirstTokenOnLine ? {
+            type: StmtType.LABEL,
+            label: $1.value,
+            ...useLoc($1),
+          } : reject
     %}
 
 dimStmt ->
@@ -414,6 +427,24 @@ callStmt ->
             ...useLoc($1),
           })
       %}
+    | %IDENTIFIER exprs  {%
+          ([$1, $2], _, reject): CallStmt | Reject => {
+            // A line like "f: f:" should parse as a label "f" followed by an invocation of the
+            // sub "f", so need to explicitly disambiguate here.
+            if ($1.isFirstTokenOnLine && $2.length === 0) {
+              const nextToken = lexer.peek();
+              if (nextToken && nextToken.type === 'COLON') {
+                return reject;
+              }
+            }
+            return {
+              type: StmtType.CALL,
+              name: $1.value,
+              argExprs: $2,
+              ...useLoc($1),
+            };
+          }
+    %}
 
 endStmt ->
     %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}

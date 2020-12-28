@@ -150,6 +150,9 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
   };
 }
 
+/** Type of the 'reject' parameter passed to postprocessors. */
+type Reject = Object | undefined;
+
 // ----
 // Generated grammer for QBasic
 // ----
@@ -284,12 +287,20 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
-        ([$1]): LabelStmt =>
-            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+        ([$1], _, reject): LabelStmt | Reject =>
+            $1.isFirstTokenOnLine ? {
+              type: StmtType.LABEL,
+              label: $1.value,
+              ...useLoc($1),
+            } : reject
             },
     {"name": "labelStmt", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": 
-        ([$1, $2]): LabelStmt =>
-            ({ type: StmtType.LABEL, label: $1.value, ...useLoc($1) })
+        ([$1, $2], _, reject): LabelStmt | Reject =>
+          $1.isFirstTokenOnLine ? {
+            type: StmtType.LABEL,
+            label: $1.value,
+            ...useLoc($1),
+          } : reject
             },
     {"name": "dimStmt$ebnf$1", "symbols": [(lexer.has("SHARED") ? {type: "SHARED"} : SHARED)], "postprocess": id},
     {"name": "dimStmt$ebnf$1", "symbols": [], "postprocess": () => null},
@@ -480,6 +491,22 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
               },
+    {"name": "callStmt", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "exprs"], "postprocess": 
+        ([$1, $2], _, reject): CallStmt | Reject => {
+          if ($1.isFirstTokenOnLine && $2.length === 0) {
+            const nextToken = lexer.peek();
+            if (nextToken && nextToken.type === 'COLON') {
+              return reject;
+            }
+          }
+          return {
+            type: StmtType.CALL,
+            name: $1.value,
+            argExprs: $2,
+            ...useLoc($1),
+          };
+        }
+            },
     {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })

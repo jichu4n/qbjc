@@ -1,7 +1,11 @@
-FOR i = 1 TO 3
-  CALL f1
-  CALL f2("yo")
-NEXT
+' Test invocation with CALL keyword.
+CALL f1
+CALL f2("yo")
+
+' Test short form invocation.
+f1: f1: f1: f1  ' First "f1: " should be parsed as label
+f2 "yo"
+
 SUB f1
   PRINT "hi"
 END SUB
@@ -13,8 +17,9 @@ END SUB
 '   "io": [
 '     {"output": "hi\n"},
 '     {"output": "yo\n"},
+'
 '     {"output": "hi\n"},
-'     {"output": "yo\n"},
+'     {"output": "hi\n"},
 '     {"output": "hi\n"},
 '     {"output": "yo\n"}
 '   ]
