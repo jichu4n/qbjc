@@ -13,8 +13,7 @@ SUB f2(x AS STRING)
   PRINT x
 END SUB
 
-
-' Exit from inside sub.
+' Exit from sub.
 countdown 3
 SUB countdown (x AS INTEGER)
   PRINT x

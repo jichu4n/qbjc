@@ -126,6 +126,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitLabelStmt(node: LabelStmt): void {}
 
   visitDimStmt(node: DimStmt): void {
+    if (node.isShared && this.currentProc) {
+      this.throwError(
+        'DIM SHARED can only be used at the module level, ' +
+          `not inside a ${procTypeName(this.currentProc.type)}`,
+        node
+      );
+    }
     for (const varDecl of node.varDecls) {
       const resolvedSymbol = this.lookupSymbol(varDecl.name);
       if (resolvedSymbol) {
@@ -143,15 +150,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       }
       const typeSpec =
         varDecl.typeSpec ?? this.getTypeSpecFromSuffix(varDecl.name);
-      const symbol: VarSymbol = {
-        name: varDecl.name,
-        type: VarType.VAR,
-        typeSpec,
-      };
       if (node.isShared) {
-        this.module.globalSymbols!.push(symbol);
+        this.module.globalSymbols!.push({
+          name: varDecl.name,
+          type: VarType.VAR,
+          typeSpec,
+        });
       } else {
-        this.addLocalSymbol(symbol);
+        this.addLocalSymbol(
+          this.createLocalVarSymbol({
+            name: varDecl.name,
+            typeSpec,
+          })
+        );
       }
     }
   }
@@ -341,11 +352,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       }
 
       resolvedSymbol = {
-        symbol: {
+        symbol: this.createLocalVarSymbol({
           name: node.name,
-          type: VarType.VAR,
           typeSpec: this.getTypeSpecFromSuffix(node.name),
-        },
+        }),
         scope: VarScope.LOCAL,
       };
       this.addLocalSymbol(resolvedSymbol.symbol);
@@ -535,6 +545,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       return {symbol, scope: VarScope.GLOBAL};
     }
     return null;
+  }
+
+  private createLocalVarSymbol(args: Omit<VarSymbol, 'type'>): VarSymbol {
+    return {
+      ...args,
+      type:
+        this.currentProc && this.currentProc.isDefaultStatic
+          ? VarType.STATIC_VAR
+          : VarType.VAR,
+    };
   }
 
   private addLocalSymbol(...args: Array<VarSymbol>) {

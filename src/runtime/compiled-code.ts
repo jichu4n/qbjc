@@ -104,6 +104,7 @@ export interface ExecutionContext {
   ) => Promise<any>;
   args: ArgsContainer;
   localVars: VarContainer;
+  localStaticVars: VarContainer;
   globalVars: VarContainer;
   tempVars: VarContainer;
 }

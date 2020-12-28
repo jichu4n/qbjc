@@ -593,7 +593,20 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     if (node.varType === VarType.ARG) {
       chunk = `ctx.args['${node.name}'][0][ctx.args['${node.name}'][1]]`;
     } else if (node.varScope === VarScope.LOCAL) {
-      chunk = `ctx.localVars['${node.name}']`;
+      switch (node.varType) {
+        case VarType.STATIC_VAR:
+          chunk = `ctx.localStaticVars['${node.name}']`;
+          break;
+        case VarType.VAR:
+        case VarType.CONST:
+          chunk = `ctx.localVars['${node.name}']`;
+          break;
+        default:
+          this.throwError(
+            `Unexpected local var type: ${JSON.stringify(node.varType)}`,
+            node
+          );
+      }
     } else if (node.varScope === VarScope.GLOBAL) {
       chunk = `ctx.globalVars['${node.name}']`;
     } else {

@@ -39,22 +39,34 @@ PRINT f4((y));
 PRINT y
 
 ' Explicit type declarations.
-FUNCTION f5(x AS STRING) AS STRING
-  f5 = x + x
+FUNCTION f5$(x AS STRING)
+  f5$ = x + x
 END FUNCTION
-PRINT f5("aaa")
+PRINT f5$("aaa")
+
+' Static vars.
+FUNCTION f6
+  x = x + 1
+  f6 = x
+END FUNCTION
+FUNCTION f7 STATIC
+  x = x + 1
+  f7 = x
+END FUNCTION
+PRINT f6; f6; f6
+PRINT f7; f7; f7
 
 ' Exit inside function.
-PRINT f6
-FUNCTION f6 AS STRING
-  f6 = "hi"
+PRINT f8$
+FUNCTION f8$
+  f8$ = "hi"
   EXIT FUNCTION
-  f6 = "hello"
+  f8$ = "hello"
 END FUNCTION
 
 ' End inside function.
-PRINT f7
-FUNCTION f7
+PRINT f9
+FUNCTION f9
   END
 END FUNCTION
 
@@ -73,6 +85,9 @@ END FUNCTION
 '     {"output": " 0  42 \n"},
 '
 '     {"output": "aaaaaa\n"},
+'
+'     {"output": " 1  1  1 \n"},
+'     {"output": " 1  2  3 \n"},
 '
 '     {"output": "hi\n"}
 '   ]

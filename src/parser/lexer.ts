@@ -34,6 +34,7 @@ export enum Keywords {
   RETURN = 'return',
   SHARED = 'shared',
   SINGLE = 'single',
+  STATIC = 'static',
   STEP = 'step',
   STRING = 'string',
   SUB = 'sub',

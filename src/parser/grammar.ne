@@ -133,24 +133,25 @@ proc ->
     | subProc  {% id %}
 
 fnProc ->
-    %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? asTypeName:? stmts %END %FUNCTION  {%
+    %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? %STATIC:? stmts %END %FUNCTION  {%
         ([$1, $2, $3, $4, $5, $6, $7]): FnProc => ({
           type: ProcType.FN,
           name: $2.value,
           params: $3 ? $3[1] : [],
           stmts: $5,
-          returnTypeSpec: $4,
+          isDefaultStatic: !!$4,
           ...useLoc($1),
         })
     %}
 
 subProc ->
-    %SUB %IDENTIFIER (%LPAREN params %RPAREN):? stmts %END %SUB  {%
-        ([$1, $2, $3, $4, $5, $6]): SubProc => ({
+    %SUB %IDENTIFIER (%LPAREN params %RPAREN):? %STATIC:? stmts %END %SUB  {%
+        ([$1, $2, $3, $4, $5, $6, $7]): SubProc => ({
           type: ProcType.SUB,
           name: $2.value,
           params: $3 ? $3[1] : [],
-          stmts: $4,
+          stmts: $5,
+          isDefaultStatic: !!$4,
           ...useLoc($1),
         })
     %}

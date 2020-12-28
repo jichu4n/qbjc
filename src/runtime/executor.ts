@@ -10,7 +10,7 @@ import {
   VarContainer,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
-import {lookupSymbol, VarSymbolTable} from '../lib/symbol-table';
+import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
 import {DataType, ProcType, procTypeName} from '../lib/types';
 
 /** State for a GOSUB invocation. */
@@ -52,12 +52,20 @@ export default class Executor {
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {
     this.currentModule = module;
+    this.localStaticVarsMap = {};
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
       executeProc: this.executeProc.bind(this),
       args: {},
-      localVars: this.initVars(module.localSymbols),
-      globalVars: this.initVars(module.globalSymbols),
+      localVars: this.initVars(module.localSymbols, [
+        VarType.VAR,
+        VarType.CONST,
+      ]),
+      localStaticVars: {},
+      globalVars: this.initVars(module.globalSymbols, [
+        VarType.VAR,
+        VarType.CONST,
+      ]),
       tempVars: {},
     };
     try {
@@ -68,6 +76,9 @@ export default class Executor {
       } else {
         throw e;
       }
+    } finally {
+      this.currentModule = null;
+      this.localStaticVarsMap = {};
     }
   }
 
@@ -80,6 +91,8 @@ export default class Executor {
     if (!proc) {
       throw new Error(`Procedure not found: "${name}"`);
     }
+
+    // Init args.
     if (argPtrs.length !== proc.paramSymbols.length) {
       throw new Error(
         'Incorrect number of arguments to ' +
@@ -92,14 +105,24 @@ export default class Executor {
       args[proc.paramSymbols[i].name] = argPtrs[i];
     }
 
+    // Init static vars.
+    if (!this.localStaticVarsMap[name]) {
+      this.localStaticVarsMap[name] = this.initVars(proc.localSymbols, [
+        VarType.STATIC_VAR,
+      ]);
+    }
+
+    // Execute statements.
     const ctx: ExecutionContext = {
       ...prevCtx,
       args,
-      localVars: this.initVars(proc.localSymbols),
+      localVars: this.initVars(proc.localSymbols, [VarType.VAR, VarType.CONST]),
+      localStaticVars: this.localStaticVarsMap[name],
       tempVars: {},
     };
     await this.executeStmts(ctx, proc.stmts);
 
+    // Return value.
     if (proc.type === ProcType.FN) {
       if (!(name in ctx.localVars)) {
         throw new Error(
@@ -110,16 +133,24 @@ export default class Executor {
     }
   }
 
-  private initVars(varSymbolTable: VarSymbolTable): VarContainer {
+  private initVars(
+    varSymbolTable: VarSymbolTable,
+    includeVarTypes: Array<VarType>
+  ): VarContainer {
     const container: VarContainer = {};
     for (const symbol of varSymbolTable) {
-      const {type} = symbol.typeSpec;
-      if (type in INIT_VALUE_MAP) {
-        container[symbol.name] =
-          INIT_VALUE_MAP[type as keyof typeof INIT_VALUE_MAP];
-      } else {
-        throw new Error(`Symbol "${symbol.name}" has type: ${symbol.typeSpec}`);
+      if (!includeVarTypes.includes(symbol.type)) {
+        continue;
       }
+      const {type: dataType} = symbol.typeSpec;
+      if (!(dataType in INIT_VALUE_MAP)) {
+        throw new Error(
+          `Symbol "${symbol.name}" has unknown type: ${symbol.typeSpec}`
+        );
+      }
+
+      container[symbol.name] =
+        INIT_VALUE_MAP[dataType as keyof typeof INIT_VALUE_MAP];
     }
     return container;
   }
@@ -218,4 +249,7 @@ export default class Executor {
 
   /** Current module being executed. */
   private currentModule: CompiledModule | null = null;
+
+  /** Static vars by proc name. */
+  private localStaticVarsMap: {[key: string]: VarContainer} = {};
 }

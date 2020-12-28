@@ -45,6 +45,7 @@ interface ProcBase extends AstNodeBase {
   name: string;
   params: Array<Param>;
   stmts: Stmts;
+  isDefaultStatic: boolean;
 
   /** Local variable symbol table.
    *

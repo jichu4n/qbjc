@@ -4,6 +4,8 @@ import {DataTypeSpec} from './types';
 export enum VarType {
   /** Regular variable. */
   VAR = 'var',
+  /** Static variable. */
+  STATIC_VAR = 'staticVar',
   /** Constant. */
   CONST = 'const',
   /** FUNCTION or SUB argument. */

@@ -7,6 +7,7 @@ declare var FUNCTION: any;
 declare var IDENTIFIER: any;
 declare var LPAREN: any;
 declare var RPAREN: any;
+declare var STATIC: any;
 declare var END: any;
 declare var SUB: any;
 declare var COMMA: any;
@@ -216,7 +217,7 @@ const grammar: Grammar = {
     {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "fnProc$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "fnProc$ebnf$2", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "fnProc$ebnf$2", "symbols": [(lexer.has("STATIC") ? {type: "STATIC"} : STATIC)], "postprocess": id},
     {"name": "fnProc$ebnf$2", "symbols": [], "postprocess": () => null},
     {"name": "fnProc", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "fnProc$ebnf$1", "fnProc$ebnf$2", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)], "postprocess": 
         ([$1, $2, $3, $4, $5, $6, $7]): FnProc => ({
@@ -224,19 +225,22 @@ const grammar: Grammar = {
           name: $2.value,
           params: $3 ? $3[1] : [],
           stmts: $5,
-          returnTypeSpec: $4,
+          isDefaultStatic: !!$4,
           ...useLoc($1),
         })
             },
     {"name": "subProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "subProc$ebnf$1", "symbols": ["subProc$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "subProc$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "subProc", "symbols": [(lexer.has("SUB") ? {type: "SUB"} : SUB), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "subProc$ebnf$1", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("SUB") ? {type: "SUB"} : SUB)], "postprocess": 
-        ([$1, $2, $3, $4, $5, $6]): SubProc => ({
+    {"name": "subProc$ebnf$2", "symbols": [(lexer.has("STATIC") ? {type: "STATIC"} : STATIC)], "postprocess": id},
+    {"name": "subProc$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "subProc", "symbols": [(lexer.has("SUB") ? {type: "SUB"} : SUB), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "subProc$ebnf$1", "subProc$ebnf$2", "stmts", (lexer.has("END") ? {type: "END"} : END), (lexer.has("SUB") ? {type: "SUB"} : SUB)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7]): SubProc => ({
           type: ProcType.SUB,
           name: $2.value,
           params: $3 ? $3[1] : [],
-          stmts: $4,
+          stmts: $5,
+          isDefaultStatic: !!$4,
           ...useLoc($1),
         })
             },
