@@ -165,15 +165,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     );
   }
 
-  visitFnProc(node: FnProc): SourceNode {
-    return this.visitProc(node);
-  }
-
-  visitSubProc(node: SubProc): SourceNode {
-    return this.visitProc(node);
-  }
-
-  private visitProc(node: Proc): SourceNode {
+  visitProc(node: Proc): SourceNode {
     this.currentProc = node;
     const chunks: SourceChunks = [];
 

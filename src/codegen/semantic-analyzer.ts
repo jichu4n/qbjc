@@ -113,15 +113,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  visitFnProc(node: FnProc): void {
-    this.visitProc(node);
-  }
-
-  visitSubProc(node: SubProc): void {
-    this.visitProc(node);
-  }
-
-  private visitProc(node: Proc) {
+  visitProc(node: Proc) {
     this.currentProc = node;
     this.acceptAll(node.stmts);
     this.currentProc = null;

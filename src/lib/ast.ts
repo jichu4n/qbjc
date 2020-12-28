@@ -437,8 +437,7 @@ export class AstVisitorError extends ErrorWithLoc {
 /** Base class for AST visitors. */
 export abstract class AstVisitor<T = any> {
   protected abstract visitModule(module: Module): T;
-  protected abstract visitFnProc(node: FnProc): T;
-  protected abstract visitSubProc(node: SubProc): T;
+  protected abstract visitProc(node: Proc): T;
 
   protected abstract visitLabelStmt(node: LabelStmt): T;
   protected abstract visitDimStmt(node: DimStmt): T;
@@ -471,9 +470,8 @@ export abstract class AstVisitor<T = any> {
   protected accept(node: AstNode): T {
     switch (node.type) {
       case ProcType.FN:
-        return this.visitFnProc(node);
       case ProcType.SUB:
-        return this.visitSubProc(node);
+        return this.visitProc(node);
       case StmtType.LABEL:
         return this.visitLabelStmt(node);
       case StmtType.DIM:
