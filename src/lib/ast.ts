@@ -141,8 +141,14 @@ export interface LabelStmt extends AstNodeBase {
 
 export interface DimStmt extends AstNodeBase {
   type: StmtType.DIM;
-  isShared: boolean;
+  dimType: DimType;
   varDecls: Array<VarDecl>;
+}
+
+export enum DimType {
+  LOCAL = 'local',
+  SHARED = 'shared',
+  STATIC = 'static',
 }
 
 /** A variable declaration inside a DIM statement. */

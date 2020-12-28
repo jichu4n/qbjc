@@ -85,6 +85,7 @@ import {
   StmtType,
   LabelStmt,
   DimStmt,
+  DimType,
   VarDecl,
   GotoStmt,
   AssignStmt,
@@ -315,8 +316,16 @@ const grammar: Grammar = {
     {"name": "dimStmt", "symbols": [(lexer.has("DIM") ? {type: "DIM"} : DIM), "dimStmt$ebnf$1", "varDecls"], "postprocess": 
         ([$1, $2, $3]): DimStmt => ({
           type: StmtType.DIM,
-          isShared: !!$2,
+          dimType: $2 ? DimType.SHARED : DimType.LOCAL,
           varDecls: $3,
+          ...useLoc($1),
+        })
+            },
+    {"name": "dimStmt", "symbols": [(lexer.has("STATIC") ? {type: "STATIC"} : STATIC), "varDecls"], "postprocess": 
+        ([$1, $2]): DimStmt => ({
+          type: StmtType.DIM,
+          dimType: DimType.STATIC,
+          varDecls: $2,
           ...useLoc($1),
         })
             },

@@ -8,6 +8,7 @@ import {
   CondLoopStmt,
   ConstStmt,
   DimStmt,
+  DimType,
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
@@ -126,10 +127,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitLabelStmt(node: LabelStmt): void {}
 
   visitDimStmt(node: DimStmt): void {
-    if (node.isShared && this.currentProc) {
+    if (node.dimType === DimType.SHARED && this.currentProc) {
       this.throwError(
-        'DIM SHARED can only be used at the module level, ' +
+        'DIM SHARED statement can only be used at the module level, ' +
           `not inside a ${procTypeName(this.currentProc.type)}`,
+        node
+      );
+    }
+    if (node.dimType === DimType.STATIC && !this.currentProc) {
+      this.throwError(
+        'STATIC statement can only be used inside a procedure.',
         node
       );
     }
@@ -141,7 +148,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
             `Variable already defined in local scope: "${varDecl.name}"`,
             node
           );
-        } else if (resolvedSymbol.scope === VarScope.GLOBAL && node.isShared) {
+        } else if (
+          resolvedSymbol.scope === VarScope.GLOBAL &&
+          node.dimType === DimType.SHARED
+        ) {
           this.throwError(
             `Variable already defined in global scope: "${varDecl.name}"`,
             node
@@ -150,19 +160,34 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       }
       const typeSpec =
         varDecl.typeSpec ?? this.getTypeSpecFromSuffix(varDecl.name);
-      if (node.isShared) {
-        this.module.globalSymbols!.push({
-          name: varDecl.name,
-          type: VarType.VAR,
-          typeSpec,
-        });
-      } else {
-        this.addLocalSymbol(
-          this.createLocalVarSymbol({
+      switch (node.dimType) {
+        case DimType.SHARED:
+          this.module.globalSymbols!.push({
             name: varDecl.name,
+            type: VarType.VAR,
             typeSpec,
-          })
-        );
+          });
+          break;
+        case DimType.LOCAL:
+          this.addLocalSymbol(
+            this.createLocalVarSymbol({
+              name: varDecl.name,
+              typeSpec,
+            })
+          );
+          break;
+        case DimType.STATIC:
+          this.addLocalSymbol({
+            name: varDecl.name,
+            type: VarType.STATIC_VAR,
+            typeSpec,
+          });
+          break;
+        default:
+          this.throwError(
+            `Unknown DimType: ${JSON.stringify(node.dimType)}`,
+            node
+          );
       }
     }
   }

@@ -24,6 +24,7 @@ import {
   StmtType,
   LabelStmt,
   DimStmt,
+  DimType,
   VarDecl,
   GotoStmt,
   AssignStmt,
@@ -223,13 +224,21 @@ labelStmt ->
     %}
 
 dimStmt ->
-    %DIM %SHARED:? varDecls  {%
-        ([$1, $2, $3]): DimStmt => ({
-          type: StmtType.DIM,
-          isShared: !!$2,
-          varDecls: $3,
-          ...useLoc($1),
-        })
+      %DIM %SHARED:? varDecls  {%
+          ([$1, $2, $3]): DimStmt => ({
+            type: StmtType.DIM,
+            dimType: $2 ? DimType.SHARED : DimType.LOCAL,
+            varDecls: $3,
+            ...useLoc($1),
+          })
+    %}
+    | %STATIC varDecls  {%
+          ([$1, $2]): DimStmt => ({
+            type: StmtType.DIM,
+            dimType: DimType.STATIC,
+            varDecls: $2,
+            ...useLoc($1),
+          })
     %}
 
 varDecls ->

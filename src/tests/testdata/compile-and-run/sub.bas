@@ -14,11 +14,22 @@ SUB f2(x AS STRING)
 END SUB
 
 ' Exit from sub.
-countdown 3
-SUB countdown (x AS INTEGER)
+count_down 3
+SUB count_down (x AS INTEGER)
   PRINT x
   IF x = 0 THEN EXIT SUB
-  countdown x - 1
+  count_down x - 1
+END SUB
+
+' Static vars.
+count_up 3
+SUB count_up (x AS INTEGER)
+  STATIC t
+  PRINT t
+  IF t < x THEN
+    t = t + 1
+    count_up x
+  END IF
 END SUB
 
 ' EXPECT {
@@ -34,6 +45,11 @@ END SUB
 '     {"output": " 3 \n"},
 '     {"output": " 2 \n"},
 '     {"output": " 1 \n"},
-'     {"output": " 0 \n"}
+'     {"output": " 0 \n"},
+'
+'     {"output": " 0 \n"},
+'     {"output": " 1 \n"},
+'     {"output": " 2 \n"},
+'     {"output": " 3 \n"}
 '   ]
 ' }
