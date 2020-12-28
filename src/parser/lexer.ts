@@ -22,6 +22,7 @@ export enum Keywords {
   GOSUB = 'gosub',
   GOTO = 'goto',
   IF = 'if',
+  IS = 'is',
   INPUT = 'input',
   INTEGER = 'integer',
   LET = 'let',

@@ -1,6 +1,6 @@
 import {VarSymbolTable} from '../lib/symbol-table';
-import Runtime from './runtime';
 import {ProcType} from '../lib/types';
+import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
 export interface CompiledModule {

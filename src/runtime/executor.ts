@@ -1,4 +1,6 @@
 import ErrorWithLoc from '../lib/error-with-loc';
+import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
+import {DataType, ProcType, procTypeName} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -10,8 +12,6 @@ import {
   VarContainer,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
-import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {DataType, ProcType, procTypeName} from '../lib/types';
 
 /** State for a GOSUB invocation. */
 interface GosubState {

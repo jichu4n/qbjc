@@ -1,6 +1,6 @@
-import {DataTypeSpec, ProcType} from './types';
-import {VarSymbolTable, VarType, VarScope} from './symbol-table';
 import ErrorWithLoc from './error-with-loc';
+import {VarScope, VarSymbolTable, VarType} from './symbol-table';
+import {DataTypeSpec, ProcType} from './types';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
@@ -98,6 +98,7 @@ export type Stmt =
   | ConstStmt
   | GotoStmt
   | IfStmt
+  | SelectStmt
   | CondLoopStmt
   | UncondLoopStmt
   | ExitLoopStmt
@@ -119,6 +120,7 @@ export enum StmtType {
   CONST = 'const',
   GOTO = 'goto',
   IF = 'if',
+  SELECT = 'select',
   COND_LOOP = 'condLoop',
   UNCOND_LOOP = 'uncondLoop',
   EXIT_LOOP = 'exitLoop',
@@ -183,15 +185,59 @@ export interface GotoStmt extends AstNodeBase {
   destLabel: string;
 }
 
-export interface IfBranch {
+export interface IfBranch extends AstNodeBase {
   condExpr: Expr;
+  stmts: Stmts;
+}
+
+export interface ElseBranch extends AstNodeBase {
   stmts: Stmts;
 }
 
 export interface IfStmt extends AstNodeBase {
   type: StmtType.IF;
   ifBranches: Array<IfBranch>;
-  elseBranchStmts: Stmts;
+  elseBranch: ElseBranch | null;
+}
+
+export interface SelectStmt extends AstNodeBase {
+  type: StmtType.SELECT;
+  testExpr: Expr;
+  ifBranches: Array<CaseBranch>;
+  elseBranch: ElseBranch | null;
+}
+
+export interface CaseBranch extends AstNodeBase {
+  condExprs: Array<CaseExpr>;
+  stmts: Stmts;
+}
+
+export type CaseExpr = ValueCaseExpr | RangeCaseExpr | CompCaseExpr;
+
+export enum CaseExprType {
+  /** Single value expression. */
+  VALUE = 'value',
+  /** Range, e.g. 1 TO 5. */
+  RANGE = 'range',
+  /** Comparison operator, e.g. IS >= 5. */
+  COMP = 'comp',
+}
+
+export interface ValueCaseExpr {
+  type: CaseExprType.VALUE;
+  valueExpr: Expr;
+}
+
+export interface RangeCaseExpr {
+  type: CaseExprType.RANGE;
+  lowerBoundExpr: Expr;
+  upperBoundExpr: Expr;
+}
+
+export interface CompCaseExpr {
+  type: CaseExprType.COMP;
+  op: BinaryOp;
+  rightExpr: Expr;
 }
 
 export enum CondLoopStructure {
@@ -392,6 +438,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitConstStmt(node: ConstStmt): T;
   protected abstract visitGotoStmt(node: GotoStmt): T;
   protected abstract visitIfStmt(node: IfStmt): T;
+  protected abstract visitSelectStmt(node: SelectStmt): T;
   protected abstract visitCondLoopStmt(node: CondLoopStmt): T;
   protected abstract visitUncondLoopStmt(node: UncondLoopStmt): T;
   protected abstract visitExitLoopStmt(node: ExitLoopStmt): T;
@@ -431,6 +478,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitGotoStmt(node);
       case StmtType.IF:
         return this.visitIfStmt(node);
+      case StmtType.SELECT:
+        return this.visitSelectStmt(node);
       case StmtType.COND_LOOP:
         return this.visitCondLoopStmt(node);
       case StmtType.UNCOND_LOOP:

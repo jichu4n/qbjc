@@ -5,6 +5,7 @@ import {
   BinaryOp,
   BinaryOpExpr,
   CallStmt,
+  CaseExprType,
   CondLoopStmt,
   ConstStmt,
   DimStmt,
@@ -29,6 +30,7 @@ import {
   PrintStmt,
   Proc,
   ReturnStmt,
+  SelectStmt,
   SubProc,
   UnaryOp,
   UnaryOpExpr,
@@ -273,7 +275,52 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.requireNumericExpr(condExpr);
       this.acceptAll(stmts);
     }
-    this.acceptAll(node.elseBranchStmts);
+    if (node.elseBranch) {
+      this.acceptAll(node.elseBranch.stmts);
+    }
+  }
+
+  visitSelectStmt(node: SelectStmt): void {
+    this.accept(node.testExpr);
+    for (const {condExprs, stmts} of node.ifBranches) {
+      for (const condExpr of condExprs) {
+        const exprs: Array<Expr> = [];
+        switch (condExpr.type) {
+          case CaseExprType.VALUE:
+            exprs.push(condExpr.valueExpr);
+            break;
+          case CaseExprType.RANGE:
+            exprs.push(condExpr.lowerBoundExpr, condExpr.upperBoundExpr);
+            break;
+          case CaseExprType.COMP:
+            exprs.push(condExpr.rightExpr);
+            break;
+          default:
+            this.throwError(
+              `Unknown case expression type: ${JSON.stringify(condExpr)}`,
+              node
+            );
+        }
+        this.acceptAll(exprs);
+        for (const expr of exprs) {
+          if (
+            !areMatchingElementaryTypes(node.testExpr.typeSpec!, expr.typeSpec!)
+          ) {
+            this.throwError(
+              'Case expression type does not match test expression: ' +
+                `expected ${node.testExpr.typeSpec!.type}, got ${
+                  expr.typeSpec!.type
+                }`,
+              expr
+            );
+          }
+        }
+      }
+      this.acceptAll(stmts);
+    }
+    if (node.elseBranch) {
+      this.acceptAll(node.elseBranch.stmts);
+    }
   }
 
   visitCondLoopStmt(node: CondLoopStmt): void {

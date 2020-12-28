@@ -26,6 +26,13 @@ declare var ELSE: any;
 declare var ELSEIF: any;
 declare var SELECT: any;
 declare var CASE: any;
+declare var TO: any;
+declare var IS: any;
+declare var NE: any;
+declare var GT: any;
+declare var GTE: any;
+declare var LT: any;
+declare var LTE: any;
 declare var WHILE: any;
 declare var WEND: any;
 declare var DO: any;
@@ -33,7 +40,6 @@ declare var LOOP: any;
 declare var UNTIL: any;
 declare var EXIT: any;
 declare var FOR: any;
-declare var TO: any;
 declare var STEP: any;
 declare var NEXT: any;
 declare var GOSUB: any;
@@ -52,11 +58,6 @@ declare var AS: any;
 declare var OR: any;
 declare var AND: any;
 declare var NOT: any;
-declare var NE: any;
-declare var GT: any;
-declare var GTE: any;
-declare var LT: any;
-declare var LTE: any;
 declare var ADD: any;
 declare var MOD: any;
 declare var INTDIV: any;
@@ -95,6 +96,9 @@ import {
   ConstStmt,
   ConstDef,
   IfStmt,
+  SelectStmt,
+  CaseExprType,
+  CaseExpr,
   CondLoopStructure,
   CondLoopStmt,
   UncondLoopStmt,
@@ -390,8 +394,8 @@ const grammar: Grammar = {
         ([$1, $2, $3, $4, $5, $6]): IfStmt =>
             ({
               type: StmtType.IF,
-              ifBranches: [ { condExpr: $2, stmts: $4 } ],
-              elseBranchStmts: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              ifBranches: [ { condExpr: $2, stmts: $4, ...useLoc($1) } ],
+              elseBranch: $5 ? { stmts: $5[1], ...useLoc($5[0]) } : null,
               ...useLoc($1),
             })
             },
@@ -406,44 +410,73 @@ const grammar: Grammar = {
             ({
               type: StmtType.IF,
               ifBranches: [
-                { condExpr: $2, stmts: $5 },
-                ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
+                { condExpr: $2, stmts: $5, ...useLoc($1) },
+                ...$6.map(
+                  ([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({
+                    condExpr: $6_2,
+                    stmts: $6_5,
+                    ...useLoc($6_1),
+                  })),
               ],
-              elseBranchStmts: $7 ? $7[1] : [],
+              elseBranch: $7 ? { stmts: $7[1], ...useLoc($7[0]) } : null,
               ...useLoc($1),
             })
             },
     {"name": "selectStmt$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "selectStmt$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "selectStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "exprs", "stmts"]},
+    {"name": "selectStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "caseExprs", "stmts"]},
     {"name": "selectStmt$ebnf$2", "symbols": ["selectStmt$ebnf$2$subexpression$1"]},
-    {"name": "selectStmt$ebnf$2$subexpression$2", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "exprs", "stmts"]},
+    {"name": "selectStmt$ebnf$2$subexpression$2", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "caseExprs", "stmts"]},
     {"name": "selectStmt$ebnf$2", "symbols": ["selectStmt$ebnf$2", "selectStmt$ebnf$2$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "selectStmt$ebnf$3$subexpression$1", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), (lexer.has("ELSE") ? {type: "ELSE"} : ELSE), "stmts"]},
     {"name": "selectStmt$ebnf$3", "symbols": ["selectStmt$ebnf$3$subexpression$1"], "postprocess": id},
     {"name": "selectStmt$ebnf$3", "symbols": [], "postprocess": () => null},
     {"name": "selectStmt", "symbols": [(lexer.has("SELECT") ? {type: "SELECT"} : SELECT), (lexer.has("CASE") ? {type: "CASE"} : CASE), "expr", "selectStmt$ebnf$1", "selectStmt$ebnf$2", "selectStmt$ebnf$3", (lexer.has("END") ? {type: "END"} : END), (lexer.has("SELECT") ? {type: "SELECT"} : SELECT)], "postprocess": 
-        ([$1, $2, $3, $4, $5, $6, $7, $8]): IfStmt => ({
-          type: StmtType.IF,
-          ifBranches: _.flatMap(
-            $5,
-            ([$5_1, $5_2, $5_3]: Array<any>) =>
-                $5_2.map((valueExpr: any) => {
-                  const condExpr: BinaryOpExpr = {
-                    type: ExprType.BINARY_OP,
-                    op: BinaryOp.EQ,
-                    leftExpr: $3,
-                    rightExpr: valueExpr,
-                    ...useLoc($5_1),
-                  };
-                  return {
-                    condExpr,
-                    stmts: $5_3,
-                  };
-                })
+        ([$1, $2, $3, $4, $5, $6, $7, $8]): SelectStmt => ({
+          type: StmtType.SELECT,
+          testExpr: $3,
+          ifBranches: $5.map(
+            ([$5_1, $5_2, $5_3]: Array<any>) => ({
+              condExprs: $5_2,
+              stmts: $5_3,
+              ...useLoc($5_1),
+            })
           ),
-          elseBranchStmts: $6 ? $6[2] : [],
+          elseBranch: $6 ? { stmts: $6[2], ...useLoc($6[0]) } : null,
           ...useLoc($1),
+        })
+            },
+    {"name": "caseExprs$ebnf$1", "symbols": []},
+    {"name": "caseExprs$ebnf$1$subexpression$1", "symbols": ["caseExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "caseExprs$ebnf$1", "symbols": ["caseExprs$ebnf$1", "caseExprs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "caseExprs", "symbols": ["caseExprs$ebnf$1", "caseExpr"], "postprocess": 
+        ([$1, $2]): Array<CaseExpr> =>
+            [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+              },
+    {"name": "caseExpr", "symbols": ["expr"], "postprocess": 
+        ([$1]): CaseExpr => ({
+          type: CaseExprType.VALUE,
+          valueExpr: $1,
+        })
+            },
+    {"name": "caseExpr", "symbols": ["expr", (lexer.has("TO") ? {type: "TO"} : TO), "expr"], "postprocess": 
+        ([$1, $2, $3]): CaseExpr => ({
+          type: CaseExprType.RANGE,
+          lowerBoundExpr: $1,
+          upperBoundExpr: $3,
+        })
+            },
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("EQ") ? {type: "EQ"} : EQ)]},
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("NE") ? {type: "NE"} : NE)]},
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("GT") ? {type: "GT"} : GT)]},
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("GTE") ? {type: "GTE"} : GTE)]},
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("LT") ? {type: "LT"} : LT)]},
+    {"name": "caseExpr$subexpression$1", "symbols": [(lexer.has("LTE") ? {type: "LTE"} : LTE)]},
+    {"name": "caseExpr", "symbols": [(lexer.has("IS") ? {type: "IS"} : IS), "caseExpr$subexpression$1", "expr"], "postprocess": 
+        ([$1, $2, $3]): CaseExpr => ({
+          type: CaseExprType.COMP,
+          op: id($2).type.toLowerCase(),
+          rightExpr: $3,
         })
             },
     {"name": "whileStmt", "symbols": [(lexer.has("WHILE") ? {type: "WHILE"} : WHILE), "expr", "stmts", (lexer.has("WEND") ? {type: "WEND"} : WEND)], "postprocess": 

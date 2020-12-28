@@ -22,7 +22,7 @@ Test2:
     RETURN
 
 Test3:
-  ' Example from "Microsoft(R) QuickBASIC BASIC: Language Reference"
+  ' Example from Microsoft QuickBASIC BASIC: Language Reference
   PRINT "in module-level code"
   GOSUB Sub1
   PRINT "this line in main routine should be skipped"

@@ -32,6 +32,9 @@ import {
   ConstStmt,
   ConstDef,
   IfStmt,
+  SelectStmt,
+  CaseExprType,
+  CaseExpr,
   CondLoopStructure,
   CondLoopStmt,
   UncondLoopStmt,
@@ -304,8 +307,8 @@ singleLineIfStmt ->
         ([$1, $2, $3, $4, $5, $6]): IfStmt =>
             ({
               type: StmtType.IF,
-              ifBranches: [ { condExpr: $2, stmts: $4 } ],
-              elseBranchStmts: $5 ? (([$5_1, $5_2]) => $5_2)($5) : [],
+              ifBranches: [ { condExpr: $2, stmts: $4, ...useLoc($1) } ],
+              elseBranch: $5 ? { stmts: $5[1], ...useLoc($5[0]) } : null,
               ...useLoc($1),
             })
     %}
@@ -319,41 +322,65 @@ blockIfStmt ->
             ({
               type: StmtType.IF,
               ifBranches: [
-                { condExpr: $2, stmts: $5 },
-                ...$6.map(([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({ condExpr: $6_2, stmts: $6_5})),
+                { condExpr: $2, stmts: $5, ...useLoc($1) },
+                ...$6.map(
+                  ([$6_1, $6_2, $6_3, $6_4, $6_5]: Array<any>) => ({
+                    condExpr: $6_2,
+                    stmts: $6_5,
+                    ...useLoc($6_1),
+                  })),
               ],
-              elseBranchStmts: $7 ? $7[1] : [],
+              elseBranch: $7 ? { stmts: $7[1], ...useLoc($7[0]) } : null,
               ...useLoc($1),
             })
     %}
 
 selectStmt ->
     %SELECT %CASE expr stmtSep:?
-        (%CASE exprs stmts):+
+        (%CASE caseExprs stmts):+
         (%CASE %ELSE stmts):?
         %END %SELECT  {%
-        ([$1, $2, $3, $4, $5, $6, $7, $8]): IfStmt => ({
-          type: StmtType.IF,
-          ifBranches: _.flatMap(
-            $5,
-            ([$5_1, $5_2, $5_3]: Array<any>) =>
-                $5_2.map((valueExpr: any) => {
-                  const condExpr: BinaryOpExpr = {
-                    type: ExprType.BINARY_OP,
-                    op: BinaryOp.EQ,
-                    leftExpr: $3,
-                    rightExpr: valueExpr,
-                    ...useLoc($5_1),
-                  };
-                  return {
-                    condExpr,
-                    stmts: $5_3,
-                  };
-                })
+        ([$1, $2, $3, $4, $5, $6, $7, $8]): SelectStmt => ({
+          type: StmtType.SELECT,
+          testExpr: $3,
+          ifBranches: $5.map(
+            ([$5_1, $5_2, $5_3]: Array<any>) => ({
+              condExprs: $5_2,
+              stmts: $5_3,
+              ...useLoc($5_1),
+            })
           ),
-          elseBranchStmts: $6 ? $6[2] : [],
+          elseBranch: $6 ? { stmts: $6[2], ...useLoc($6[0]) } : null,
           ...useLoc($1),
         })
+    %}
+
+caseExprs ->
+      (caseExpr %COMMA):* caseExpr  {%
+          ([$1, $2]): Array<CaseExpr> =>
+              [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+      %}
+
+caseExpr ->
+      expr  {%
+          ([$1]): CaseExpr => ({
+            type: CaseExprType.VALUE,
+            valueExpr: $1,
+          })
+    %}
+    | expr %TO expr  {%
+          ([$1, $2, $3]): CaseExpr => ({
+            type: CaseExprType.RANGE,
+            lowerBoundExpr: $1,
+            upperBoundExpr: $3,
+          })
+    %}
+    | %IS (%EQ | %NE | %GT | %GTE | %LT | %LTE) expr  {%
+          ([$1, $2, $3]): CaseExpr => ({
+            type: CaseExprType.COMP,
+            op: id($2).type.toLowerCase(),
+            rightExpr: $3,
+          })
     %}
 
 whileStmt ->
