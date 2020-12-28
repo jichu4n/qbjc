@@ -13,6 +13,7 @@ import {
   Expr,
   ExprType,
   BinaryOpExpr,
+  BinaryOp,
   UnaryOp,
   UnaryOpExpr,
   LiteralExpr,
@@ -185,6 +186,7 @@ nonLabelStmt ->
     | constStmt  {% id %}
     | gotoStmt  {% id %}
     | ifStmt  {% id %}
+    | selectStmt  {% id %}
     | whileStmt  {% id %}
     | doWhileStmt  {% id %}
     | doUntilStmt  {% id %}
@@ -323,6 +325,35 @@ blockIfStmt ->
               elseBranchStmts: $7 ? $7[1] : [],
               ...useLoc($1),
             })
+    %}
+
+selectStmt ->
+    %SELECT %CASE expr stmtSep:?
+        (%CASE exprs stmts):+
+        (%CASE %ELSE stmts):?
+        %END %SELECT  {%
+        ([$1, $2, $3, $4, $5, $6, $7, $8]): IfStmt => ({
+          type: StmtType.IF,
+          ifBranches: _.flatMap(
+            $5,
+            ([$5_1, $5_2, $5_3]: Array<any>) =>
+                $5_2.map((valueExpr: any) => {
+                  const condExpr: BinaryOpExpr = {
+                    type: ExprType.BINARY_OP,
+                    op: BinaryOp.EQ,
+                    leftExpr: $3,
+                    rightExpr: valueExpr,
+                    ...useLoc($5_1),
+                  };
+                  return {
+                    condExpr,
+                    stmts: $5_3,
+                  };
+                })
+          ),
+          elseBranchStmts: $6 ? $6[2] : [],
+          ...useLoc($1),
+        })
     %}
 
 whileStmt ->

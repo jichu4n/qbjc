@@ -24,6 +24,8 @@ declare var IF: any;
 declare var THEN: any;
 declare var ELSE: any;
 declare var ELSEIF: any;
+declare var SELECT: any;
+declare var CASE: any;
 declare var WHILE: any;
 declare var WEND: any;
 declare var DO: any;
@@ -74,6 +76,7 @@ import {
   Expr,
   ExprType,
   BinaryOpExpr,
+  BinaryOp,
   UnaryOp,
   UnaryOpExpr,
   LiteralExpr,
@@ -276,6 +279,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["constStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["selectStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["whileStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["doWhileStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["doUntilStmt"], "postprocess": id},
@@ -408,6 +412,39 @@ const grammar: Grammar = {
               elseBranchStmts: $7 ? $7[1] : [],
               ...useLoc($1),
             })
+            },
+    {"name": "selectStmt$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "selectStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "selectStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "exprs", "stmts"]},
+    {"name": "selectStmt$ebnf$2", "symbols": ["selectStmt$ebnf$2$subexpression$1"]},
+    {"name": "selectStmt$ebnf$2$subexpression$2", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), "exprs", "stmts"]},
+    {"name": "selectStmt$ebnf$2", "symbols": ["selectStmt$ebnf$2", "selectStmt$ebnf$2$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "selectStmt$ebnf$3$subexpression$1", "symbols": [(lexer.has("CASE") ? {type: "CASE"} : CASE), (lexer.has("ELSE") ? {type: "ELSE"} : ELSE), "stmts"]},
+    {"name": "selectStmt$ebnf$3", "symbols": ["selectStmt$ebnf$3$subexpression$1"], "postprocess": id},
+    {"name": "selectStmt$ebnf$3", "symbols": [], "postprocess": () => null},
+    {"name": "selectStmt", "symbols": [(lexer.has("SELECT") ? {type: "SELECT"} : SELECT), (lexer.has("CASE") ? {type: "CASE"} : CASE), "expr", "selectStmt$ebnf$1", "selectStmt$ebnf$2", "selectStmt$ebnf$3", (lexer.has("END") ? {type: "END"} : END), (lexer.has("SELECT") ? {type: "SELECT"} : SELECT)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7, $8]): IfStmt => ({
+          type: StmtType.IF,
+          ifBranches: _.flatMap(
+            $5,
+            ([$5_1, $5_2, $5_3]: Array<any>) =>
+                $5_2.map((valueExpr: any) => {
+                  const condExpr: BinaryOpExpr = {
+                    type: ExprType.BINARY_OP,
+                    op: BinaryOp.EQ,
+                    leftExpr: $3,
+                    rightExpr: valueExpr,
+                    ...useLoc($5_1),
+                  };
+                  return {
+                    condExpr,
+                    stmts: $5_3,
+                  };
+                })
+          ),
+          elseBranchStmts: $6 ? $6[2] : [],
+          ...useLoc($1),
+        })
             },
     {"name": "whileStmt", "symbols": [(lexer.has("WHILE") ? {type: "WHILE"} : WHILE), "expr", "stmts", (lexer.has("WEND") ? {type: "WEND"} : WEND)], "postprocess": 
         ([$1, $2, $3, $4]): CondLoopStmt =>
