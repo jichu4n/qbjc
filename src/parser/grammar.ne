@@ -565,7 +565,7 @@ inputStmt ->
             ...useLoc($1),
           })
     %}
-    | %LINE %INPUT (%STRING_LITERAL %SEMICOLON):? lhsExpr  {%
+    | %LINE %INPUT (%STRING_LITERAL inputStmtPromptSep):? lhsExpr  {%
           ([$1, $2, $3, $4]): InputStmt => ({
             type: StmtType.INPUT,
             prompt: $3 ? $3[0].value : '',

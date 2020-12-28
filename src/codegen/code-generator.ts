@@ -783,9 +783,14 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         let text = '';
         if (argExpr.varType === VarType.ARG) {
           text = `ctx.args['${argExpr.name}']`;
+        } else if (argExpr.varType === VarType.STATIC_VAR) {
+          text = `[ctx.localStaticVars, '${argExpr.name}']`;
         } else {
-          // TODO: Global
-          text = `[ctx.localVars, '${argExpr.name}']`;
+          if (argExpr.varScope === VarScope.GLOBAL) {
+            text = `[ctx.globalVars, '${argExpr.name}']`;
+          } else {
+            text = `[ctx.localVars, '${argExpr.name}']`;
+          }
         }
         argPtrs.push(this.createSourceNode(argExpr, text));
       } else {

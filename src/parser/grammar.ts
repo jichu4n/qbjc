@@ -648,7 +648,7 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
-    {"name": "inputStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("STRING_LITERAL") ? {type: "STRING_LITERAL"} : STRING_LITERAL), (lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)]},
+    {"name": "inputStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("STRING_LITERAL") ? {type: "STRING_LITERAL"} : STRING_LITERAL), "inputStmtPromptSep"]},
     {"name": "inputStmt$ebnf$2", "symbols": ["inputStmt$ebnf$2$subexpression$1"], "postprocess": id},
     {"name": "inputStmt$ebnf$2", "symbols": [], "postprocess": () => null},
     {"name": "inputStmt", "symbols": [(lexer.has("LINE") ? {type: "LINE"} : LINE), (lexer.has("INPUT") ? {type: "INPUT"} : INPUT), "inputStmt$ebnf$2", "lhsExpr"], "postprocess": 
