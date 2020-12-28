@@ -130,13 +130,14 @@ moduleComponentWithSep ->
     | proc stmtSep  {%
           ([$1, $2]): Module => ({
             stmts: [],
-            procs: [$1],
+            procs: $1 ? [$1] : [],
           })
     %}
 
 proc ->
       fnProc  {% id %}
     | subProc  {% id %}
+    | procDecl  {% discard %}
 
 fnProc ->
     %FUNCTION %IDENTIFIER (%LPAREN params %RPAREN):? %STATIC:? stmts %END %FUNCTION  {%
@@ -161,6 +162,9 @@ subProc ->
           ...useLoc($1),
         })
     %}
+
+procDecl ->
+    %DECLARE (%FUNCTION | %SUB) %IDENTIFIER (%LPAREN params %RPAREN):?  {% discard %}
 
 params ->
       null  {% (): Array<Param> => [] %}

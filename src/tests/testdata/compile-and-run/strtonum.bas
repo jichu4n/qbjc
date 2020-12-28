@@ -1,6 +1,6 @@
 ' Example from QuickBASIC EXAMPLES folder.
 
-' DECLARE FUNCTION Filter$ (Txt$, FilterString$)
+DECLARE FUNCTION Filter$ (Txt$, FilterString$)
 
 ' Input a line:
 LINE INPUT "Enter a number with commas: ", A$

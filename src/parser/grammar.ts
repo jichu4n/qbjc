@@ -10,6 +10,7 @@ declare var RPAREN: any;
 declare var STATIC: any;
 declare var END: any;
 declare var SUB: any;
+declare var DECLARE: any;
 declare var COMMA: any;
 declare var COLON: any;
 declare var NEWLINE: any;
@@ -219,11 +220,12 @@ const grammar: Grammar = {
     {"name": "moduleComponentWithSep", "symbols": ["proc", "stmtSep"], "postprocess": 
         ([$1, $2]): Module => ({
           stmts: [],
-          procs: [$1],
+          procs: $1 ? [$1] : [],
         })
             },
     {"name": "proc", "symbols": ["fnProc"], "postprocess": id},
     {"name": "proc", "symbols": ["subProc"], "postprocess": id},
+    {"name": "proc", "symbols": ["procDecl"], "postprocess": discard},
     {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "fnProc$ebnf$1", "symbols": [], "postprocess": () => null},
@@ -254,6 +256,12 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
+    {"name": "procDecl$subexpression$1", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)]},
+    {"name": "procDecl$subexpression$1", "symbols": [(lexer.has("SUB") ? {type: "SUB"} : SUB)]},
+    {"name": "procDecl$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
+    {"name": "procDecl$ebnf$1", "symbols": ["procDecl$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "procDecl$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "procDecl", "symbols": [(lexer.has("DECLARE") ? {type: "DECLARE"} : DECLARE), "procDecl$subexpression$1", (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "procDecl$ebnf$1"], "postprocess": discard},
     {"name": "params", "symbols": [], "postprocess": (): Array<Param> => []},
     {"name": "params$ebnf$1", "symbols": []},
     {"name": "params$ebnf$1$subexpression$1", "symbols": ["param", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},

@@ -4,7 +4,7 @@
 '
 ' Demonstrates a BASIC version of the strtok C function.
 '
-'DECLARE FUNCTION StrTok$(Source$,Delimiters$)
+DECLARE FUNCTION StrTok$(Source$,Delimiters$)
 
 LINE INPUT "Enter string: ",P$
 ' Set up the characters that separate tokens.
