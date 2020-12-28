@@ -1,4 +1,4 @@
-import {DataTypeSpec} from './types';
+import {DataTypeSpec, ProcType} from './types';
 import {VarSymbolTable, VarType, VarScope} from './symbol-table';
 import ErrorWithLoc from './error-with-loc';
 
@@ -39,20 +39,6 @@ export interface Module {
 
 /** A procedure definition (a SUB or a FUNCTION). */
 export type Proc = SubProc | FnProc;
-
-export enum ProcType {
-  SUB = 'sub',
-  FN = 'fn',
-}
-
-/** Returns the user-facing name of a ProcType. */
-export function procTypeName(procType: ProcType) {
-  const NAMES = {
-    [ProcType.SUB]: 'SUB procedure',
-    [ProcType.FN]: 'function',
-  };
-  return NAMES[procType];
-}
 
 /** Common properties of procedure definitions. */
 interface ProcBase extends AstNodeBase {

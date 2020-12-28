@@ -27,14 +27,12 @@ import {
   NextStmt,
   PrintStmt,
   Proc,
-  ProcType,
   ReturnStmt,
   SubProc,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
-  procTypeName,
 } from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
@@ -46,6 +44,8 @@ import {
   isNumeric,
   isString,
   longSpec,
+  ProcType,
+  procTypeName,
   singleSpec,
   stringSpec,
 } from '../lib/types';

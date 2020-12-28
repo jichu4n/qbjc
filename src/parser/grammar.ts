@@ -67,7 +67,6 @@ import lexer from './lexer';
 import {
   AstNode,
   Module,
-  ProcType,
   FnProc,
   SubProc,
   Param,
@@ -113,6 +112,7 @@ import {
   singleSpec,
   doubleSpec,
   stringSpec,
+  ProcType,
 } from '../lib/types';
 
 // ----
@@ -155,7 +155,7 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
 type Reject = Object | undefined;
 
 // ----
-// Generated grammer for QBasic
+// Generated grammer below
 // ----
 
 

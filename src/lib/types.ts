@@ -87,3 +87,20 @@ export function areMatchingElementaryTypes(
 function getType(t: DataType | DataTypeSpec) {
   return typeof t === 'object' ? t.type : t;
 }
+
+/** Type of a procedure. */
+export enum ProcType {
+  /** SUB procedure. */
+  SUB = 'sub',
+  /** FUNCTION procedure. */
+  FN = 'fn',
+}
+
+/** Returns the user-facing name of a ProcType. */
+export function procTypeName(procType: ProcType) {
+  const NAMES = {
+    [ProcType.SUB]: 'SUB procedure',
+    [ProcType.FN]: 'FUNCTION procedure',
+  };
+  return NAMES[procType];
+}

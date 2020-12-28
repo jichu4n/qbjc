@@ -2,7 +2,6 @@ import ErrorWithLoc from '../lib/error-with-loc';
 import {
   ArgsContainer,
   CompiledModule,
-  CompiledProcType,
   CompiledStmt,
   ExecutionContext,
   ExecutionDirective,
@@ -12,7 +11,7 @@ import {
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
 import {lookupSymbol, VarSymbolTable} from '../lib/symbol-table';
-import {DataType} from '../lib/types';
+import {DataType, ProcType, procTypeName} from '../lib/types';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
@@ -83,7 +82,8 @@ export default class Executor {
     }
     if (argPtrs.length !== proc.paramSymbols.length) {
       throw new Error(
-        `Incorrect number of arguments to "${proc.name}": ` +
+        'Incorrect number of arguments to ' +
+          `${procTypeName(proc.type)} "${proc.name}": ` +
           `expected ${proc.paramSymbols.length}, got ${argPtrs.length}`
       );
     }
@@ -100,9 +100,11 @@ export default class Executor {
     };
     await this.executeStmts(ctx, proc.stmts);
 
-    if (proc.type === CompiledProcType.FN) {
+    if (proc.type === ProcType.FN) {
       if (!(name in ctx.localVars)) {
-        throw new Error(`Function ${proc.name} did not return a value`);
+        throw new Error(
+          `${procTypeName(proc.type)} "${proc.name}" did not return a value`
+        );
       }
       return ctx.localVars[name];
     }

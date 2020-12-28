@@ -1,5 +1,6 @@
 import {VarSymbolTable} from '../lib/symbol-table';
 import Runtime from './runtime';
+import {ProcType} from '../lib/types';
 
 /** A compiled module produced by CodeGenerator. */
 export interface CompiledModule {
@@ -17,16 +18,11 @@ interface CompiledComponentBase {
 
 /** A compiled procedure (SUB or FUNCTION). */
 export interface CompiledProc {
-  type: CompiledProcType.FN;
+  type: ProcType;
   name: string;
   localSymbols: VarSymbolTable;
   paramSymbols: VarSymbolTable;
   stmts: Array<CompiledStmt>;
-}
-
-export enum CompiledProcType {
-  SUB = 'sub',
-  FN = 'fn',
 }
 
 /** A compiled statement. */
