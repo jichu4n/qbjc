@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import {SourceNode} from 'source-map';
+import {FnDefType} from '../lib/types';
 import {
   AssignStmt,
   AstNodeBase,
@@ -797,6 +798,15 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       }
     }
 
+    const executeProcCodePrefixMap = {
+      [FnDefType.BUILTIN]:
+        'ctx.runtime.executeBuiltinFn(' +
+        `'${node.name}', ${JSON.stringify(
+          node.argExprs.map(({typeSpec}) => typeSpec!)
+        )}`,
+      [FnDefType.MODULE]: `ctx.executeProc(ctx, '${node.name}'`,
+    };
+
     return this.createSourceNode(
       node,
       '(await (async () => {\n',
@@ -807,9 +817,9 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         ';\n',
       ]),
       this.lines(
-        `const result = await ctx.executeProc(ctx, '${
-          node.name
-        }', ${argPtrs.join(', ')});`,
+        `const result = await ${
+          executeProcCodePrefixMap[node.fnDefType!]
+        }, ${argPtrs.join(', ')});`,
         ...tempVars.map(({name}) => `delete ${this.generateTempVarRef(name)};`),
         'return result;',
         -1,

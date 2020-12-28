@@ -1,6 +1,6 @@
 import ErrorWithLoc from './error-with-loc';
 import {VarScope, VarSymbolTable, VarType} from './symbol-table';
-import {DataTypeSpec, ProcType} from './types';
+import {DataTypeSpec, ProcType, FnDefType} from './types';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
@@ -293,6 +293,12 @@ export interface CallStmt extends AstNodeBase {
   type: StmtType.CALL;
   name: string;
   argExprs: Array<Expr>;
+
+  /** Resolved function definition type.
+   *
+   * Populated during semantic analysis.
+   */
+  fnDefType?: FnDefType;
 }
 
 export interface ExitProcStmt extends AstNodeBase {
@@ -385,6 +391,12 @@ export interface FnCallExpr extends ExprBase {
   type: ExprType.FN_CALL;
   name: string;
   argExprs: Array<Expr>;
+
+  /** Resolved function definition type.
+   *
+   * Populated during semantic analysis.
+   */
+  fnDefType?: FnDefType;
 }
 
 export enum BinaryOp {

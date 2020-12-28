@@ -43,5 +43,18 @@ export function lookupSymbol<T extends {name: string}>(
   symbolTable: Array<T>,
   name: string
 ) {
-  return symbolTable.find((symbol) => symbol.name === name) ?? null;
+  return (
+    symbolTable.find(
+      (symbol) => symbol.name.toLowerCase() === name.toLowerCase()
+    ) ?? null
+  );
+}
+
+export function lookupSymbols<T extends {name: string}>(
+  symbolTable: Array<T>,
+  name: string
+) {
+  return symbolTable.filter(
+    (symbol) => symbol.name.toLowerCase() === name.toLowerCase()
+  );
 }

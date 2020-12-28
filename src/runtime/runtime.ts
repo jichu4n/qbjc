@@ -1,6 +1,145 @@
-import {DataTypeSpec, isNumeric, isString} from '../lib/types';
 import moo, {Token} from 'moo';
-import {PrintArg, PrintArgType} from './compiled-code';
+import {
+  DataTypeSpec,
+  doubleSpec,
+  integerSpec,
+  isNumeric,
+  isString,
+  longSpec,
+  stringSpec,
+  areMatchingElementaryTypes,
+} from '../lib/types';
+import {lookupSymbols} from '../lib/symbol-table';
+import {PrintArg, PrintArgType, Ptr} from './compiled-code';
+
+/** Built-in function definition. */
+export interface BuiltinFn<
+  RunFnT extends (...args: Array<any>) => Promise<any> = (
+    ...args: Array<any>
+  ) => Promise<any>
+> {
+  name: string;
+  paramTypeSpecs: Array<DataTypeSpec>;
+  returnTypeSpec: DataTypeSpec;
+  run: RunFnT;
+}
+
+export const BUILTIN_FNS: Array<BuiltinFn> = [
+  {
+    name: 'chr$',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return (String.fromCodePoint ?? String.fromCharCode)(Math.floor(n));
+    },
+  },
+  {
+    name: 'instr',
+    paramTypeSpecs: [stringSpec(), stringSpec()],
+    returnTypeSpec: integerSpec(),
+    async run(haystack: string, needle: string) {
+      return haystack.indexOf(needle) + 1;
+    },
+  },
+  {
+    name: 'instr',
+    paramTypeSpecs: [longSpec(), stringSpec(), stringSpec()],
+    returnTypeSpec: integerSpec(),
+    async run(start: number, haystack: string, needle: string) {
+      return haystack.indexOf(needle, Math.floor(start) - 1) + 1;
+    },
+  },
+  {
+    name: 'lcase$',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string) {
+      return s.toLowerCase();
+    },
+  },
+  {
+    name: 'left$',
+    paramTypeSpecs: [stringSpec(), longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string, n: number) {
+      return s.substr(0, Math.floor(n));
+    },
+  },
+  {
+    name: 'len',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: longSpec(),
+    async run(s: string) {
+      return s.length;
+    },
+  },
+  {
+    name: 'mid$',
+    paramTypeSpecs: [stringSpec(), longSpec(), longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string, startIdx: number, length: number) {
+      return s.substr(Math.floor(startIdx) - 1, Math.floor(length));
+    },
+  },
+  {
+    name: 'right$',
+    paramTypeSpecs: [stringSpec(), longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string, n: number) {
+      return s.substr(Math.max(0, s.length - Math.floor(n)));
+    },
+  },
+  {
+    name: 'str$',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return `${n >= 0 ? ' ' : ''}${n}`;
+    },
+  },
+  {
+    name: 'val',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(s: string) {
+      const v = parseFloat(s);
+      return isNaN(v) ? 0 : v;
+    },
+  },
+  {
+    name: 'ucase$',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string) {
+      return s.toUpperCase();
+    },
+  },
+];
+
+export function lookupBuiltinFn(
+  name: string,
+  argTypeSpecs: Array<DataTypeSpec>,
+  {
+    shouldReturnIfArgTypeMismatch,
+  }: {
+    shouldReturnIfArgTypeMismatch?: boolean;
+  } = {}
+) {
+  const builtinFnsMatchingName = lookupSymbols(BUILTIN_FNS, name);
+  const builtinFn = builtinFnsMatchingName.find(
+    ({paramTypeSpecs}) =>
+      paramTypeSpecs.length === argTypeSpecs.length &&
+      paramTypeSpecs.every((paramTypeSpec, i) =>
+        areMatchingElementaryTypes(paramTypeSpec, argTypeSpecs[i])
+      )
+  );
+  return (
+    builtinFn ??
+    (shouldReturnIfArgTypeMismatch && builtinFnsMatchingName.length > 0
+      ? builtinFnsMatchingName[0]
+      : null)
+  );
+}
 
 /** Interface for platform-specific runtime functionality. */
 export interface RuntimePlatform {
@@ -17,6 +156,18 @@ export interface RuntimePlatform {
  */
 export default class Runtime {
   constructor(private readonly platform: RuntimePlatform) {}
+
+  async executeBuiltinFn(
+    name: string,
+    argTypeSpecs: Array<DataTypeSpec>,
+    ...args: Array<Ptr>
+  ) {
+    const builtinFn = lookupBuiltinFn(name, argTypeSpecs);
+    if (!builtinFn) {
+      throw new Error(`No matching built-in function found: "${name}"`);
+    }
+    return await builtinFn.run(...args.map((ptr) => ptr[0][ptr[1]]));
+  }
 
   print(...args: Array<PrintArg>) {
     const PRINT_ZONE_LENGTH = 14;

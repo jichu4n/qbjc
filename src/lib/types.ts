@@ -104,3 +104,11 @@ export function procTypeName(procType: ProcType) {
   };
   return NAMES[procType];
 }
+
+/** The type of a function definition. */
+export enum FnDefType {
+  /** Built-in function. */
+  BUILTIN = 'builtin',
+  /** User-defined function in the current module. */
+  MODULE = 'module',
+}

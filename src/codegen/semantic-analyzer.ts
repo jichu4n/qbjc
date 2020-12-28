@@ -41,6 +41,7 @@ import {
   areMatchingElementaryTypes,
   DataTypeSpec,
   doubleSpec,
+  FnDefType,
   integerSpec,
   isElementaryType,
   isNumeric,
@@ -51,6 +52,7 @@ import {
   singleSpec,
   stringSpec,
 } from '../lib/types';
+import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
 /** Map from variable type declaration suffix to the corresponding type spec. */
 const TYPE_SUFFIX_MAP: {[key: string]: DataTypeSpec} = Object.freeze({
@@ -60,6 +62,18 @@ const TYPE_SUFFIX_MAP: {[key: string]: DataTypeSpec} = Object.freeze({
   '#': doubleSpec(),
   $: stringSpec(),
 });
+
+type ResolvedFn =
+  | {
+      fnDefType: FnDefType.BUILTIN;
+      builtinFn: BuiltinFn;
+      returnTypeSpec: DataTypeSpec;
+    }
+  | {
+      fnDefType: FnDefType.MODULE;
+      proc: Proc;
+      returnTypeSpec: DataTypeSpec | null;
+    };
 
 /** Semantic analysis pass.
  *
@@ -349,6 +363,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitReturnStmt(node: ReturnStmt): void {}
 
   visitCallStmt(node: CallStmt): void {
+    this.acceptAll(node.argExprs);
     const proc = lookupSymbol(this.module.procs, node.name);
     if (!proc || proc.type !== ProcType.SUB) {
       this.throwError(
@@ -356,7 +371,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         node
       );
     }
-    this.visitProcCall(proc, node);
+    this.visitProcCall(
+      {
+        fnDefType: FnDefType.MODULE,
+        proc,
+        returnTypeSpec: null,
+      },
+      node
+    );
   }
 
   visitExitProcStmt(node: ExitProcStmt): void {
@@ -458,12 +480,20 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
-    const proc = lookupSymbol(this.module.procs, node.name);
-    if (!proc || proc.type !== ProcType.FN) {
+    this.acceptAll(node.argExprs);
+    const resolvedFn = this.lookupFn(
+      node.name,
+      node.argExprs.map(({typeSpec}) => typeSpec!)
+    );
+    if (
+      !resolvedFn ||
+      (resolvedFn.fnDefType === FnDefType.MODULE &&
+        resolvedFn.proc.type !== ProcType.FN)
+    ) {
       this.throwError(`Function not found: "${node.name}"`, node);
     }
-    this.visitProcCall(proc, node);
-    node.typeSpec = proc.returnTypeSpec!;
+    this.visitProcCall(resolvedFn, node);
+    node.typeSpec = resolvedFn.returnTypeSpec!;
   }
 
   visitBinaryOpExpr(node: BinaryOpExpr): void {
@@ -546,17 +576,32 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  private visitProcCall(proc: Proc, node: FnCallExpr | CallStmt) {
-    if (proc.paramSymbols!.length !== node.argExprs.length) {
+  private visitProcCall(resolvedFn: ResolvedFn, node: FnCallExpr | CallStmt) {
+    let paramTypeSpecs: Array<DataTypeSpec>;
+    switch (resolvedFn.fnDefType) {
+      case FnDefType.BUILTIN:
+        paramTypeSpecs = resolvedFn.builtinFn.paramTypeSpecs;
+        break;
+      case FnDefType.MODULE:
+        paramTypeSpecs = resolvedFn.proc.paramSymbols!.map(
+          ({typeSpec}) => typeSpec!
+        );
+        break;
+      default:
+        this.throwError(
+          `Unknown FnDefType: ${JSON.stringify(resolvedFn)}`,
+          node
+        );
+    }
+    if (paramTypeSpecs.length !== node.argExprs.length) {
       this.throwError(
         `Incorrect number of arguments to "${node.name}": ` +
-          `expected ${proc.paramSymbols!.length}, got ${node.argExprs.length}`,
+          `expected ${paramTypeSpecs.length}, got ${node.argExprs.length}`,
         node
       );
     }
-    this.acceptAll(node.argExprs);
     for (let i = 0; i < node.argExprs.length; ++i) {
-      const paramTypeSpec = proc.paramSymbols![i].typeSpec;
+      const paramTypeSpec = paramTypeSpecs[i];
       const argTypeSpec = node.argExprs[i].typeSpec!;
       if (!areMatchingElementaryTypes(paramTypeSpec, argTypeSpec)) {
         this.throwError(
@@ -566,6 +611,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         );
       }
     }
+    node.fnDefType = resolvedFn.fnDefType;
   }
 
   /** Computes the output numeric type after an arithmetic operation. */
@@ -654,6 +700,32 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const lastCharInName = name[name.length - 1];
     // TODO: Support DEFINT etc.
     return TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+  }
+
+  private lookupFn(
+    name: string,
+    argTypeSpecs: Array<DataTypeSpec>
+  ): ResolvedFn | null {
+    const proc = lookupSymbol(this.module.procs, name);
+    if (proc) {
+      return {
+        fnDefType: FnDefType.MODULE,
+        proc,
+        returnTypeSpec: proc.type === ProcType.FN ? proc.returnTypeSpec! : null,
+      };
+    }
+    const builtinFn = lookupBuiltinFn(name, argTypeSpecs, {
+      // This allows us to throw a more useful error message in visitProcCall().
+      shouldReturnIfArgTypeMismatch: true,
+    });
+    if (builtinFn) {
+      return {
+        fnDefType: FnDefType.BUILTIN,
+        builtinFn,
+        returnTypeSpec: builtinFn.returnTypeSpec,
+      };
+    }
+    return null;
   }
 
   /** The current proc being visited, or null if currently visiting module-level nodes. */
