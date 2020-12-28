@@ -1,3 +1,4 @@
+REM This is a hello world program
 PRINT "Hello, world!"
 
 ' EXPECT {

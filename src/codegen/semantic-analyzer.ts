@@ -273,7 +273,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitCallStmt(node: CallStmt): void {
     const proc = lookupSymbol(this.module.procs, node.name);
     if (!proc || proc.type !== ProcType.SUB) {
-      this.throwError(`Sub not found: "${node.name}"`, node);
+      this.throwError(
+        `${procTypeName(ProcType.SUB)} not found: "${node.name}"`,
+        node
+      );
     }
     this.visitProcCall(proc, node);
   }
@@ -281,7 +284,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitExitProcStmt(node: ExitProcStmt): void {
     if (!this.currentProc || this.currentProc.type !== node.procType) {
       this.throwError(
-        `EXIT statement found outside of a ${procTypeName(node.procType)}`,
+        `EXIT statement must be placed inside a ${procTypeName(node.procType)}`,
         node
       );
     }

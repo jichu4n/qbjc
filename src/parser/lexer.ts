@@ -30,6 +30,7 @@ export enum Keywords {
   NEXT = 'next',
   OR = 'or',
   PRINT = 'print',
+  REM = 'rem',
   RETURN = 'return',
   SHARED = 'shared',
   SINGLE = 'single',
@@ -44,48 +45,64 @@ export enum Keywords {
 }
 
 /** moo lexer used internally by Lexer. */
-const mooLexer: moo.Lexer & {
-  lastToken?: Token;
-  isFirstTokenOnLine?: boolean;
-} = moo.compile({
-  WHITESPACE: {
-    match: /\s+/,
-    type: (text) => (text.includes('\n') ? 'NEWLINE' : ''),
-    lineBreaks: true,
-  },
-  COMMENT: /'[^\n]*/,
-  IDENTIFIER: {
-    match: /[a-zA-Z_][a-zA-Z0-9_]*(?:\$|%|#|&|!)?/,
-    type: caseInsensitiveKeywords(Keywords),
-  },
+const mooLexer = moo.states(
+  {
+    main: {
+      WHITESPACE: {
+        match: /\s+/,
+        type: (text) => (text.includes('\n') ? 'NEWLINE' : ''),
+        lineBreaks: true,
+      },
+      COMMENT: {
+        match: /'/,
+        push: 'comment',
+      },
+      IDENTIFIER: {
+        match: /[a-zA-Z_][a-zA-Z0-9_]*(?:\$|%|#|&|!)?/,
+        type: caseInsensitiveKeywords(Keywords),
+      },
 
-  STRING_LITERAL: {
-    match: /"[^"]*"/,
-    value: (text) => text.substr(1, text.length - 2),
+      STRING_LITERAL: {
+        match: /"[^"]*"/,
+        value: (text) => text.substr(1, text.length - 2),
+      },
+      NUMERIC_LITERAL: /-?(?:\d*\.\d+|\d+)/,
+
+      COLON: ':',
+      SEMICOLON: ';',
+      COMMA: ',',
+      LPAREN: '(',
+      RPAREN: ')',
+      ADD: '+',
+      SUB: '-', // Note: must be after NUMERIC_LITERAL
+      MUL: '*',
+      EXP: '^',
+      DIV: '/',
+      INTDIV: '\\',
+      // Note: order matters in the comparison operators!
+      EQ: '=',
+      NE: '<>',
+      GTE: '>=',
+      LTE: '<=',
+      GT: '>',
+      LT: '<',
+    },
+    comment: {
+      COMMENT: {
+        match: /[^\n]+/,
+        pop: 1,
+      },
+      NEWLINE: {
+        match: /\n/,
+        pop: 1,
+        lineBreaks: true,
+      },
+    },
   },
-  NUMERIC_LITERAL: /-?(?:\d*\.\d+|\d+)/,
+  'main'
+);
 
-  COLON: ':',
-  SEMICOLON: ';',
-  COMMA: ',',
-  LPAREN: '(',
-  RPAREN: ')',
-  ADD: '+',
-  SUB: '-', // Note: must be after NUMERIC_LITERAL
-  MUL: '*',
-  EXP: '^',
-  DIV: '/',
-  INTDIV: '\\',
-  // Note: order matters in the comparison operators!
-  EQ: '=',
-  NE: '<>',
-  GTE: '>=',
-  LTE: '<=',
-  GT: '>',
-  LT: '<',
-});
-
-const TOKEN_TYPES_TO_DISCARD = ['WHITESPACE', 'COMMENT'];
+const TOKEN_TYPES_TO_DISCARD = ['WHITESPACE', 'COMMENT', 'REM'];
 
 /** Extended token. */
 export interface Token extends moo.Token {
@@ -115,10 +132,15 @@ class Lexer {
       if (token) {
         this.lastToken = token;
         token.isFirstTokenOnLine = this.isNextTokenFirstOnLine;
+
         if (token.type === 'NEWLINE') {
           this.isNextTokenFirstOnLine = true;
         } else {
           this.isNextTokenFirstOnLine = false;
+        }
+
+        if (token.type === 'REM') {
+          this.mooLexer.pushState('comment');
         }
       }
     } while (
