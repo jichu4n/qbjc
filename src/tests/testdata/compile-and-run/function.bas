@@ -44,9 +44,17 @@ FUNCTION f5(x AS STRING) AS STRING
 END FUNCTION
 PRINT f5("aaa")
 
-' Exit from inside function.
+' Exit inside function.
 PRINT f6
-FUNCTION f6
+FUNCTION f6 AS STRING
+  f6 = "hi"
+  EXIT FUNCTION
+  f6 = "hello"
+END FUNCTION
+
+' End inside function.
+PRINT f7
+FUNCTION f7
   END
 END FUNCTION
 
@@ -64,6 +72,8 @@ END FUNCTION
 '     {"output": " 0  0 \n"},
 '     {"output": " 0  42 \n"},
 '
-'     {"output": "aaaaaa\n"}
+'     {"output": "aaaaaa\n"},
+'
+'     {"output": "hi\n"}
 '   ]
 ' }

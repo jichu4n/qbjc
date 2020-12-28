@@ -186,6 +186,9 @@ export default class Executor {
           break;
         case ExecutionDirectiveType.END:
           throw new EndDirective();
+        case ExecutionDirectiveType.EXIT_PROC:
+          stmtIdx = stmts.length;
+          break;
         default:
           throw new ExecutionError(
             `Unrecognized execution directive: ${JSON.stringify(directive)}`,

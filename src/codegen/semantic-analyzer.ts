@@ -11,6 +11,7 @@ import {
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
+  ExitProcStmt,
   Expr,
   ExprType,
   FnCallExpr,
@@ -33,6 +34,7 @@ import {
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
+  procTypeName,
 } from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
@@ -274,6 +276,15 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.throwError(`Sub not found: "${node.name}"`, node);
     }
     this.visitProcCall(proc, node);
+  }
+
+  visitExitProcStmt(node: ExitProcStmt): void {
+    if (!this.currentProc || this.currentProc.type !== node.procType) {
+      this.throwError(
+        `EXIT statement found outside of a ${procTypeName(node.procType)}`,
+        node
+      );
+    }
   }
 
   visitEndStmt(node: EndStmt): void {}

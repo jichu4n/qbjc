@@ -101,6 +101,7 @@ import {
   GosubStmt,
   ReturnStmt,
   CallStmt,
+  ExitProcStmt,
   EndStmt,
   PrintStmt,
   PrintSep,
@@ -283,6 +284,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["gosubStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["returnStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["callStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["exitProcStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["endStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
@@ -511,6 +513,20 @@ const grammar: Grammar = {
           };
         }
             },
+    {"name": "exitProcStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)], "postprocess": 
+        ([$1, $2]): ExitProcStmt => ({
+          type: StmtType.EXIT_PROC,
+          procType: ProcType.FN,
+          ...useLoc($1),
+        })
+              },
+    {"name": "exitProcStmt", "symbols": [(lexer.has("EXIT") ? {type: "EXIT"} : EXIT), (lexer.has("SUB") ? {type: "SUB"} : SUB)], "postprocess": 
+        ([$1, $2]): ExitProcStmt => ({
+          type: StmtType.EXIT_PROC,
+          procType: ProcType.SUB,
+          ...useLoc($1),
+        })
+              },
     {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })

@@ -47,13 +47,15 @@ export type ExecutionDirective =
   | GotoDirective
   | GosubDirective
   | ReturnDirective
-  | EndDirective;
+  | EndDirective
+  | ExitProcDirective;
 
 export enum ExecutionDirectiveType {
   GOTO = 'goto',
   GOSUB = 'gosub',
   RETURN = 'return',
   END = 'end',
+  EXIT_PROC = 'exitProc',
 }
 
 /** Jump to a label. */
@@ -74,9 +76,14 @@ export interface ReturnDirective {
   destLabel?: string;
 }
 
-/** End execution. */
+/** End program execution. */
 export interface EndDirective {
   type: ExecutionDirectiveType.END;
+}
+
+/** End execution of current proc. */
+export interface ExitProcDirective {
+  type: ExecutionDirectiveType.EXIT_PROC;
 }
 
 /** A map holding variables at runtime, indexed by variable name. */

@@ -15,6 +15,7 @@ import {
   EndStmt,
   ExitForStmt,
   ExitLoopStmt,
+  ExitProcStmt,
   Expr,
   ExprType,
   FnCallExpr,
@@ -516,6 +517,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       this.visitProcCall(node),
       ';',
     ]);
+  }
+
+  visitExitProcStmt(node: ExitProcStmt): SourceNode {
+    return this.createStmtSourceNode(
+      node,
+      () => `return { type: '${ExecutionDirectiveType.EXIT_PROC}' };`
+    );
   }
 
   visitEndStmt(node: EndStmt): SourceNode {

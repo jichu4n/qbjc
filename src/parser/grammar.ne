@@ -41,6 +41,7 @@ import {
   GosubStmt,
   ReturnStmt,
   CallStmt,
+  ExitProcStmt,
   EndStmt,
   PrintStmt,
   PrintSep,
@@ -195,6 +196,7 @@ nonLabelStmt ->
     | gosubStmt  {% id %}
     | returnStmt  {% id %}
     | callStmt  {% id %}
+    | exitProcStmt  {% id %}
     | endStmt  {% id %}
     | printStmt  {% id %}
     | inputStmt  {% id %}
@@ -445,6 +447,22 @@ callStmt ->
             };
           }
     %}
+
+exitProcStmt ->
+      %EXIT %FUNCTION  {%
+        ([$1, $2]): ExitProcStmt => ({
+          type: StmtType.EXIT_PROC,
+          procType: ProcType.FN,
+          ...useLoc($1),
+        })
+      %}
+    | %EXIT %SUB  {%
+        ([$1, $2]): ExitProcStmt => ({
+          type: StmtType.EXIT_PROC,
+          procType: ProcType.SUB,
+          ...useLoc($1),
+        })
+      %}
 
 endStmt ->
     %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}

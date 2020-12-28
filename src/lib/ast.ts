@@ -45,6 +45,15 @@ export enum ProcType {
   FN = 'fn',
 }
 
+/** Returns the user-facing name of a ProcType. */
+export function procTypeName(procType: ProcType) {
+  const NAMES = {
+    [ProcType.SUB]: 'SUB procedure',
+    [ProcType.FN]: 'function',
+  };
+  return NAMES[procType];
+}
+
 /** Common properties of procedure definitions. */
 interface ProcBase extends AstNodeBase {
   name: string;
@@ -111,6 +120,7 @@ export type Stmt =
   | GosubStmt
   | ReturnStmt
   | CallStmt
+  | ExitProcStmt
   | EndStmt
   | PrintStmt
   | InputStmt;
@@ -131,6 +141,7 @@ export enum StmtType {
   GOSUB = 'gosub',
   RETURN = 'return',
   CALL = 'call',
+  EXIT_PROC = 'exitProc',
   END = 'end',
   PRINT = 'print',
   INPUT = 'input',
@@ -243,6 +254,11 @@ export interface CallStmt extends AstNodeBase {
   type: StmtType.CALL;
   name: string;
   argExprs: Array<Expr>;
+}
+
+export interface ExitProcStmt extends AstNodeBase {
+  type: StmtType.EXIT_PROC;
+  procType: ProcType;
 }
 
 export interface EndStmt extends AstNodeBase {
@@ -392,6 +408,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitGosubStmt(node: GosubStmt): T;
   protected abstract visitReturnStmt(node: ReturnStmt): T;
   protected abstract visitCallStmt(node: CallStmt): T;
+  protected abstract visitExitProcStmt(node: ExitProcStmt): T;
   protected abstract visitEndStmt(node: EndStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
@@ -439,6 +456,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitReturnStmt(node);
       case StmtType.CALL:
         return this.visitCallStmt(node);
+      case StmtType.EXIT_PROC:
+        return this.visitExitProcStmt(node);
       case StmtType.END:
         return this.visitEndStmt(node);
       case StmtType.PRINT:
