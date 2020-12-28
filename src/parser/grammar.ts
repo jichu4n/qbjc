@@ -296,6 +296,8 @@ const grammar: Grammar = {
             },
     {"name": "labelStmt", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": 
         ([$1, $2], _, reject): LabelStmt | Reject =>
+          // A line like "f: f:" should parse as a label "f" followed by an invocation of the
+          // sub "f", so need to explicitly disambiguate here.
           $1.isFirstTokenOnLine ? {
             type: StmtType.LABEL,
             label: $1.value,
@@ -493,6 +495,8 @@ const grammar: Grammar = {
               },
     {"name": "callStmt", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "exprs"], "postprocess": 
         ([$1, $2], _, reject): CallStmt | Reject => {
+          // A line like "f: f:" should parse as a label "f" followed by an invocation of the
+          // sub "f", so need to explicitly disambiguate here.
           if ($1.isFirstTokenOnLine && $2.length === 0) {
             const nextToken = lexer.peek();
             if (nextToken && nextToken.type === 'COLON') {

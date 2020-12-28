@@ -41,6 +41,11 @@ export class ExecutionError extends ErrorWithLoc {
   }
 }
 
+/** Exception thrown to signal program termination via END. */
+class EndDirective extends Error {
+  isEndDirective = true;
+}
+
 /** Manages the execution of a compiled program. */
 export default class Executor {
   constructor(private readonly platform: RuntimePlatform) {}
@@ -56,7 +61,15 @@ export default class Executor {
       globalVars: this.initVars(module.globalSymbols),
       tempVars: {},
     };
-    await this.executeStmts(ctx, module.stmts);
+    try {
+      await this.executeStmts(ctx, module.stmts);
+    } catch (e) {
+      if (e.isEndDirective) {
+        // Swallow error
+      } else {
+        throw e;
+      }
+    }
   }
 
   private async executeProc(
@@ -131,7 +144,11 @@ export default class Executor {
         try {
           directive = await stmt.run(ctx);
         } catch (e) {
-          throw new ExecutionError(e.message, errorArgs);
+          if (e.isEndDirective) {
+            throw e;
+          } else {
+            throw new ExecutionError(e.message, errorArgs);
+          }
         }
       }
 
@@ -168,8 +185,7 @@ export default class Executor {
           }
           break;
         case ExecutionDirectiveType.END:
-          stmtIdx = stmts.length;
-          break;
+          throw new EndDirective();
         default:
           throw new ExecutionError(
             `Unrecognized execution directive: ${JSON.stringify(directive)}`,

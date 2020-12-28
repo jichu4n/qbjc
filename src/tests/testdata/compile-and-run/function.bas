@@ -44,6 +44,12 @@ FUNCTION f5(x AS STRING) AS STRING
 END FUNCTION
 PRINT f5("aaa")
 
+' Exit from inside function.
+PRINT f6
+FUNCTION f6
+  END
+END FUNCTION
+
 ' EXPECT {
 '   "io": [
 '     {"output": "answer = 42 \n"},
