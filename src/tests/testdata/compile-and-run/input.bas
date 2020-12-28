@@ -7,6 +7,11 @@ PRINT a$; ", "; b$
 INPUT "a,b,c ", a, b, c
 PRINT a; ","; b; ","; c
 
+LINE INPUT a$
+PRINT a$
+LINE INPUT "Prompt: "; b$
+PRINT b$
+
 ' EXPECT {
 '   "io": [
 '     {"output": "? "},
@@ -19,6 +24,12 @@ PRINT a; ","; b; ","; c
 '
 '     {"output": "a,b,c "},
 '     {"input": "1,500,-30"},
-'     {"output": " 1 , 500 ,-30 \n"}
+'     {"output": " 1 , 500 ,-30 \n"},
+'
+'     {"input": "hello, world"},
+'     {"output": "hello, world\n"},
+'     {"output": "Prompt: "},
+'     {"input": "hello, world"},
+'     {"output": "hello, world\n"}
 '   ]
 ' }

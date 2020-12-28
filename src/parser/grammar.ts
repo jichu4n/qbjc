@@ -49,6 +49,7 @@ declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
 declare var STRING_LITERAL: any;
+declare var LINE: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -114,6 +115,7 @@ import {
   PrintStmt,
   PrintSep,
   InputStmt,
+  InputType,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -641,7 +643,20 @@ const grammar: Grammar = {
         ([$1, $2, $3]): InputStmt => ({
           type: StmtType.INPUT,
           prompt: $2 ? `${$2[0].value}${$2[1] ? '? ': ''}` : '? ',
+          inputType: InputType.TOKENIZED,
           targetExprs: $3,
+          ...useLoc($1),
+        })
+            },
+    {"name": "inputStmt$ebnf$2$subexpression$1", "symbols": [(lexer.has("STRING_LITERAL") ? {type: "STRING_LITERAL"} : STRING_LITERAL), (lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)]},
+    {"name": "inputStmt$ebnf$2", "symbols": ["inputStmt$ebnf$2$subexpression$1"], "postprocess": id},
+    {"name": "inputStmt$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "inputStmt", "symbols": [(lexer.has("LINE") ? {type: "LINE"} : LINE), (lexer.has("INPUT") ? {type: "INPUT"} : INPUT), "inputStmt$ebnf$2", "lhsExpr"], "postprocess": 
+        ([$1, $2, $3, $4]): InputStmt => ({
+          type: StmtType.INPUT,
+          prompt: $3 ? $3[0].value : '',
+          inputType: InputType.LINE,
+          targetExprs: [$4],
           ...useLoc($1),
         })
             },

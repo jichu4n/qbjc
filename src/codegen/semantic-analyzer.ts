@@ -23,6 +23,7 @@ import {
   GotoStmt,
   IfStmt,
   InputStmt,
+  InputType,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -385,7 +386,33 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitInputStmt(node: InputStmt): void {
-    this.requireElementaryTypeExpr(...node.targetExprs);
+    switch (node.inputType) {
+      case InputType.TOKENIZED:
+        this.requireElementaryTypeExpr(...node.targetExprs);
+        break;
+      case InputType.LINE:
+        if (node.targetExprs.length !== 1) {
+          this.throwError(
+            `Expected single destination in LINE INPUT statement, got ${node.targetExprs.length}`,
+            node
+          );
+        }
+        this.accept(node.targetExprs[0]);
+        if (!isString(node.targetExprs[0].typeSpec!)) {
+          this.throwError(
+            `Expected string destination in LINE INPUT statement, got ${
+              node.targetExprs[0].typeSpec!.type
+            }`,
+            node.targetExprs[0]
+          );
+        }
+        break;
+      default:
+        this.throwError(
+          `Unknown input type: ${JSON.stringify(node.inputType)}`,
+          node
+        );
+    }
   }
 
   visitLiteralExpr(node: LiteralExpr): void {

@@ -26,6 +26,7 @@ export enum Keywords {
   INPUT = 'input',
   INTEGER = 'integer',
   LET = 'let',
+  LINE = 'line',
   LONG = 'long',
   LOOP = 'loop',
   MOD = 'mod',

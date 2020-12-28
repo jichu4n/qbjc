@@ -53,6 +53,11 @@ export default class Runtime {
     this.platform.print(line);
   }
 
+  async inputLine(prompt: string) {
+    this.platform.print(prompt);
+    return await this.platform.inputLine();
+  }
+
   async input(prompt: string, ...resultTypes: Array<DataTypeSpec>) {
     for (;;) {
       this.platform.print(prompt);

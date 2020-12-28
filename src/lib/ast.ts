@@ -318,7 +318,15 @@ export interface PrintStmt extends AstNodeBase {
 export interface InputStmt extends AstNodeBase {
   type: StmtType.INPUT;
   prompt: string;
+  inputType: InputType;
   targetExprs: Array<LhsExpr>;
+}
+
+export enum InputType {
+  /** INPUT. */
+  TOKENIZED = 'tokenized',
+  /** LINE INPUT. */
+  LINE = 'line',
 }
 
 // ----

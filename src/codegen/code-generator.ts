@@ -28,6 +28,7 @@ import {
   IfBranch,
   IfStmt,
   InputStmt,
+  InputType,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -634,15 +635,37 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitInputStmt(node: InputStmt): SourceNode {
-    return this.createStmtSourceNode(node, () => [
-      'const results = await ctx.runtime.input(',
-      `${JSON.stringify(node.prompt)}, `,
-      node.targetExprs.map((expr) => JSON.stringify(expr.typeSpec!)).join(', '),
-      '); ',
-      ...node.targetExprs.map((expr, i) =>
-        this.createSourceNode(expr, this.accept(expr), ` = results[${i}]; `)
-      ),
-    ]);
+    return this.createStmtSourceNode(node, () => {
+      switch (node.inputType) {
+        case InputType.TOKENIZED:
+          return [
+            'const results = await ctx.runtime.input(',
+            `${JSON.stringify(node.prompt)}, `,
+            node.targetExprs
+              .map((expr) => JSON.stringify(expr.typeSpec!))
+              .join(', '),
+            '); ',
+            ...node.targetExprs.map((expr, i) =>
+              this.createSourceNode(
+                expr,
+                this.accept(expr),
+                ` = results[${i}]; `
+              )
+            ),
+          ];
+        case InputType.LINE:
+          return this.createSourceNode(
+            node.targetExprs[0],
+            this.accept(node.targetExprs[0]),
+            ` = await ctx.runtime.inputLine(${JSON.stringify(node.prompt)});`
+          );
+        default:
+          this.throwError(
+            `Unknown input type: ${JSON.stringify(node.inputType)}`,
+            node
+          );
+      }
+    });
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(

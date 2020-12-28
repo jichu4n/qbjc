@@ -50,6 +50,7 @@ import {
   PrintStmt,
   PrintSep,
   InputStmt,
+  InputType,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -555,13 +556,23 @@ printSep ->
     | %SEMICOLON  {% () => PrintSep.SEMICOLON %}
 
 inputStmt ->
-    %INPUT (%STRING_LITERAL inputStmtPromptSep):? lhsExprs  {%
-        ([$1, $2, $3]): InputStmt => ({
-          type: StmtType.INPUT,
-          prompt: $2 ? `${$2[0].value}${$2[1] ? '? ': ''}` : '? ',
-          targetExprs: $3,
-          ...useLoc($1),
-        })
+      %INPUT (%STRING_LITERAL inputStmtPromptSep):? lhsExprs  {%
+          ([$1, $2, $3]): InputStmt => ({
+            type: StmtType.INPUT,
+            prompt: $2 ? `${$2[0].value}${$2[1] ? '? ': ''}` : '? ',
+            inputType: InputType.TOKENIZED,
+            targetExprs: $3,
+            ...useLoc($1),
+          })
+    %}
+    | %LINE %INPUT (%STRING_LITERAL %SEMICOLON):? lhsExpr  {%
+          ([$1, $2, $3, $4]): InputStmt => ({
+            type: StmtType.INPUT,
+            prompt: $3 ? $3[0].value : '',
+            inputType: InputType.LINE,
+            targetExprs: [$4],
+            ...useLoc($1),
+          })
     %}
 
 inputStmtPromptSep ->
