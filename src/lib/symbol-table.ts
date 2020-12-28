@@ -18,12 +18,23 @@ export enum VarScope {
   GLOBAL = 'global',
 }
 
-/** A variable in a symbol table. */
-export interface VarSymbol {
+interface VarSymbolBase {
   name: string;
-  type: VarType;
   typeSpec: DataTypeSpec;
 }
+
+interface LocalVarSymbol extends VarSymbolBase {
+  varType: VarType.STATIC_VAR | VarType.ARG;
+  varScope: VarScope.LOCAL;
+}
+
+interface LocalOrGlobalVarSymbol extends VarSymbolBase {
+  varType: VarType.VAR | VarType.CONST;
+  varScope: VarScope.LOCAL | VarScope.GLOBAL;
+}
+
+/** A variable in a symbol table. */
+export type VarSymbol = LocalVarSymbol | LocalOrGlobalVarSymbol;
 
 /** Symbol table for variables. */
 export type VarSymbolTable = Array<VarSymbol>;

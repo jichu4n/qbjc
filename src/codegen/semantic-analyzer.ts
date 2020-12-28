@@ -17,7 +17,6 @@ import {
   Expr,
   ExprType,
   FnCallExpr,
-  FnProc,
   ForStmt,
   GosubStmt,
   GotoStmt,
@@ -32,7 +31,6 @@ import {
   Proc,
   ReturnStmt,
   SelectStmt,
-  SubProc,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -97,8 +95,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   private preprocessProc(node: Proc) {
     node.paramSymbols = node.params.map((param) => ({
       name: param.name,
-      type: VarType.ARG,
+      varType: VarType.ARG,
       typeSpec: param.typeSpec ?? this.getTypeSpecFromSuffix(param.name),
+      varScope: VarScope.LOCAL,
     }));
     node.localSymbols = [];
     if (node.type === ProcType.FN) {
@@ -107,8 +106,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       }
       node.localSymbols.push({
         name: node.name,
-        type: VarType.VAR,
+        varType: VarType.VAR,
         typeSpec: node.returnTypeSpec,
+        varScope: VarScope.LOCAL,
       });
     }
   }
@@ -138,13 +138,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     for (const varDecl of node.varDecls) {
       const resolvedSymbol = this.lookupSymbol(varDecl.name);
       if (resolvedSymbol) {
-        if (resolvedSymbol.scope === VarScope.LOCAL) {
+        if (resolvedSymbol.varScope === VarScope.LOCAL) {
           this.throwError(
             `Variable already defined in local scope: "${varDecl.name}"`,
             node
           );
         } else if (
-          resolvedSymbol.scope === VarScope.GLOBAL &&
+          resolvedSymbol.varScope === VarScope.GLOBAL &&
           node.dimType === DimType.SHARED
         ) {
           this.throwError(
@@ -159,8 +159,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         case DimType.SHARED:
           this.module.globalSymbols!.push({
             name: varDecl.name,
-            type: VarType.VAR,
+            varType: VarType.VAR,
             typeSpec,
+            varScope: VarScope.GLOBAL,
           });
           break;
         case DimType.LOCAL:
@@ -174,8 +175,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         case DimType.STATIC:
           this.addLocalSymbol({
             name: varDecl.name,
-            type: VarType.STATIC_VAR,
+            varType: VarType.STATIC_VAR,
             typeSpec,
+            varScope: VarScope.LOCAL,
           });
           break;
         default:
@@ -205,13 +207,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.accept(constDef.valueExpr);
       const resolvedSymbol = this.lookupSymbol(constDef.name);
       if (resolvedSymbol) {
-        if (resolvedSymbol.scope === VarScope.LOCAL) {
+        if (resolvedSymbol.varScope === VarScope.LOCAL) {
           this.throwError(
             `Constant already defined in local scope: "${constDef.name}"`,
             node
           );
         } else if (
-          resolvedSymbol.scope === VarScope.GLOBAL &&
+          resolvedSymbol.varScope === VarScope.GLOBAL &&
           !this.currentProc
         ) {
           this.throwError(
@@ -220,16 +222,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         }
       }
-      const symbol: VarSymbol = {
+      const symbol = {
         name: constDef.name,
-        type: VarType.CONST,
+        varType: VarType.CONST as const,
         typeSpec: constDef.valueExpr.typeSpec!,
       };
       if (this.currentProc) {
-        this.addLocalSymbol(symbol);
+        this.addLocalSymbol({...symbol, varScope: VarScope.LOCAL});
         constDef.varScope = VarScope.LOCAL;
       } else {
-        this.module.globalSymbols!.push(symbol);
+        this.module.globalSymbols!.push({...symbol, varScope: VarScope.GLOBAL});
         constDef.varScope = VarScope.GLOBAL;
       }
     }
@@ -422,8 +424,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitVarRefExpr(node: VarRefExpr): void {
-    let resolvedSymbol = this.lookupSymbol(node.name);
-    if (!resolvedSymbol) {
+    let symbol = this.lookupSymbol(node.name);
+    if (!symbol) {
       // VarRef may actually be a function invocation without args.
       let proc = lookupSymbol(this.module.procs, node.name);
       if (proc) {
@@ -442,18 +444,17 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         }
       }
 
-      resolvedSymbol = {
-        symbol: this.createLocalVarSymbol({
-          name: node.name,
-          typeSpec: this.getTypeSpecFromSuffix(node.name),
-        }),
-        scope: VarScope.LOCAL,
-      };
-      this.addLocalSymbol(resolvedSymbol.symbol);
+      symbol = this.createLocalVarSymbol({
+        name: node.name,
+        typeSpec: this.getTypeSpecFromSuffix(node.name),
+      });
+      this.addLocalSymbol(symbol);
     }
-    node.typeSpec = resolvedSymbol.symbol.typeSpec;
-    node.varType = resolvedSymbol.symbol.type;
-    node.varScope = resolvedSymbol.scope;
+    [node.typeSpec, node.varType, node.varScope] = [
+      symbol.typeSpec,
+      symbol.varType,
+      symbol.varScope,
+    ];
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
@@ -623,28 +624,25 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     let symbol: VarSymbol | null = null;
     if (this.currentProc) {
       symbol = lookupSymbol(this.currentProc.paramSymbols!, name);
-      if (symbol) {
-        return {symbol, scope: VarScope.LOCAL};
-      }
     }
-    symbol = lookupSymbol(this.getLocalSymbols(), name);
-    if (symbol) {
-      return {symbol, scope: VarScope.LOCAL};
-    }
-    symbol = lookupSymbol(this.module.globalSymbols!, name);
-    if (symbol) {
-      return {symbol, scope: VarScope.GLOBAL};
-    }
-    return null;
+    return (
+      symbol ??
+      lookupSymbol(this.getLocalSymbols(), name) ??
+      lookupSymbol(this.module.globalSymbols!, name) ??
+      null
+    );
   }
 
-  private createLocalVarSymbol(args: Omit<VarSymbol, 'type'>): VarSymbol {
+  private createLocalVarSymbol(
+    args: Omit<VarSymbol, 'varType' | 'varScope'>
+  ): VarSymbol {
     return {
       ...args,
-      type:
+      varType:
         this.currentProc && this.currentProc.isDefaultStatic
           ? VarType.STATIC_VAR
           : VarType.VAR,
+      varScope: VarScope.LOCAL,
     };
   }
 

@@ -139,7 +139,7 @@ export default class Executor {
   ): VarContainer {
     const container: VarContainer = {};
     for (const symbol of varSymbolTable) {
-      if (!includeVarTypes.includes(symbol.type)) {
+      if (!includeVarTypes.includes(symbol.varType)) {
         continue;
       }
       const {type: dataType} = symbol.typeSpec;
