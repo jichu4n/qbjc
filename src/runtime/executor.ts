@@ -1,6 +1,6 @@
 import ErrorWithLoc from '../lib/error-with-loc';
 import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {DataType, ProcType, procTypeName} from '../lib/types';
+import {DataType, DataTypeSpec, ProcType, procTypeName} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -12,6 +12,7 @@ import {
   VarContainer,
 } from './compiled-code';
 import Runtime, {RuntimePlatform} from './runtime';
+import QbArray from './qb-array';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
@@ -20,7 +21,7 @@ interface GosubState {
 }
 
 /** Initial value for each data type. */
-const INIT_VALUE_MAP = {
+const INIT_VALUE_MAP: {[key: string]: any} = {
   [DataType.INTEGER]: 0,
   [DataType.LONG]: 0,
   [DataType.SINGLE]: 0.0,
@@ -142,17 +143,25 @@ export default class Executor {
       if (!includeVarTypes.includes(symbol.varType)) {
         continue;
       }
-      const {type: dataType} = symbol.typeSpec;
-      if (!(dataType in INIT_VALUE_MAP)) {
-        throw new Error(
-          `Symbol "${symbol.name}" has unknown type: ${symbol.typeSpec}`
-        );
-      }
-
-      container[symbol.name] =
-        INIT_VALUE_MAP[dataType as keyof typeof INIT_VALUE_MAP];
+      container[symbol.name] = this.getInitValue(symbol.name, symbol.typeSpec);
     }
     return container;
+  }
+
+  private getInitValue(symbolName: string, typeSpec: DataTypeSpec): any {
+    const {type: dataType} = typeSpec;
+    if (dataType in INIT_VALUE_MAP) {
+      return INIT_VALUE_MAP[dataType];
+    }
+    switch (typeSpec.type) {
+      case DataType.ARRAY:
+        return new QbArray(
+          typeSpec.arraySpec,
+          this.getInitValue(symbolName, typeSpec.elementTypeSpec)
+        );
+      default:
+        throw new Error(`Symbol "${symbolName}" has unknown type: ${typeSpec}`);
+    }
   }
 
   private async executeStmts(

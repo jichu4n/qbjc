@@ -345,10 +345,11 @@ export type Expr =
   | VarRefExpr
   | FnCallExpr
   | BinaryOpExpr
-  | UnaryOpExpr;
+  | UnaryOpExpr
+  | SubscriptExpr;
 
 /** An expression that can be assigned to. */
-export type LhsExpr = VarRefExpr;
+export type LhsExpr = VarRefExpr | SubscriptExpr;
 
 export enum ExprType {
   LITERAL = 'literal',
@@ -356,6 +357,7 @@ export enum ExprType {
   FN_CALL = 'fnCall',
   BINARY_OP = 'binaryOp',
   UNARY_OP = 'unaryOp',
+  SUBSCRIPT = 'subscript',
 }
 
 /** Common attributes of expression nodes. */
@@ -436,6 +438,12 @@ export interface UnaryOpExpr extends ExprBase {
   rightExpr: Expr;
 }
 
+export interface SubscriptExpr extends ExprBase {
+  type: ExprType.SUBSCRIPT;
+  arrayExpr: VarRefExpr; // QBasic only allows indexing variables
+  indexExprs: Array<Expr>;
+}
+
 /** Error thrown by AST visitors. */
 export class AstVisitorError extends ErrorWithLoc {
   constructor(
@@ -477,6 +485,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitFnCallExpr(node: FnCallExpr): T;
   protected abstract visitBinaryOpExpr(node: BinaryOpExpr): T;
   protected abstract visitUnaryOpExpr(node: UnaryOpExpr): T;
+  protected abstract visitSubscriptExpr(node: SubscriptExpr): T;
 
   /** Invokes the visitor method corresponding to the specified AstNode. */
   protected accept(node: AstNode): T {
@@ -534,6 +543,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitBinaryOpExpr(node);
       case ExprType.UNARY_OP:
         return this.visitUnaryOpExpr(node);
+      case ExprType.SUBSCRIPT:
+        return this.visitSubscriptExpr(node);
       default:
         throw new Error(`Unknown node type: ${JSON.stringify(node)}`);
     }

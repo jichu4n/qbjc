@@ -10,10 +10,10 @@ export enum DataType {
   DOUBLE = 'double',
   /** String. */
   STRING = 'string',
-  /** Array. Multi-dimensional arrays are represented as arrays of arrays. */
+  /** Array. */
   ARRAY = 'array',
   /** User-defined record type. */
-  TYPE = 'type',
+  UDT = 'udt',
 }
 
 /** Specification for a field in a user-defined record type. */
@@ -32,8 +32,28 @@ export type DataTypeSpec =
         | DataType.DOUBLE
         | DataType.STRING;
     }
-  | {type: DataType.ARRAY; elementTypeSpec: DataTypeSpec}
-  | {type: DataType.TYPE; fieldSpecs: Array<FieldSpec>};
+  | ArrayTypeSpec
+  | UdtTypeSpec;
+
+export interface ArrayTypeSpec {
+  type: DataType.ARRAY;
+  elementTypeSpec: DataTypeSpec;
+  arraySpec: ArraySpec;
+}
+
+/** Specification for a single dimension of an array. */
+export interface ArrayDimensionSpec {
+  minIdx: number;
+  maxIdx: number;
+}
+
+/** Specification for array dimensions. */
+export type ArraySpec = Array<ArrayDimensionSpec>;
+
+export interface UdtTypeSpec {
+  type: DataType.UDT;
+  fieldSpecs: Array<FieldSpec>;
+}
 
 // Helpers for creating DataTypeSpec instances.
 
@@ -57,21 +77,34 @@ export function stringSpec(): DataTypeSpec {
   return {type: DataType.STRING};
 }
 
-// Helpers for type checking.
-
-export function isNumeric(...types: Array<DataType | DataTypeSpec>) {
-  return types.every((t) =>
-    [
-      DataType.INTEGER,
-      DataType.LONG,
-      DataType.SINGLE,
-      DataType.DOUBLE,
-    ].includes(getType(t))
-  );
+export function arraySpec(
+  elementTypeSpec: DataTypeSpec,
+  arraySpec: ArraySpec
+): DataTypeSpec {
+  return {type: DataType.ARRAY, elementTypeSpec, arraySpec};
 }
 
-export function isString(...types: Array<DataType | DataTypeSpec>) {
-  return types.every((t) => getType(t) === DataType.STRING);
+// Helpers for type checking.
+
+export function isNumeric(t: DataType | DataTypeSpec) {
+  return [
+    DataType.INTEGER,
+    DataType.LONG,
+    DataType.SINGLE,
+    DataType.DOUBLE,
+  ].includes(getType(t));
+}
+
+export function isString(
+  t: DataType | DataTypeSpec
+): t is DataType.STRING | {type: DataType.STRING} {
+  return getType(t) === DataType.STRING;
+}
+
+export function isArray(
+  t: DataType | DataTypeSpec
+): t is DataType.ARRAY | ArrayTypeSpec {
+  return getType(t) === DataType.ARRAY;
 }
 
 export function isElementaryType(...types: Array<DataType | DataTypeSpec>) {
@@ -81,7 +114,7 @@ export function isElementaryType(...types: Array<DataType | DataTypeSpec>) {
 export function areMatchingElementaryTypes(
   ...types: Array<DataType | DataTypeSpec>
 ) {
-  return isNumeric(...types) || isString(...types);
+  return types.every(isNumeric) || types.every(isString);
 }
 
 function getType(t: DataType | DataTypeSpec) {

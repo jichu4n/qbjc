@@ -697,6 +697,7 @@ const grammar: Grammar = {
     {"name": "asTypeName", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "typeName"], "postprocess": ([$1, $2]) => $2},
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
+    {"name": "lhsExpr", "symbols": ["fnCallExpr"], "postprocess": id},
     {"name": "expr10", "symbols": ["expr9"], "postprocess": id},
     {"name": "expr10$subexpression$1", "symbols": [(lexer.has("OR") ? {type: "OR"} : OR)]},
     {"name": "expr10", "symbols": ["expr10", "expr10$subexpression$1", "expr9"], "postprocess": buildBinaryOpExpr},

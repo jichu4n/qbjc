@@ -31,6 +31,7 @@ import {
   Proc,
   ReturnStmt,
   SelectStmt,
+  SubscriptExpr,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -38,11 +39,13 @@ import {
 } from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
+  arraySpec,
   areMatchingElementaryTypes,
   DataTypeSpec,
   doubleSpec,
   FnDefType,
   integerSpec,
+  isArray,
   isElementaryType,
   isNumeric,
   isString,
@@ -51,6 +54,7 @@ import {
   procTypeName,
   singleSpec,
   stringSpec,
+  ArrayDimensionSpec,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
@@ -62,6 +66,12 @@ const TYPE_SUFFIX_MAP: {[key: string]: DataTypeSpec} = Object.freeze({
   '#': doubleSpec(),
   $: stringSpec(),
 });
+
+/** Default array dimension spec. */
+const DEFAULT_DIMENSION_SPEC: ArrayDimensionSpec = {
+  minIdx: 0,
+  maxIdx: 10,
+};
 
 type ResolvedFn =
   | {
@@ -416,7 +426,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         this.accept(node.targetExprs[0]);
         if (!isString(node.targetExprs[0].typeSpec!)) {
           this.throwError(
-            `Expected string destination in LINE INPUT statement, got ${
+            `Expected string destination in LINE INPUT staement, got ${
               node.targetExprs[0].typeSpec!.type
             }`,
             node.targetExprs[0]
@@ -468,7 +478,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
       symbol = this.createLocalVarSymbol({
         name: node.name,
-        typeSpec: this.getTypeSpecFromSuffix(node.name),
+        // If this VarRefExpr is nested inside a SubscriptExpr, visitSubScriptExpr() will set the
+        // typeSpec for this VarRefExpr based on the index expressions. So we should respect that
+        // here.
+        typeSpec: node.typeSpec ?? this.getTypeSpecFromSuffix(node.name),
       });
       this.addLocalSymbol(symbol);
     }
@@ -481,19 +494,42 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitFnCallExpr(node: FnCallExpr): void {
     this.acceptAll(node.argExprs);
+
+    // Try resolving the name as a function.
     const resolvedFn = this.lookupFn(
       node.name,
       node.argExprs.map(({typeSpec}) => typeSpec!)
     );
-    if (
-      !resolvedFn ||
-      (resolvedFn.fnDefType === FnDefType.MODULE &&
-        resolvedFn.proc.type !== ProcType.FN)
-    ) {
-      this.throwError(`Function not found: "${node.name}"`, node);
+    if (resolvedFn) {
+      if (
+        resolvedFn.fnDefType === FnDefType.MODULE &&
+        resolvedFn.proc.type !== ProcType.FN
+      ) {
+        this.throwError(
+          `A ${procTypeName(
+            resolvedFn.proc.type
+          )} cannot be used in an expression: "${node.name}"`,
+          node
+        );
+      }
+      this.visitProcCall(resolvedFn, node);
+      node.typeSpec = resolvedFn.returnTypeSpec!;
+      return;
     }
-    this.visitProcCall(resolvedFn, node);
-    node.typeSpec = resolvedFn.returnTypeSpec!;
+
+    // Try resolving as a subscript expression.
+    const subscriptExpr: SubscriptExpr = {
+      type: ExprType.SUBSCRIPT,
+      arrayExpr: {
+        type: ExprType.VAR_REF,
+        name: node.name,
+        loc: node.loc,
+      },
+      indexExprs: node.argExprs,
+      loc: node.loc,
+    };
+    this.accept(subscriptExpr);
+    Object.assign(node, subscriptExpr);
   }
 
   visitBinaryOpExpr(node: BinaryOpExpr): void {
@@ -503,7 +539,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const rightTypeSpec = node.rightExpr.typeSpec!;
     const errorMessage = `Incompatible types for ${node.op} operator: ${leftTypeSpec.type} and ${rightTypeSpec.type}`;
     const requireNumericOperands = () => {
-      if (!isNumeric(leftTypeSpec, rightTypeSpec)) {
+      if (!(isNumeric(leftTypeSpec) && isNumeric(rightTypeSpec))) {
         this.throwError(errorMessage, node);
       }
     };
@@ -512,7 +548,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     };
     switch (node.op) {
       case BinaryOp.ADD:
-        if (isString(leftTypeSpec, rightTypeSpec)) {
+        if (isString(leftTypeSpec) && isString(rightTypeSpec)) {
           node.typeSpec = stringSpec();
         } else {
           requireNumericOperands();
@@ -576,6 +612,47 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
+  visitSubscriptExpr(node: SubscriptExpr): void {
+    this.acceptAll(node.indexExprs);
+    for (let i = 0; i < node.indexExprs.length; ++i) {
+      const indexExpr = node.indexExprs[i];
+      if (!isNumeric(indexExpr.typeSpec!)) {
+        this.throwError(
+          `Array index #${i + 1} should be numeric instead of ${
+            indexExpr.typeSpec!.type
+          }`,
+          indexExpr
+        );
+      }
+    }
+
+    // Add typeSpec hint for arrayExpr. This will be used to create the underlying variable symbol
+    // if not already found.
+    node.arrayExpr.typeSpec = arraySpec(
+      this.getTypeSpecFromSuffix(node.arrayExpr.name),
+      node.indexExprs.map(() => DEFAULT_DIMENSION_SPEC)
+    );
+    this.accept(node.arrayExpr);
+
+    if (!isArray(node.arrayExpr.typeSpec!)) {
+      this.throwError(
+        'Expected array variable in subscript expression, ' +
+          `got ${node.arrayExpr.typeSpec!.type}`,
+        node.arrayExpr
+      );
+    }
+    if (node.arrayExpr.typeSpec!.arraySpec.length !== node.indexExprs.length) {
+      this.throwError(
+        'Wrong number of index expressions: ' +
+          `expected ${node.arrayExpr.typeSpec!.arraySpec.length}, ` +
+          `got ${node.indexExprs.length}`,
+        node
+      );
+    }
+
+    node.typeSpec = node.arrayExpr.typeSpec.elementTypeSpec;
+  }
+
   private visitProcCall(resolvedFn: ResolvedFn, node: FnCallExpr | CallStmt) {
     let paramTypeSpecs: Array<DataTypeSpec>;
     switch (resolvedFn.fnDefType) {
@@ -615,7 +692,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   /** Computes the output numeric type after an arithmetic operation. */
-  private coerceNumericTypes(...t: Array<DataTypeSpec>): DataTypeSpec {
+  private coerceNumericTypes(...typeSpecs: Array<DataTypeSpec>): DataTypeSpec {
     const RULES: Array<{
       operands: [DataTypeSpec, DataTypeSpec];
       result: DataTypeSpec;
@@ -637,23 +714,24 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       {operands: [doubleSpec(), singleSpec()], result: doubleSpec()},
       {operands: [doubleSpec(), doubleSpec()], result: doubleSpec()},
     ];
-    if (t.length === 0) {
+    if (typeSpecs.length === 0) {
       throw new Error('Missing arguments');
     }
-    if (!isNumeric(...t)) {
-      throw new Error(`Expected numeric types`);
+    if (!typeSpecs.every(isNumeric)) {
+      throw new Error(`Expected numeric types: ${JSON.stringify(typeSpecs)}`);
     }
-    let resultTypeSpec = t[0];
-    for (let i = 1; i < t.length; ++i) {
+    let resultTypeSpec = typeSpecs[0];
+    for (let i = 1; i < typeSpecs.length; ++i) {
       const matchingRule = RULES.find(
         ({operands: [typeSpec1, typeSpec2]}) =>
-          _.isEqual(typeSpec1, resultTypeSpec) && _.isEqual(typeSpec2, t[i])
+          _.isEqual(typeSpec1, resultTypeSpec) &&
+          _.isEqual(typeSpec2, typeSpecs[i])
       );
       if (matchingRule) {
         resultTypeSpec = matchingRule.result;
       } else {
         throw new Error(
-          `Unknown numeric type combination: ${resultTypeSpec.type} and ${t[i].type}`
+          `Unknown numeric type combination: ${resultTypeSpec.type} and ${typeSpecs[i].type}`
         );
       }
     }

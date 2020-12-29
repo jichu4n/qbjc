@@ -616,7 +616,10 @@ expr ->
 
 # An expression that can be assigned to.
 lhsExpr ->
-    varRefExpr  {% id %}
+      varRefExpr  {% id %}
+    # We actually only allow array subscript expressions here, but array subscript expressions are
+    # actually parsed as FnCallExprs. See comment for fnCallExpr rule below.
+    | fnCallExpr  {% id %}
 
 expr10 ->
       expr9  {% id %}
@@ -677,6 +680,9 @@ varRefExpr ->
             ({ type: ExprType.VAR_REF, name: $1.value, ...useLoc($1) })
     %}
 
+# Note that this syntax can either represent a function call or an array subscript expression. There
+# is no way to disambiguate at the parsing layer, so we always parse such syntax as FnCallExpr and
+# disambiguate later during semantic analysis.
 fnCallExpr ->
     %IDENTIFIER %LPAREN exprs %RPAREN  {%
         ([$1, $2, $3, $4]): FnCallExpr => ({

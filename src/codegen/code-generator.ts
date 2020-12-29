@@ -38,6 +38,7 @@ import {
   ReturnStmt,
   SelectStmt,
   Stmts,
+  SubscriptExpr,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -769,6 +770,21 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       OP_MAP[node.op],
       this.accept(node.rightExpr),
       ')'
+    );
+  }
+
+  visitSubscriptExpr(node: SubscriptExpr): SourceNode {
+    return this.createSourceNode(
+      node,
+      this.accept(node.arrayExpr),
+      '.values',
+      ...node.indexExprs.map((indexExpr, i) => [
+        '[',
+        this.accept(node.arrayExpr),
+        `.getIdx(${i}, `,
+        this.accept(indexExpr),
+        ')]',
+      ])
     );
   }
 
