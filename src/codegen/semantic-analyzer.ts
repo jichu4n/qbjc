@@ -636,6 +636,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitSubscriptExpr(node: SubscriptExpr): void {
+    // Hack: treat empty parens (used to pass array to procedures) as reference to the array
+    // variable itself.
+    if (node.indexExprs.length === 0) {
+      this.accept(node.arrayExpr);
+      Object.assign(node, node.arrayExpr);
+      return;
+    }
+
     this.acceptAll(node.indexExprs);
     for (let i = 0; i < node.indexExprs.length; ++i) {
       const indexExpr = node.indexExprs[i];

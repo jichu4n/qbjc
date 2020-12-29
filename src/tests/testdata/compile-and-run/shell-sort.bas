@@ -25,7 +25,7 @@ DIM A1(N) AS STRING
 FOR i = 1 TO N
   LINE INPUT A1(i)
 NEXT
-ShellSort A1, N
+CALL ShellSort(A1(), N)
 FOR i = 1 TO N
   PRINT A1(i)
 NEXT
