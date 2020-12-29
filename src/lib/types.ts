@@ -16,6 +16,14 @@ export enum DataType {
   UDT = 'udt',
 }
 
+export type NumericDataType =
+  | DataType.INTEGER
+  | DataType.LONG
+  | DataType.SINGLE
+  | DataType.DOUBLE;
+
+export type ElementaryDataType = NumericDataType | DataType.STRING;
+
 /** Specification for a field in a user-defined record type. */
 export interface FieldSpec {
   name: string;
@@ -23,21 +31,21 @@ export interface FieldSpec {
 }
 
 /** Full data type specification. */
-export type DataTypeSpec =
-  | {
-      type:
-        | DataType.INTEGER
-        | DataType.LONG
-        | DataType.SINGLE
-        | DataType.DOUBLE
-        | DataType.STRING;
-    }
-  | ArrayTypeSpec
-  | UdtTypeSpec;
+export type DataTypeSpec = ElementaryTypeSpec | ArrayTypeSpec | UdtTypeSpec;
+
+export type ElementaryTypeSpec = NumericTypeSpec | StringTypeSpec;
+
+export interface NumericTypeSpec {
+  type: NumericDataType;
+}
+
+export interface StringTypeSpec {
+  type: DataType.STRING;
+}
 
 export interface ArrayTypeSpec {
   type: DataType.ARRAY;
-  elementTypeSpec: DataTypeSpec;
+  elementTypeSpec: ElementaryTypeSpec;
   arraySpec: ArraySpec;
 }
 
@@ -57,28 +65,28 @@ export interface UdtTypeSpec {
 
 // Helpers for creating DataTypeSpec instances.
 
-export function integerSpec(): DataTypeSpec {
+export function integerSpec(): NumericTypeSpec {
   return {type: DataType.INTEGER};
 }
 
-export function longSpec(): DataTypeSpec {
+export function longSpec(): NumericTypeSpec {
   return {type: DataType.LONG};
 }
 
-export function singleSpec(): DataTypeSpec {
+export function singleSpec(): NumericTypeSpec {
   return {type: DataType.SINGLE};
 }
 
-export function doubleSpec(): DataTypeSpec {
+export function doubleSpec(): NumericTypeSpec {
   return {type: DataType.DOUBLE};
 }
 
-export function stringSpec(): DataTypeSpec {
+export function stringSpec(): StringTypeSpec {
   return {type: DataType.STRING};
 }
 
 export function arraySpec(
-  elementTypeSpec: DataTypeSpec,
+  elementTypeSpec: ElementaryTypeSpec,
   arraySpec: ArraySpec
 ): DataTypeSpec {
   return {type: DataType.ARRAY, elementTypeSpec, arraySpec};
@@ -86,7 +94,9 @@ export function arraySpec(
 
 // Helpers for type checking.
 
-export function isNumeric(t: DataType | DataTypeSpec) {
+export function isNumeric(
+  t: DataType | DataTypeSpec
+): t is NumericDataType | NumericTypeSpec {
   return [
     DataType.INTEGER,
     DataType.LONG,

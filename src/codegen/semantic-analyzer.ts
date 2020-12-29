@@ -55,11 +55,12 @@ import {
   singleSpec,
   stringSpec,
   ArrayDimensionSpec,
+  ElementaryTypeSpec,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
 /** Map from variable type declaration suffix to the corresponding type spec. */
-const TYPE_SUFFIX_MAP: {[key: string]: DataTypeSpec} = Object.freeze({
+const TYPE_SUFFIX_MAP: {[key: string]: ElementaryTypeSpec} = Object.freeze({
   '%': integerSpec(),
   '&': longSpec(),
   '!': singleSpec(),
