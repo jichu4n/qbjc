@@ -43,6 +43,7 @@ export enum Keywords {
   STEP = 'step',
   STRING = 'string',
   SUB = 'sub',
+  SWAP = 'swap',
   THEN = 'then',
   TO = 'to',
   UNTIL = 'until',

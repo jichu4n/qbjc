@@ -39,6 +39,7 @@ import {
   SelectStmt,
   Stmts,
   SubscriptExpr,
+  SwapStmt,
   TypeSpecExprType,
   UnaryOp,
   UnaryOpExpr,
@@ -631,6 +632,27 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       node,
       () => `return { type: '${ExecutionDirectiveType.END}' };`
     );
+  }
+
+  visitSwapStmt(node: SwapStmt): SourceNode {
+    const tempVarName = `${this.generateLabel()}_temp`;
+    return this.createStmtSourceNode(node, () => [
+      this.generateTempVarRef(tempVarName),
+      ' = ',
+      this.accept(node.leftExpr),
+      '; ',
+      this.accept(node.leftExpr),
+      ' = ',
+      this.accept(node.rightExpr),
+      '; ',
+      this.accept(node.rightExpr),
+      ' = ',
+      this.generateTempVarRef(tempVarName),
+      '; ',
+      'delete ',
+      this.generateTempVarRef(tempVarName),
+      ';',
+    ]);
   }
 
   visitPrintStmt(node: PrintStmt): SourceNode {

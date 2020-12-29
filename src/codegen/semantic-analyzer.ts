@@ -27,11 +27,13 @@ import {
   LiteralExpr,
   Module,
   NextStmt,
+  Param,
   PrintStmt,
   Proc,
   ReturnStmt,
   SelectStmt,
   SubscriptExpr,
+  SwapStmt,
   TypeSpecExpr,
   TypeSpecExprType,
   UnaryOp,
@@ -122,7 +124,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     node.paramSymbols = node.params.map((param) => ({
       name: param.name,
       varType: VarType.ARG,
-      typeSpec: param.typeSpec ?? this.getTypeSpecFromSuffix(param.name),
+      typeSpec: this.getTypeSpecForVarDeclOrParam(param),
       varScope: VarScope.LOCAL,
     }));
     node.localSymbols = [];
@@ -179,7 +181,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         }
       }
-      const typeSpec = this.getTypeSpecForVarDecl(varDecl);
+      const typeSpec = this.getTypeSpecForVarDeclOrParam(varDecl);
       let symbol: VarSymbol;
       switch (node.dimType) {
         case DimType.SHARED:
@@ -407,6 +409,25 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitEndStmt(node: EndStmt): void {}
+
+  visitSwapStmt(node: SwapStmt): void {
+    this.accept(node.leftExpr);
+    this.accept(node.rightExpr);
+    if (
+      !areMatchingElementaryTypes(
+        node.leftExpr.typeSpec!,
+        node.rightExpr.typeSpec!
+      )
+    ) {
+      this.throwError(
+        'Cannot swap variables of different types: ' +
+          `${node.leftExpr.typeSpec!.type} and ${
+            node.rightExpr.typeSpec!.type
+          }`,
+        node
+      );
+    }
+  }
 
   visitPrintStmt(node: PrintStmt): void {
     for (const arg of node.args) {
@@ -636,7 +657,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     );
     this.accept(node.arrayExpr);
 
-    if (!isArray(node.arrayExpr.typeSpec!)) {
+    const arrayTypeSpec = node.arrayExpr.typeSpec!;
+    if (!isArray(arrayTypeSpec)) {
       this.throwError(
         'Expected array variable in subscript expression, ' +
           `got ${node.arrayExpr.typeSpec!.type}`,
@@ -644,11 +666,12 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       );
     }
     if (
-      node.arrayExpr.typeSpec!.dimensionSpecs.length !== node.indexExprs.length
+      arrayTypeSpec.dimensionSpecs.length && // Dimension is unknown for array arguments.
+      arrayTypeSpec.dimensionSpecs.length !== node.indexExprs.length
     ) {
       this.throwError(
         'Wrong number of index expressions: ' +
-          `expected ${node.arrayExpr.typeSpec!.dimensionSpecs.length}, ` +
+          `expected ${arrayTypeSpec.dimensionSpecs.length}, ` +
           `got ${node.indexExprs.length}`,
         node
       );
@@ -790,8 +813,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     return this.getLocalSymbols().push(...args);
   }
 
-  private getTypeSpecForVarDecl(varDecl: VarDecl): DataTypeSpec {
-    const {name, typeSpecExpr} = varDecl;
+  private getTypeSpecForVarDeclOrParam(
+    varDeclOrParam: VarDecl | Param
+  ): DataTypeSpec {
+    const {name, typeSpecExpr} = varDeclOrParam;
     switch (typeSpecExpr.type) {
       case TypeSpecExprType.ELEMENTARY:
         if (!typeSpecExpr.typeSpec) {
@@ -827,7 +852,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       default:
         this.throwError(
           `Unknown TypeSpecExpr type: ${JSON.stringify(typeSpecExpr)}`,
-          varDecl
+          varDeclOrParam
         );
     }
   }

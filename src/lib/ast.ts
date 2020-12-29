@@ -75,13 +75,9 @@ export interface FnProc extends ProcBase {
 }
 
 /** A function parameter. */
-export interface Param {
+export interface Param extends AstNodeBase {
   name: string;
-  /** Type of this parameter.
-   *
-   * May be populated during parsing (if AS <type> provided) or during semantic analysis.
-   */
-  typeSpec?: DataTypeSpec;
+  typeSpecExpr: TypeSpecExpr;
 }
 
 export type Stmts = Array<Stmt>;
@@ -110,6 +106,7 @@ export type Stmt =
   | CallStmt
   | ExitProcStmt
   | EndStmt
+  | SwapStmt
   | PrintStmt
   | InputStmt;
 
@@ -132,6 +129,7 @@ export enum StmtType {
   CALL = 'call',
   EXIT_PROC = 'exitProc',
   END = 'end',
+  SWAP = 'swap',
   PRINT = 'print',
   INPUT = 'input',
 }
@@ -338,6 +336,12 @@ export interface EndStmt extends AstNodeBase {
   type: StmtType.END;
 }
 
+export interface SwapStmt extends AstNodeBase {
+  type: StmtType.SWAP;
+  leftExpr: LhsExpr;
+  rightExpr: LhsExpr;
+}
+
 export enum PrintSep {
   COMMA = 'comma',
   SEMICOLON = 'semicolon',
@@ -500,6 +504,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitCallStmt(node: CallStmt): T;
   protected abstract visitExitProcStmt(node: ExitProcStmt): T;
   protected abstract visitEndStmt(node: EndStmt): T;
+  protected abstract visitSwapStmt(node: SwapStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
 
@@ -552,6 +557,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitExitProcStmt(node);
       case StmtType.END:
         return this.visitEndStmt(node);
+      case StmtType.SWAP:
+        return this.visitSwapStmt(node);
       case StmtType.PRINT:
         return this.visitPrintStmt(node);
       case StmtType.INPUT:

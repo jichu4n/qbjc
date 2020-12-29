@@ -46,6 +46,7 @@ declare var NEXT: any;
 declare var GOSUB: any;
 declare var RETURN: any;
 declare var CALL: any;
+declare var SWAP: any;
 declare var PRINT: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
@@ -115,6 +116,7 @@ import {
   CallStmt,
   ExitProcStmt,
   EndStmt,
+  SwapStmt,
   PrintStmt,
   PrintSep,
   InputStmt,
@@ -273,7 +275,26 @@ const grammar: Grammar = {
             },
     {"name": "param$ebnf$1", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
     {"name": "param$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 })},
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": 
+        ([$1, $2]): Param => ({
+          name: $1.value,
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+          ...useLoc($1),
+        })
+            },
+    {"name": "param$ebnf$2", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
+    {"name": "param$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "param$ebnf$2"], "postprocess": 
+        ([$1, $2, $3, $4]): Param => ({
+          name: $1.value,
+          typeSpecExpr: {
+            type: TypeSpecExprType.ARRAY,
+            elementTypeSpec: $4,
+            dimensionSpecExprs: [],
+          },
+          ...useLoc($1),
+        })
+            },
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
     {"name": "stmts$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmts$ebnf$2", "symbols": []},
@@ -311,6 +332,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["callStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["exitProcStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["endStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["swapStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
@@ -653,6 +675,14 @@ const grammar: Grammar = {
         })
               },
     {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
+    {"name": "swapStmt", "symbols": [(lexer.has("SWAP") ? {type: "SWAP"} : SWAP), "lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "lhsExpr"], "postprocess": 
+        ([$1, $2, $3, $4]): SwapStmt => ({
+          type: StmtType.SWAP,
+          leftExpr: $2,
+          rightExpr: $4,
+          ...useLoc($1),
+        })
+            },
     {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
         ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
             },

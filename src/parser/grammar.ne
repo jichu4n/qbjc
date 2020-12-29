@@ -49,6 +49,7 @@ import {
   CallStmt,
   ExitProcStmt,
   EndStmt,
+  SwapStmt,
   PrintStmt,
   PrintSep,
   InputStmt,
@@ -175,7 +176,24 @@ params ->
     %}
 
 param ->
-    %IDENTIFIER asElementaryTypeSpec:?  {% ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 }) %}
+      %IDENTIFIER asElementaryTypeSpec:?  {%
+          ([$1, $2]): Param => ({
+            name: $1.value,
+            typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+            ...useLoc($1),
+          })
+    %}
+    | %IDENTIFIER %LPAREN %RPAREN asElementaryTypeSpec:?  {%
+          ([$1, $2, $3, $4]): Param => ({
+            name: $1.value,
+            typeSpecExpr: {
+              type: TypeSpecExprType.ARRAY,
+              elementTypeSpec: $4,
+              dimensionSpecExprs: [],
+            },
+            ...useLoc($1),
+          })
+    %}
 
 # ----
 # Statements
@@ -212,6 +230,7 @@ nonLabelStmt ->
     | callStmt  {% id %}
     | exitProcStmt  {% id %}
     | endStmt  {% id %}
+    | swapStmt  {% id %}
     | printStmt  {% id %}
     | inputStmt  {% id %}
 
@@ -570,6 +589,16 @@ exitProcStmt ->
 
 endStmt ->
     %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}
+
+swapStmt ->
+    %SWAP lhsExpr %COMMA lhsExpr  {%
+        ([$1, $2, $3, $4]): SwapStmt => ({
+          type: StmtType.SWAP,
+          leftExpr: $2,
+          rightExpr: $4,
+          ...useLoc($1),
+        })
+    %}
 
 printStmt ->
     %PRINT printArgs  {%
