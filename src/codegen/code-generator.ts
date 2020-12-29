@@ -803,12 +803,23 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       '.values',
       ...node.indexExprs.map((indexExpr, i) => [
         '[',
-        this.accept(node.arrayExpr),
-        `.getIdx(${i}, `,
-        this.accept(indexExpr),
-        ')]',
+        this.generateSubscriptCode(node.arrayExpr, i, indexExpr),
+        ']',
       ])
     );
+  }
+
+  private generateSubscriptCode(
+    arrayExpr: VarRefExpr,
+    dimension: number,
+    indexExpr: Expr
+  ): SourceChunk {
+    return [
+      this.accept(arrayExpr),
+      `.getIdx(${dimension}, `,
+      this.accept(indexExpr),
+      ')',
+    ];
   }
 
   private visitProcCall(node: FnCallExpr | CallStmt): SourceNode {
@@ -819,13 +830,39 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
     for (const argExpr of node.argExprs) {
       if (argExpr.type === ExprType.VAR_REF) {
-        const code =
-          argExpr.symbol!.varType === VarType.ARG
-            ? `ctx.args['${argExpr.name}']`
-            : `[${this.generateVarContainerCode(argExpr, argExpr.symbol!)}, '${
-                argExpr.name
-              }']`;
-        argPtrs.push(this.createSourceNode(argExpr, code));
+        argPtrs.push(
+          this.createSourceNode(
+            argExpr,
+            argExpr.symbol!.varType === VarType.ARG
+              ? `ctx.args['${argExpr.name}']`
+              : `[${this.generateVarContainerCode(
+                  argExpr,
+                  argExpr.symbol!
+                )}, '${argExpr.name}']`
+          )
+        );
+      } else if (argExpr.type === ExprType.SUBSCRIPT) {
+        const containerCode = this.accept({
+          ...argExpr,
+          indexExprs: argExpr.indexExprs.slice(
+            0,
+            argExpr.indexExprs.length - 1
+          ),
+        });
+        const lastIndexExprCode = this.generateSubscriptCode(
+          argExpr.arrayExpr,
+          argExpr.indexExprs.length - 1,
+          argExpr.indexExprs[argExpr.indexExprs.length - 1]
+        );
+        argPtrs.push(
+          this.createSourceNode(argExpr, [
+            '[',
+            containerCode,
+            ', ',
+            lastIndexExprCode,
+            ']',
+          ])
+        );
       } else {
         if (!tempVarPrefix) {
           tempVarPrefix = this.generateLabel();

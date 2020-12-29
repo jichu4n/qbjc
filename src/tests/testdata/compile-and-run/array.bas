@@ -30,6 +30,19 @@ PRINT A3(42, -42)
 PRINT A3(N, -N)
 
 
+' Pass array element by reference
+DIM A4(3) AS STRING, A5(3, 3) AS STRING
+FOR i = 1 TO 3
+  f1 A4(i), i
+  f1 A5(i, i), i
+NEXT i
+SUB f1 (s AS STRING, i AS INTEGER)
+  s = STR$(i * 100 + i * 10 + i)
+END SUB
+PRINT A4(3)
+PRINT A5(2, 2)
+
+
 ' EXPECT {
 '   "io": [
 '     {"output": " 0 \n"},
@@ -39,6 +52,9 @@ PRINT A3(N, -N)
 '
 '     {"output": " 1  100 -100 -1 \n"},
 '     {"output": " 42 * 10 + -42 =  378\n"},
-'     {"output": " 100 * 10 + -100 =  900\n"}
+'     {"output": " 100 * 10 + -100 =  900\n"},
+'
+'     {"output": " 333\n"},
+'     {"output": " 222\n"}
 '   ]
 ' }
