@@ -47,6 +47,7 @@ export enum Keywords {
   SWAP = 'swap',
   THEN = 'then',
   TO = 'to',
+  TYPE = 'type',
   UNTIL = 'until',
   WEND = 'wend',
   WHILE = 'while',

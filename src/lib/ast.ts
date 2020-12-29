@@ -1,6 +1,13 @@
 import ErrorWithLoc from './error-with-loc';
-import {VarScope, VarSymbol, VarSymbolTable, VarType} from './symbol-table';
-import {DataTypeSpec, ProcType, FnDefType, ElementaryTypeSpec} from './types';
+import {VarSymbol, VarSymbolTable} from './symbol-table';
+import {
+  DataTypeSpec,
+  ElementaryDataType,
+  ElementaryTypeSpec,
+  FnDefType,
+  ProcType,
+  UdtTypeSpec,
+} from './types';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
@@ -24,6 +31,8 @@ export interface Module {
   stmts: Stmts;
   /** Procedure definitions (SUBs and FUNCTIONs). */
   procs: Array<Proc>;
+  /** User-defined data types. */
+  udts: Array<Udt>;
 
   /** Local variable symbol table.
    *
@@ -78,6 +87,22 @@ export interface FnProc extends ProcBase {
 export interface Param extends AstNodeBase {
   name: string;
   typeSpecExpr: TypeSpecExpr;
+}
+
+export interface Udt extends AstNodeBase {
+  name: string;
+  fieldSpecExprs: Array<FieldSpecExpr>;
+
+  /** Resolved TypeSpec.
+   *
+   * Populated during semantic analysis.
+   */
+  typeSpec?: UdtTypeSpec;
+}
+
+export interface FieldSpecExpr extends AstNodeBase {
+  name: string;
+  typeSpecExpr: SingularTypeSpecExpr;
 }
 
 export type Stmts = Array<Stmt>;
@@ -162,22 +187,30 @@ export interface VarDecl extends AstNodeBase {
   symbol?: VarSymbol;
 }
 
-export type TypeSpecExpr = ElementaryTypeSpecExpr | ArrayTypeSpecExpr;
+export type SingularTypeSpecExpr = ElementaryTypeSpecExpr | UdtTypeSpecExpr;
+
+export type TypeSpecExpr = SingularTypeSpecExpr | ArrayTypeSpecExpr;
 
 export enum TypeSpecExprType {
   ELEMENTARY = 'elementary',
   ARRAY = 'array',
+  UDT = 'udt',
 }
 
-export interface ElementaryTypeSpecExpr {
+export interface ElementaryTypeSpecExpr extends AstNodeBase {
   type: TypeSpecExprType.ELEMENTARY;
   typeSpec?: ElementaryTypeSpec;
 }
 
-export interface ArrayTypeSpecExpr {
+export interface ArrayTypeSpecExpr extends AstNodeBase {
   type: TypeSpecExprType.ARRAY;
   elementTypeSpec?: ElementaryTypeSpec;
   dimensionSpecExprs: Array<ArrayDimensionSpecExpr>;
+}
+
+export interface UdtTypeSpecExpr extends AstNodeBase {
+  type: TypeSpecExprType.UDT;
+  name: string;
 }
 
 export interface ArrayDimensionSpecExpr extends AstNodeBase {

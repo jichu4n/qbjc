@@ -12,6 +12,7 @@ declare var END: any;
 declare var SUB: any;
 declare var DECLARE: any;
 declare var COMMA: any;
+declare var TYPE: any;
 declare var COLON: any;
 declare var NEWLINE: any;
 declare var NUMERIC_LITERAL: any;
@@ -58,6 +59,7 @@ declare var LONG: any;
 declare var SINGLE: any;
 declare var DOUBLE: any;
 declare var STRING: any;
+declare var MUL: any;
 declare var AS: any;
 declare var OR: any;
 declare var AND: any;
@@ -65,7 +67,6 @@ declare var NOT: any;
 declare var ADD: any;
 declare var MOD: any;
 declare var INTDIV: any;
-declare var MUL: any;
 declare var DIV: any;
 declare var EXP: any;
 
@@ -78,6 +79,10 @@ import {
   FnProc,
   SubProc,
   Param,
+  TypeSpecExprType,
+  SingularTypeSpecExpr,
+  Udt,
+  FieldSpecExpr,
   Expr,
   ExprType,
   BinaryOpExpr,
@@ -95,7 +100,6 @@ import {
   DimStmt,
   DimType,
   VarDecl,
-  TypeSpecExprType,
   ArrayDimensionSpecExpr,
   GotoStmt,
   AssignStmt,
@@ -214,18 +218,28 @@ const grammar: Grammar = {
         ([$1, $2]): Module => $2.reduce((a: Module, b: Module) => ({
           stmts: [...a.stmts, ...b.stmts],
           procs: [...a.procs, ...b.procs],
+          udts: [...a.udts, ...b.udts],
         }))
             },
     {"name": "moduleComponentWithSep", "symbols": ["stmtWithSep"], "postprocess": 
         ([$1]): Module => ({
           stmts: [$1],
           procs: [],
+          udts: [],
         })
               },
     {"name": "moduleComponentWithSep", "symbols": ["proc", "stmtSep"], "postprocess": 
         ([$1, $2]): Module => ({
           stmts: [],
           procs: $1 ? [$1] : [],
+          udts: [],
+        })
+            },
+    {"name": "moduleComponentWithSep", "symbols": ["udt", "stmtSep"], "postprocess": 
+        ([$1, $2]): Module => ({
+          stmts: [],
+          procs: [],
+          udts: $1 ? [$1] : [],
         })
             },
     {"name": "proc", "symbols": ["fnProc"], "postprocess": id},
@@ -279,7 +293,7 @@ const grammar: Grammar = {
     {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": 
         ([$1, $2]): Param => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
           ...useLoc($1),
         })
             },
@@ -292,7 +306,38 @@ const grammar: Grammar = {
             type: TypeSpecExprType.ARRAY,
             elementTypeSpec: $4,
             dimensionSpecExprs: [],
+            ...useLoc($1),
           },
+          ...useLoc($1),
+        })
+            },
+    {"name": "udt", "symbols": [(lexer.has("TYPE") ? {type: "TYPE"} : TYPE), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "fieldExprs", (lexer.has("END") ? {type: "END"} : END), (lexer.has("TYPE") ? {type: "TYPE"} : TYPE)], "postprocess": 
+        ([$1, $2, $3, $4, $5]): Udt => ({
+          name: $2.value,
+          fieldSpecExprs: $3,
+          ...useLoc($1),
+        })
+            },
+    {"name": "fieldExprs$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "fieldExprs$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "fieldExprs", "symbols": ["fieldExprs$ebnf$1"], "postprocess": (): Array<FieldSpecExpr> => []},
+    {"name": "fieldExprs$ebnf$2", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "fieldExprs$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "fieldExprs$ebnf$3", "symbols": []},
+    {"name": "fieldExprs$ebnf$3$subexpression$1", "symbols": ["fieldExpr", "stmtSep"]},
+    {"name": "fieldExprs$ebnf$3", "symbols": ["fieldExprs$ebnf$3", "fieldExprs$ebnf$3$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "fieldExprs$ebnf$4", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "fieldExprs$ebnf$4", "symbols": [], "postprocess": () => null},
+    {"name": "fieldExprs", "symbols": ["fieldExprs$ebnf$2", "fieldExprs$ebnf$3", "fieldExpr", "fieldExprs$ebnf$4"], "postprocess": 
+        ([$1, $2, $3, $4]): Array<FieldSpecExpr> => [
+          ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : []),
+          $3,
+        ]
+            },
+    {"name": "fieldExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "asSingularTypeSpecExpr"], "postprocess": 
+        ([$1, $2]): FieldSpecExpr => ({
+          name: $1.value,
+          typeSpecExpr: $2,
           ...useLoc($1),
         })
             },
@@ -386,7 +431,7 @@ const grammar: Grammar = {
     {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "varDecl$ebnf$1"], "postprocess": 
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
           ...useLoc($1),
         })
             },
@@ -399,6 +444,7 @@ const grammar: Grammar = {
             type: TypeSpecExprType.ARRAY,
             elementTypeSpec: $5,
             dimensionSpecExprs: $3,
+            ...useLoc($1),
           },
           ...useLoc($1),
         })
@@ -762,8 +808,21 @@ const grammar: Grammar = {
     {"name": "elementaryTypeSpec", "symbols": [(lexer.has("LONG") ? {type: "LONG"} : LONG)], "postprocess": () => longSpec()},
     {"name": "elementaryTypeSpec", "symbols": [(lexer.has("SINGLE") ? {type: "SINGLE"} : SINGLE)], "postprocess": () => singleSpec()},
     {"name": "elementaryTypeSpec", "symbols": [(lexer.has("DOUBLE") ? {type: "DOUBLE"} : DOUBLE)], "postprocess": () => doubleSpec()},
-    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING)], "postprocess": () => stringSpec()},
+    {"name": "elementaryTypeSpec$ebnf$1$subexpression$1", "symbols": [(lexer.has("MUL") ? {type: "MUL"} : MUL), "expr2"]},
+    {"name": "elementaryTypeSpec$ebnf$1", "symbols": ["elementaryTypeSpec$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "elementaryTypeSpec$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING), "elementaryTypeSpec$ebnf$1"], "postprocess": () => stringSpec()},
     {"name": "asElementaryTypeSpec", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess": ([$1, $2]) => $2},
+    {"name": "asSingularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
+          type: TypeSpecExprType.ELEMENTARY,
+          typeSpec: $2,
+          ...useLoc($1),
+        }) },
+    {"name": "asSingularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
+          type: TypeSpecExprType.UDT,
+          name: $2.value,
+          ...useLoc($1),
+        }) },
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["fnCallExpr"], "postprocess": id},

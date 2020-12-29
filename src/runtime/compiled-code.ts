@@ -90,7 +90,7 @@ export type VarContainer = {[name: string]: any};
  *
  * The underlying variable can be referenced with ptr[0][ptr[1]].
  */
-export type Ptr = [VarContainer, string];
+export type Ptr<T = any> = [T, keyof T];
 
 /** Arguments to a procedure. */
 export type ArgsContainer = {[name: string]: Ptr};

@@ -10,6 +10,10 @@ import {
   FnProc,
   SubProc,
   Param,
+  TypeSpecExprType,
+  SingularTypeSpecExpr,
+  Udt,
+  FieldSpecExpr,
   Expr,
   ExprType,
   BinaryOpExpr,
@@ -27,7 +31,6 @@ import {
   DimStmt,
   DimType,
   VarDecl,
-  TypeSpecExprType,
   ArrayDimensionSpecExpr,
   GotoStmt,
   AssignStmt,
@@ -120,6 +123,7 @@ module ->
         ([$1, $2]): Module => $2.reduce((a: Module, b: Module) => ({
           stmts: [...a.stmts, ...b.stmts],
           procs: [...a.procs, ...b.procs],
+          udts: [...a.udts, ...b.udts],
         }))
     %}
 
@@ -128,12 +132,21 @@ moduleComponentWithSep ->
           ([$1]): Module => ({
             stmts: [$1],
             procs: [],
+            udts: [],
           })
       %}
     | proc stmtSep  {%
           ([$1, $2]): Module => ({
             stmts: [],
             procs: $1 ? [$1] : [],
+            udts: [],
+          })
+    %}
+    | udt stmtSep  {%
+          ([$1, $2]): Module => ({
+            stmts: [],
+            procs: [],
+            udts: $1 ? [$1] : [],
           })
     %}
 
@@ -179,7 +192,7 @@ param ->
       %IDENTIFIER asElementaryTypeSpec:?  {%
           ([$1, $2]): Param => ({
             name: $1.value,
-            typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+            typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
             ...useLoc($1),
           })
     %}
@@ -190,9 +203,37 @@ param ->
               type: TypeSpecExprType.ARRAY,
               elementTypeSpec: $4,
               dimensionSpecExprs: [],
+              ...useLoc($1),
             },
             ...useLoc($1),
           })
+    %}
+
+udt ->
+    %TYPE %IDENTIFIER fieldExprs %END %TYPE  {%
+        ([$1, $2, $3, $4, $5]): Udt => ({
+          name: $2.value,
+          fieldSpecExprs: $3,
+          ...useLoc($1),
+        })
+    %}
+
+fieldExprs ->
+      stmtSep:?  {% (): Array<FieldSpecExpr> => [] %}
+    | stmtSep:? (fieldExpr stmtSep):* fieldExpr stmtSep:?  {%
+        ([$1, $2, $3, $4]): Array<FieldSpecExpr> => [
+          ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : []),
+          $3,
+        ]
+    %}
+
+fieldExpr ->
+    %IDENTIFIER asSingularTypeSpecExpr  {%
+        ([$1, $2]): FieldSpecExpr => ({
+          name: $1.value,
+          typeSpecExpr: $2,
+          ...useLoc($1),
+        })
     %}
 
 # ----
@@ -284,7 +325,7 @@ varDecl ->
       %IDENTIFIER asElementaryTypeSpec:?  {%
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
           ...useLoc($1),
         })
     %}
@@ -295,6 +336,7 @@ varDecl ->
             type: TypeSpecExprType.ARRAY,
             elementTypeSpec: $5,
             dimensionSpecExprs: $3,
+            ...useLoc($1),
           },
           ...useLoc($1),
         })
@@ -665,10 +707,22 @@ elementaryTypeSpec ->
     | %LONG  {% () => longSpec() %}
     | %SINGLE  {% () => singleSpec() %}
     | %DOUBLE  {% () => doubleSpec() %}
-    | %STRING  {% () => stringSpec() %}
+    | %STRING (%MUL expr2):?  {% () => stringSpec() %}
 
 asElementaryTypeSpec ->
     %AS elementaryTypeSpec  {% ([$1, $2]) => $2 %}
+
+asSingularTypeSpecExpr ->
+      %AS elementaryTypeSpec  {% ([$1, $2]): SingularTypeSpecExpr  => ({
+        type: TypeSpecExprType.ELEMENTARY,
+        typeSpec: $2,
+        ...useLoc($1),
+      }) %}
+    | %AS %IDENTIFIER  {% ([$1, $2]): SingularTypeSpecExpr  => ({
+        type: TypeSpecExprType.UDT,
+        name: $2.value,
+        ...useLoc($1),
+      }) %}
 
 # ----
 # Expressions

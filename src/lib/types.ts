@@ -12,7 +12,7 @@ export enum DataType {
   STRING = 'string',
   /** Array. */
   ARRAY = 'array',
-  /** User-defined record type. */
+  /** User-defined data type, a.k.a. records. */
   UDT = 'udt',
 }
 
@@ -23,12 +23,6 @@ export type NumericDataType =
   | DataType.DOUBLE;
 
 export type ElementaryDataType = NumericDataType | DataType.STRING;
-
-/** Specification for a field in a user-defined record type. */
-export interface FieldSpec {
-  name: string;
-  typeSpec: DataTypeSpec;
-}
 
 /** Full data type specification. */
 export type DataTypeSpec = ElementaryTypeSpec | ArrayTypeSpec | UdtTypeSpec;
@@ -58,6 +52,12 @@ export type ArrayDimensionSpec = [number, number];
 export interface UdtTypeSpec {
   type: DataType.UDT;
   fieldSpecs: Array<FieldSpec>;
+}
+
+/** Specification for a field in a user-defined record type. */
+export interface FieldSpec {
+  name: string;
+  typeSpec: DataTypeSpec;
 }
 
 // Helpers for creating DataTypeSpec instances.
