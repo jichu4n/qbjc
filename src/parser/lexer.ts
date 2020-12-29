@@ -72,7 +72,7 @@ const mooLexer = moo.states(
         match: /"[^"]*"/,
         value: (text) => text.substr(1, text.length - 2),
       },
-      NUMERIC_LITERAL: /-?(?:\d*\.\d+|\d+)/,
+      NUMERIC_LITERAL: /(?:\d*\.\d+|\d+)/,
 
       COLON: ':',
       SEMICOLON: ';',
