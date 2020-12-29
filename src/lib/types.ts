@@ -46,17 +46,14 @@ export interface StringTypeSpec {
 export interface ArrayTypeSpec {
   type: DataType.ARRAY;
   elementTypeSpec: ElementaryTypeSpec;
-  arraySpec: ArraySpec;
+  dimensionSpecs: Array<ArrayDimensionSpec>;
 }
 
-/** Specification for a single dimension of an array. */
-export interface ArrayDimensionSpec {
-  minIdx: number;
-  maxIdx: number;
-}
-
-/** Specification for array dimensions. */
-export type ArraySpec = Array<ArrayDimensionSpec>;
+/** Specification for a single dimension of an array.
+ *
+ * The format is [minIdx, maxIdx].
+ */
+export type ArrayDimensionSpec = [number, number];
 
 export interface UdtTypeSpec {
   type: DataType.UDT;
@@ -87,9 +84,9 @@ export function stringSpec(): StringTypeSpec {
 
 export function arraySpec(
   elementTypeSpec: ElementaryTypeSpec,
-  arraySpec: ArraySpec
-): DataTypeSpec {
-  return {type: DataType.ARRAY, elementTypeSpec, arraySpec};
+  dimensionSpecs: Array<ArrayDimensionSpec>
+): ArrayTypeSpec {
+  return {type: DataType.ARRAY, elementTypeSpec, dimensionSpecs};
 }
 
 // Helpers for type checking.
@@ -117,8 +114,10 @@ export function isArray(
   return getType(t) === DataType.ARRAY;
 }
 
-export function isElementaryType(...types: Array<DataType | DataTypeSpec>) {
-  return types.every((t) => isNumeric(t) || isString(t));
+export function isElementaryType(
+  t: DataType | DataTypeSpec
+): t is ElementaryDataType | ElementaryTypeSpec {
+  return isNumeric(t) || isString(t);
 }
 
 export function areMatchingElementaryTypes(
@@ -130,6 +129,15 @@ export function areMatchingElementaryTypes(
 function getType(t: DataType | DataTypeSpec) {
   return typeof t === 'object' ? t.type : t;
 }
+
+/** Initial value for elementary data types. */
+export const ELEMENTARY_TYPE_INIT_VALUES = {
+  [DataType.INTEGER]: 0,
+  [DataType.LONG]: 0,
+  [DataType.SINGLE]: 0.0,
+  [DataType.DOUBLE]: 0.0,
+  [DataType.STRING]: '',
+};
 
 /** Type of a procedure. */
 export enum ProcType {

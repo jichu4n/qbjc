@@ -1,5 +1,6 @@
 import {VarSymbolTable} from '../lib/symbol-table';
-import {ProcType} from '../lib/types';
+import {ElementaryTypeSpec, ProcType} from '../lib/types';
+import QbArray from './qb-array';
 import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */

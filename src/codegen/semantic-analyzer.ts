@@ -73,10 +73,7 @@ const TYPE_SUFFIX_MAP: {[key: string]: ElementaryTypeSpec} = Object.freeze({
 });
 
 /** Default array dimension spec. */
-const DEFAULT_DIMENSION_SPEC: ArrayDimensionSpec = {
-  minIdx: 0,
-  maxIdx: 10,
-};
+const DEFAULT_DIMENSION_SPEC: ArrayDimensionSpec = [0, 10];
 
 type ResolvedFn =
   | {
@@ -183,30 +180,32 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         }
       }
       const typeSpec = this.getTypeSpecForVarDecl(varDecl);
+      let symbol: VarSymbol;
       switch (node.dimType) {
         case DimType.SHARED:
-          this.module.globalSymbols!.push({
+          symbol = {
             name: varDecl.name,
             varType: VarType.VAR,
             typeSpec,
             varScope: VarScope.GLOBAL,
-          });
+          };
+          this.module.globalSymbols!.push(symbol);
           break;
         case DimType.LOCAL:
-          this.addLocalSymbol(
-            this.createLocalVarSymbol({
-              name: varDecl.name,
-              typeSpec,
-            })
-          );
+          symbol = this.createLocalVarSymbol({
+            name: varDecl.name,
+            typeSpec,
+          });
+          this.addLocalSymbol(symbol);
           break;
         case DimType.STATIC:
-          this.addLocalSymbol({
+          symbol = {
             name: varDecl.name,
             varType: VarType.STATIC_VAR,
             typeSpec,
             varScope: VarScope.LOCAL,
-          });
+          };
+          this.addLocalSymbol(symbol);
           break;
         default:
           this.throwError(
@@ -214,6 +213,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
             node
           );
       }
+      varDecl.symbol = symbol;
     }
   }
 
@@ -643,10 +643,12 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         node.arrayExpr
       );
     }
-    if (node.arrayExpr.typeSpec!.arraySpec.length !== node.indexExprs.length) {
+    if (
+      node.arrayExpr.typeSpec!.dimensionSpecs.length !== node.indexExprs.length
+    ) {
       this.throwError(
         'Wrong number of index expressions: ' +
-          `expected ${node.arrayExpr.typeSpec!.arraySpec.length}, ` +
+          `expected ${node.arrayExpr.typeSpec!.dimensionSpecs.length}, ` +
           `got ${node.indexExprs.length}`,
         node
       );
@@ -780,16 +782,35 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const {name, typeSpecExpr} = varDecl;
     switch (typeSpecExpr.type) {
       case TypeSpecExprType.ELEMENTARY:
-        return typeSpecExpr.typeSpec ?? this.getTypeSpecFromSuffix(name);
+        if (!typeSpecExpr.typeSpec) {
+          typeSpecExpr.typeSpec = this.getTypeSpecFromSuffix(name);
+        }
+        return typeSpecExpr.typeSpec;
       case TypeSpecExprType.ARRAY:
+        for (const {
+          minIdxExpr,
+          maxIdxExpr,
+        } of typeSpecExpr.dimensionSpecExprs) {
+          const idxExprs = [...(minIdxExpr ? [minIdxExpr] : []), maxIdxExpr];
+          this.acceptAll(idxExprs);
+          for (const idxExpr of idxExprs) {
+            if (!isNumeric(idxExpr.typeSpec!)) {
+              this.throwError(
+                `Array dimension size must be numeric, not ${
+                  idxExpr.typeSpec!.type
+                }`,
+                idxExpr
+              );
+            }
+          }
+        }
+        if (!typeSpecExpr.elementTypeSpec) {
+          typeSpecExpr.elementTypeSpec = this.getTypeSpecFromSuffix(name);
+        }
         return {
           type: DataType.ARRAY,
-          elementTypeSpec:
-            typeSpecExpr.elementTypeSpec ?? this.getTypeSpecFromSuffix(name),
-          arraySpec: typeSpecExpr.dimensionSpecExprs.map(() => ({
-            minIdx: 0,
-            maxIdx: 0,
-          })),
+          elementTypeSpec: typeSpecExpr.elementTypeSpec,
+          dimensionSpecs: typeSpecExpr.dimensionSpecExprs.map(() => [0, 0]),
         };
       default:
         this.throwError(

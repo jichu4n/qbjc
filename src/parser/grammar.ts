@@ -161,7 +161,7 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
     type: ExprType.UNARY_OP,
     op: id($1).type.toLowerCase(),
     rightExpr: $2,
-    ...useLoc($1),
+    ...useLoc(id($1)),
   };
 }
 

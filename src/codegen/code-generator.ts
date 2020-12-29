@@ -39,6 +39,7 @@ import {
   SelectStmt,
   Stmts,
   SubscriptExpr,
+  TypeSpecExprType,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -161,7 +162,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       null,
       null,
       this.opts.sourceFileName,
-      _.flatten(chunks)
+      _.flattenDeep(chunks)
     );
   }
 
@@ -210,10 +211,29 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitDimStmt(node: DimStmt): SourceNode {
-    const chunk: SourceChunk = [];
-
-    if (chunk.length > 0) {
-      return this.createStmtSourceNode(node, () => chunk);
+    const chunks: SourceChunks = [];
+    for (const varDecl of node.varDecls) {
+      const {typeSpecExpr} = varDecl;
+      if (typeSpecExpr.type !== TypeSpecExprType.ARRAY) {
+        continue;
+      }
+      chunks.push(
+        this.generateVarRefCode(varDecl, varDecl.symbol!),
+        '.init(',
+        JSON.stringify(typeSpecExpr.elementTypeSpec),
+        ', [',
+        ...typeSpecExpr.dimensionSpecExprs.map(({minIdxExpr, maxIdxExpr}) => [
+          '[',
+          minIdxExpr ? this.accept(minIdxExpr) : '0',
+          ', ',
+          this.accept(maxIdxExpr),
+          '],',
+        ]),
+        ']); '
+      );
+    }
+    if (chunks.length > 0) {
+      return this.createStmtSourceNode(node, () => chunks);
     } else {
       return new SourceNode();
     }
@@ -340,7 +360,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       ];
       chunks.push(
         this.createStmtSourceNode(ifBranch, () =>
-          _.flatten([
+          _.flattenDeep([
             'if (!(',
             generateCondExprCode(ifBranch),
             `)) { ${this.generateGotoCode(nextBranchLabel)} }`,
@@ -666,7 +686,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   private createStmtSourceNode<T extends AstNodeBase>(
     node: T,
-    generateRunCode: () => SourceChunk
+    generateRunCode: () => SourceChunk | SourceChunks
   ) {
     return this.createSourceNode(
       node,
@@ -826,13 +846,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   private createSourceNode<T extends AstNodeBase>(
     node: T,
-    ...chunks: SourceChunks
+    ...chunks: Array<SourceChunk | SourceChunks>
   ) {
     return new SourceNode(
       node.loc.line,
       node.loc.col,
       this.opts.sourceFileName,
-      _.flatten(chunks)
+      _.flattenDeep(chunks)
     );
   }
 

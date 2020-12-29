@@ -157,6 +157,11 @@ export enum DimType {
 export interface VarDecl extends AstNodeBase {
   name: string;
   typeSpecExpr: TypeSpecExpr;
+  /** Resolved variable symbol.
+   *
+   * Populated during semantic analysis.
+   */
+  symbol?: VarSymbol;
 }
 
 export type TypeSpecExpr = ElementaryTypeSpecExpr | ArrayTypeSpecExpr;

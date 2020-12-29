@@ -1,6 +1,14 @@
 import ErrorWithLoc from '../lib/error-with-loc';
 import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {DataType, DataTypeSpec, ProcType, procTypeName} from '../lib/types';
+import {
+  DataType,
+  DataTypeSpec,
+  ElementaryTypeSpec,
+  ELEMENTARY_TYPE_INIT_VALUES,
+  isElementaryType,
+  ProcType,
+  procTypeName,
+} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -19,15 +27,6 @@ interface GosubState {
   /** Index of statement to return to. */
   nextStmtIdx: number;
 }
-
-/** Initial value for each data type. */
-const INIT_VALUE_MAP: {[key: string]: any} = {
-  [DataType.INTEGER]: 0,
-  [DataType.LONG]: 0,
-  [DataType.SINGLE]: 0.0,
-  [DataType.DOUBLE]: 0.0,
-  [DataType.STRING]: '',
-};
 
 export class ExecutionError extends ErrorWithLoc {
   constructor(
@@ -143,24 +142,21 @@ export default class Executor {
       if (!includeVarTypes.includes(symbol.varType)) {
         continue;
       }
-      container[symbol.name] = this.getInitValue(symbol.name, symbol.typeSpec);
+      container[symbol.name] = this.getInitValue(symbol.typeSpec);
     }
     return container;
   }
 
-  private getInitValue(symbolName: string, typeSpec: DataTypeSpec): any {
+  private getInitValue(typeSpec: DataTypeSpec): any {
     const {type: dataType} = typeSpec;
-    if (dataType in INIT_VALUE_MAP) {
-      return INIT_VALUE_MAP[dataType];
+    if (isElementaryType(dataType)) {
+      return ELEMENTARY_TYPE_INIT_VALUES[dataType];
     }
     switch (typeSpec.type) {
       case DataType.ARRAY:
-        return new QbArray(
-          typeSpec.arraySpec,
-          this.getInitValue(symbolName, typeSpec.elementTypeSpec)
-        );
+        return new QbArray(typeSpec);
       default:
-        throw new Error(`Symbol "${symbolName}" has unknown type: ${typeSpec}`);
+        throw new Error(`Unknown type: ${typeSpec}`);
     }
   }
 
