@@ -562,6 +562,10 @@ callStmt ->
                 return reject;
               }
             }
+            // A line like "A(0) = 42" should parse as an assignment rather than a CALL statement.
+            if ($2.length === 1 && $2[0].type === ExprType.BINARY_OP && $2[0].op === BinaryOp.EQ) {
+                return reject;
+            }
             return {
               type: StmtType.CALL,
               name: $1.value,
