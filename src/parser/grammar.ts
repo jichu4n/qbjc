@@ -46,6 +46,7 @@ declare var NEXT: any;
 declare var GOSUB: any;
 declare var RETURN: any;
 declare var CALL: any;
+declare var SYSTEM: any;
 declare var SWAP: any;
 declare var PRINT: any;
 declare var SEMICOLON: any;
@@ -674,7 +675,9 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
               },
-    {"name": "endStmt", "symbols": [(lexer.has("END") ? {type: "END"} : END)], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) })},
+    {"name": "endStmt$subexpression$1", "symbols": [(lexer.has("END") ? {type: "END"} : END)]},
+    {"name": "endStmt$subexpression$1", "symbols": [(lexer.has("SYSTEM") ? {type: "SYSTEM"} : SYSTEM)]},
+    {"name": "endStmt", "symbols": ["endStmt$subexpression$1"], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc(id($1)) })},
     {"name": "swapStmt", "symbols": [(lexer.has("SWAP") ? {type: "SWAP"} : SWAP), "lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "lhsExpr"], "postprocess": 
         ([$1, $2, $3, $4]): SwapStmt => ({
           type: StmtType.SWAP,

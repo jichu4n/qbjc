@@ -588,7 +588,7 @@ exitProcStmt ->
       %}
 
 endStmt ->
-    %END  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc($1) }) %}
+    (%END | %SYSTEM)  {% ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc(id($1)) }) %}
 
 swapStmt ->
     %SWAP lhsExpr %COMMA lhsExpr  {%

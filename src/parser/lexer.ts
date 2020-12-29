@@ -43,6 +43,7 @@ export enum Keywords {
   STEP = 'step',
   STRING = 'string',
   SUB = 'sub',
+  SYSTEM = 'system',
   SWAP = 'swap',
   THEN = 'then',
   TO = 'to',
