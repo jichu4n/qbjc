@@ -2,7 +2,6 @@ import ErrorWithLoc from './error-with-loc';
 import {VarSymbol, VarSymbolTable} from './symbol-table';
 import {
   DataTypeSpec,
-  ElementaryDataType,
   ElementaryTypeSpec,
   FnDefType,
   ProcType,

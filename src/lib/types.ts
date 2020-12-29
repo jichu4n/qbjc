@@ -25,7 +25,9 @@ export type NumericDataType =
 export type ElementaryDataType = NumericDataType | DataType.STRING;
 
 /** Full data type specification. */
-export type DataTypeSpec = ElementaryTypeSpec | ArrayTypeSpec | UdtTypeSpec;
+export type DataTypeSpec = SingularTypeSpec | ArrayTypeSpec;
+
+export type SingularTypeSpec = ElementaryTypeSpec | UdtTypeSpec;
 
 export type ElementaryTypeSpec = NumericTypeSpec | StringTypeSpec;
 
@@ -57,7 +59,7 @@ export interface UdtTypeSpec {
 /** Specification for a field in a user-defined record type. */
 export interface FieldSpec {
   name: string;
-  typeSpec: DataTypeSpec;
+  typeSpec: SingularTypeSpec;
 }
 
 // Helpers for creating DataTypeSpec instances.

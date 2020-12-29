@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import {
   AssignStmt,
+  AstNodeBase,
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
@@ -36,6 +37,7 @@ import {
   SwapStmt,
   TypeSpecExpr,
   TypeSpecExprType,
+  Udt,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -62,6 +64,8 @@ import {
   ArrayDimensionSpec,
   ElementaryTypeSpec,
   DataType,
+  UdtTypeSpec,
+  SingularTypeSpec,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
@@ -110,6 +114,11 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitModule(module: Module): void {
+    // Resolve UDT types.
+    this.udtStack = [];
+    module.udts.forEach(this.visitUdt.bind(this));
+
+    // Resolve type signatures of procs.
     module.procs.forEach(this.preprocessProc.bind(this));
 
     this.currentProc = null;
@@ -139,6 +148,59 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         varScope: VarScope.LOCAL,
       });
     }
+  }
+
+  /** Stack of UDTs being resolved. Used to detect cycles. */
+  private udtStack: Array<Udt> = [];
+
+  /** Resolve UDT type spec using depth first search. */
+  visitUdt(udt: Udt) {
+    if (udt.typeSpec) {
+      return;
+    }
+
+    // Check if we have a cycle.
+    const udtStackIdx = this.udtStack.indexOf(udt);
+    if (udtStackIdx >= 0) {
+      const udtsInCycle = [...this.udtStack.slice(udtStackIdx), udt];
+      this.throwError(
+        'Dependency cycle in user-defined types: ' +
+          udtsInCycle.map(({name}) => name).join(' -> '),
+        udt
+      );
+    }
+
+    // Resolve typeSpec of each field.
+    this.udtStack.push(udt);
+    const typeSpec: UdtTypeSpec = {
+      type: DataType.UDT,
+      fieldSpecs: [],
+    };
+    for (const {name: fieldName, typeSpecExpr} of udt.fieldSpecExprs) {
+      let fieldTypeSpec: SingularTypeSpec;
+      switch (typeSpecExpr.type) {
+        case TypeSpecExprType.ELEMENTARY:
+          fieldTypeSpec =
+            typeSpecExpr.typeSpec ?? this.getTypeSpecFromSuffix(fieldName);
+          break;
+        case TypeSpecExprType.UDT:
+          const fieldUdt = this.lookupUdtOrThrow(
+            typeSpecExpr,
+            typeSpecExpr.name
+          );
+          this.visitUdt(fieldUdt);
+          fieldTypeSpec = fieldUdt.typeSpec!;
+          break;
+        default:
+          this.throwError(
+            `Unexpected field type: ${JSON.stringify(typeSpecExpr)}`,
+            typeSpecExpr
+          );
+      }
+      typeSpec.fieldSpecs.push({name: fieldName, typeSpec: fieldTypeSpec});
+    }
+
+    udt.typeSpec = typeSpec;
   }
 
   visitProc(node: Proc) {
@@ -226,7 +288,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const valueTypeSpec = node.valueExpr.typeSpec!;
     if (!areMatchingElementaryTypes(targetTypeSpec, valueTypeSpec)) {
       this.throwError(
-        `Cannot assign ${valueTypeSpec.type} value to ${targetTypeSpec.type} variable`,
+        `Cannot assign ${valueTypeSpec.type} value ` +
+          `to ${targetTypeSpec.type}`,
         node
       );
     }
@@ -446,7 +509,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       case InputType.LINE:
         if (node.targetExprs.length !== 1) {
           this.throwError(
-            `Expected single destination in LINE INPUT statement, got ${node.targetExprs.length}`,
+            'Expected single destination in LINE INPUT statement, ' +
+              `got ${node.targetExprs.length}`,
             node
           );
         }
@@ -560,7 +624,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.accept(node.rightExpr);
     const leftTypeSpec = node.leftExpr.typeSpec!;
     const rightTypeSpec = node.rightExpr.typeSpec!;
-    const errorMessage = `Incompatible types for ${node.op} operator: ${leftTypeSpec.type} and ${rightTypeSpec.type}`;
+    const errorMessage =
+      `Incompatible types for ${node.op} operator: ` +
+      `${leftTypeSpec.type} and ${rightTypeSpec.type}`;
     const requireNumericOperands = () => {
       if (!(isNumeric(leftTypeSpec) && isNumeric(rightTypeSpec))) {
         this.throwError(errorMessage, node);
@@ -895,6 +961,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       };
     }
     return null;
+  }
+
+  private lookupUdtOrThrow<T extends AstNodeBase>(node: T, name: string) {
+    const udt = lookupSymbol(this.module.udts, name);
+    if (!udt) {
+      this.throwError(`Type not found: "${name}"`, node);
+    }
+    return udt;
   }
 
   /** The current proc being visited, or null if currently visiting module-level nodes. */
