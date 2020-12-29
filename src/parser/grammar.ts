@@ -93,6 +93,7 @@ import {
   DimStmt,
   DimType,
   VarDecl,
+  TypeSpecExprType,
   GotoStmt,
   AssignStmt,
   ConstStmt,
@@ -269,7 +270,7 @@ const grammar: Grammar = {
     {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": 
         ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
             },
-    {"name": "param$ebnf$1", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "param$ebnf$1", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
     {"name": "param$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 })},
     {"name": "stmts$ebnf$1", "symbols": ["stmtSep"], "postprocess": id},
@@ -356,12 +357,12 @@ const grammar: Grammar = {
           $2,
         ]
             },
-    {"name": "varDecl$ebnf$1", "symbols": ["asTypeName"], "postprocess": id},
+    {"name": "varDecl$ebnf$1", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
     {"name": "varDecl$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "varDecl$ebnf$1"], "postprocess": 
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpec: $2,
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
           ...useLoc($1),
         })
             },
@@ -689,12 +690,12 @@ const grammar: Grammar = {
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)]},
     {"name": "labelRef$subexpression$1", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)]},
     {"name": "labelRef", "symbols": ["labelRef$subexpression$1"], "postprocess": ([$1]) => id($1).value},
-    {"name": "typeName", "symbols": [(lexer.has("INTEGER") ? {type: "INTEGER"} : INTEGER)], "postprocess": () => integerSpec()},
-    {"name": "typeName", "symbols": [(lexer.has("LONG") ? {type: "LONG"} : LONG)], "postprocess": () => longSpec()},
-    {"name": "typeName", "symbols": [(lexer.has("SINGLE") ? {type: "SINGLE"} : SINGLE)], "postprocess": () => singleSpec()},
-    {"name": "typeName", "symbols": [(lexer.has("DOUBLE") ? {type: "DOUBLE"} : DOUBLE)], "postprocess": () => doubleSpec()},
-    {"name": "typeName", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING)], "postprocess": () => stringSpec()},
-    {"name": "asTypeName", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "typeName"], "postprocess": ([$1, $2]) => $2},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("INTEGER") ? {type: "INTEGER"} : INTEGER)], "postprocess": () => integerSpec()},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("LONG") ? {type: "LONG"} : LONG)], "postprocess": () => longSpec()},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("SINGLE") ? {type: "SINGLE"} : SINGLE)], "postprocess": () => singleSpec()},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("DOUBLE") ? {type: "DOUBLE"} : DOUBLE)], "postprocess": () => doubleSpec()},
+    {"name": "elementaryTypeSpec", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING)], "postprocess": () => stringSpec()},
+    {"name": "asElementaryTypeSpec", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess": ([$1, $2]) => $2},
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["fnCallExpr"], "postprocess": id},

@@ -1,6 +1,6 @@
 import ErrorWithLoc from './error-with-loc';
 import {VarScope, VarSymbolTable, VarType} from './symbol-table';
-import {DataTypeSpec, ProcType, FnDefType} from './types';
+import {DataTypeSpec, ProcType, FnDefType, ElementaryTypeSpec} from './types';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
@@ -154,9 +154,32 @@ export enum DimType {
 }
 
 /** A variable declaration inside a DIM statement. */
-export interface VarDecl {
+export interface VarDecl extends AstNodeBase {
   name: string;
-  typeSpec?: DataTypeSpec;
+  typeSpecExpr: TypeSpecExpr;
+}
+
+export type TypeSpecExpr = ElementaryTypeSpecExpr | ArrayTypeSpecExpr;
+
+export enum TypeSpecExprType {
+  ELEMENTARY = 'elementary',
+  ARRAY = 'array',
+}
+
+export interface ElementaryTypeSpecExpr {
+  type: TypeSpecExprType.ELEMENTARY;
+  typeSpec?: ElementaryTypeSpec;
+}
+
+export interface ArrayTypeSpecExpr {
+  type: TypeSpecExprType.ARRAY;
+  elementTypeSpec?: ElementaryTypeSpec;
+  dimensionSpecExprs: Array<ArrayDimensionSpecExpr>;
+}
+
+export interface ArrayDimensionSpecExpr extends AstNodeBase {
+  minIdxExpr?: Expr;
+  maxIdxExpr: Expr;
 }
 
 export interface AssignStmt extends AstNodeBase {
@@ -445,10 +468,10 @@ export interface SubscriptExpr extends ExprBase {
 }
 
 /** Error thrown by AST visitors. */
-export class AstVisitorError extends ErrorWithLoc {
+export class AstVisitorError<T extends AstNodeBase> extends ErrorWithLoc {
   constructor(
     message: string,
-    {sourceFileName, node}: {sourceFileName?: string; node?: AstNode} = {}
+    {sourceFileName, node}: {sourceFileName?: string; node?: T} = {}
   ) {
     super(message, {sourceFileName, loc: node?.loc});
   }
@@ -556,7 +579,7 @@ export abstract class AstVisitor<T = any> {
   }
 
   /** Throws an AstVisitorError for the corresponding AstNode. */
-  protected throwError(message: string, node: AstNode): never {
+  protected throwError<T extends AstNodeBase>(message: string, node: T): never {
     throw new AstVisitorError(message, {
       sourceFileName: this.sourceFileName,
       node,

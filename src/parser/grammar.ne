@@ -27,6 +27,7 @@ import {
   DimStmt,
   DimType,
   VarDecl,
+  TypeSpecExprType,
   GotoStmt,
   AssignStmt,
   ConstStmt,
@@ -173,7 +174,7 @@ params ->
     %}
 
 param ->
-    %IDENTIFIER asTypeName:?  {% ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 }) %}
+    %IDENTIFIER asElementaryTypeSpec:?  {% ([$1, $2]): Param => ({ name: $1.value, typeSpec: $2 }) %}
 
 # ----
 # Statements
@@ -260,10 +261,10 @@ varDecls ->
     %}
 
 varDecl ->
-    %IDENTIFIER asTypeName:?  {%
+    %IDENTIFIER asElementaryTypeSpec:?  {%
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpec: $2,
+          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
           ...useLoc($1),
         })
     %}
@@ -596,15 +597,15 @@ lhsExprs ->
 labelRef ->
     (%IDENTIFIER | %NUMERIC_LITERAL)  {% ([$1]) => id($1).value %}
 
-typeName ->
+elementaryTypeSpec ->
       %INTEGER  {% () => integerSpec() %}
     | %LONG  {% () => longSpec() %}
     | %SINGLE  {% () => singleSpec() %}
     | %DOUBLE  {% () => doubleSpec() %}
     | %STRING  {% () => stringSpec() %}
 
-asTypeName ->
-    %AS typeName  {% ([$1, $2]) => $2 %}
+asElementaryTypeSpec ->
+    %AS elementaryTypeSpec  {% ([$1, $2]) => $2 %}
 
 # ----
 # Expressions

@@ -32,9 +32,12 @@ import {
   ReturnStmt,
   SelectStmt,
   SubscriptExpr,
+  TypeSpecExpr,
+  TypeSpecExprType,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
+  VarDecl,
   VarRefExpr,
 } from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
@@ -56,6 +59,7 @@ import {
   stringSpec,
   ArrayDimensionSpec,
   ElementaryTypeSpec,
+  DataType,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
@@ -178,8 +182,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         }
       }
-      const typeSpec =
-        varDecl.typeSpec ?? this.getTypeSpecFromSuffix(varDecl.name);
+      const typeSpec = this.getTypeSpecForVarDecl(varDecl);
       switch (node.dimType) {
         case DimType.SHARED:
           this.module.globalSymbols!.push({
@@ -773,6 +776,29 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   private addLocalSymbol(...args: Array<VarSymbol>) {
     return this.getLocalSymbols().push(...args);
+  }
+
+  private getTypeSpecForVarDecl(varDecl: VarDecl): DataTypeSpec {
+    const {name, typeSpecExpr} = varDecl;
+    switch (typeSpecExpr.type) {
+      case TypeSpecExprType.ELEMENTARY:
+        return typeSpecExpr.typeSpec ?? this.getTypeSpecFromSuffix(name);
+      case TypeSpecExprType.ARRAY:
+        return {
+          type: DataType.ARRAY,
+          elementTypeSpec:
+            typeSpecExpr.elementTypeSpec ?? this.getTypeSpecFromSuffix(name),
+          arraySpec: typeSpecExpr.dimensionSpecExprs.map(() => ({
+            minIdx: 0,
+            maxIdx: 0,
+          })),
+        };
+      default:
+        this.throwError(
+          `Unknown TypeSpecExpr type: ${JSON.stringify(typeSpecExpr)}`,
+          varDecl
+        );
+    }
   }
 
   private getTypeSpecFromSuffix(name: string) {
