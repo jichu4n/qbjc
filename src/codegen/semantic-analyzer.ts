@@ -684,7 +684,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     for (let i = 0; i < node.argExprs.length; ++i) {
       const paramTypeSpec = paramTypeSpecs[i];
       const argTypeSpec = node.argExprs[i].typeSpec!;
-      if (!areMatchingElementaryTypes(paramTypeSpec, argTypeSpec)) {
+      if (
+        !(
+          areMatchingElementaryTypes(paramTypeSpec, argTypeSpec) ||
+          (isArray(paramTypeSpec) &&
+            isArray(argTypeSpec) &&
+            (areMatchingElementaryTypes(
+              paramTypeSpec.elementTypeSpec,
+              argTypeSpec.elementTypeSpec
+            ) ||
+              // Allow builtins to accept arrays of any element type.
+              resolvedFn.fnDefType === FnDefType.BUILTIN))
+        )
+      ) {
         this.throwError(
           `Incompatible argument ${i + 1} to function "${node.name}": ` +
             `expected ${paramTypeSpec.type}, got ${argTypeSpec.type}`,

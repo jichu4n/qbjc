@@ -12,9 +12,6 @@ class QbArray {
     this.init(arrayTypeSpec.elementTypeSpec, arrayTypeSpec.dimensionSpecs);
   }
 
-  /** The underlying array storing the actual elements. */
-  values: Array<any> = [];
-
   /** Initializes the array with the provided spec, discarding any previous contents. */
   init(
     elementTypeSpec: ElementaryTypeSpec,
@@ -23,10 +20,10 @@ class QbArray {
     if (dimensionSpecs.length === 0) {
       throw new Error('No dimension specs provided');
     }
-    this.arrayTypeSpec = arraySpec(elementTypeSpec, dimensionSpecs);
+    this._arrayTypeSpec = arraySpec(elementTypeSpec, dimensionSpecs);
 
-    this.values.length = 0;
-    let currentDimensionArrays: Array<any> = [this.values];
+    this._values.length = 0;
+    let currentDimensionArrays: Array<any> = [this._values];
     for (let i = 0; i < dimensionSpecs.length; ++i) {
       const [minIdx, maxIdx] = dimensionSpecs[i];
       const numElements = maxIdx - minIdx + 1;
@@ -52,7 +49,7 @@ class QbArray {
 
   /** Translates a QBasic index into the index in the underlying array. */
   getIdx(dimensionIdx: number, qbIdx: number) {
-    const {dimensionSpecs} = this.arrayTypeSpec;
+    const {dimensionSpecs} = this._arrayTypeSpec;
     if (
       !Number.isFinite(dimensionIdx) ||
       dimensionIdx < 0 ||
@@ -75,7 +72,18 @@ class QbArray {
     return qbIdx - minIdx;
   }
 
-  private arrayTypeSpec!: ArrayTypeSpec;
+  get values() {
+    return this._values;
+  }
+
+  get arrayTypeSpec() {
+    return this._arrayTypeSpec;
+  }
+
+  /** The underlying array storing the actual elements. */
+  private _values: Array<any> = [];
+  /** Current type spec. */
+  private _arrayTypeSpec!: ArrayTypeSpec;
 }
 
 export default QbArray;

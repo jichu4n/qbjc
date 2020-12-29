@@ -8,9 +8,12 @@ import {
   longSpec,
   stringSpec,
   areMatchingElementaryTypes,
+  arraySpec,
+  isArray,
 } from '../lib/types';
 import {lookupSymbols} from '../lib/symbol-table';
 import {PrintArg, PrintArgType, Ptr} from './compiled-code';
+import QbArray from './qb-array';
 
 /** Built-in function definition. */
 export interface BuiltinFn<
@@ -47,6 +50,28 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: integerSpec(),
     async run(start: number, haystack: string, needle: string) {
       return haystack.indexOf(needle, Math.floor(start) - 1) + 1;
+    },
+  },
+  {
+    name: 'lbound',
+    paramTypeSpecs: [arraySpec(doubleSpec(), [])],
+    returnTypeSpec: longSpec(),
+    async run(array: QbArray) {
+      return array.arrayTypeSpec.dimensionSpecs[0][0];
+    },
+  },
+  {
+    name: 'lbound',
+    paramTypeSpecs: [arraySpec(doubleSpec(), []), longSpec()],
+    returnTypeSpec: longSpec(),
+    async run(array: QbArray, dimensionIdx: number) {
+      if (
+        dimensionIdx < 1 ||
+        dimensionIdx > array.arrayTypeSpec.dimensionSpecs.length
+      ) {
+        throw new Error(`Invalid dimension index: ${dimensionIdx}`);
+      }
+      return array.arrayTypeSpec.dimensionSpecs[dimensionIdx - 1][0];
     },
   },
   {
@@ -107,6 +132,28 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'ubound',
+    paramTypeSpecs: [arraySpec(doubleSpec(), [])],
+    returnTypeSpec: longSpec(),
+    async run(array: QbArray) {
+      return array.arrayTypeSpec.dimensionSpecs[0][1];
+    },
+  },
+  {
+    name: 'ubound',
+    paramTypeSpecs: [arraySpec(doubleSpec(), []), longSpec()],
+    returnTypeSpec: longSpec(),
+    async run(array: QbArray, dimensionIdx: number) {
+      if (
+        dimensionIdx < 1 ||
+        dimensionIdx > array.arrayTypeSpec.dimensionSpecs.length
+      ) {
+        throw new Error(`Invalid dimension index: ${dimensionIdx}`);
+      }
+      return array.arrayTypeSpec.dimensionSpecs[dimensionIdx - 1][1];
+    },
+  },
+  {
     name: 'ucase$',
     paramTypeSpecs: [stringSpec()],
     returnTypeSpec: stringSpec(),
@@ -129,8 +176,10 @@ export function lookupBuiltinFn(
   const builtinFn = builtinFnsMatchingName.find(
     ({paramTypeSpecs}) =>
       paramTypeSpecs.length === argTypeSpecs.length &&
-      paramTypeSpecs.every((paramTypeSpec, i) =>
-        areMatchingElementaryTypes(paramTypeSpec, argTypeSpecs[i])
+      paramTypeSpecs.every(
+        (paramTypeSpec, i) =>
+          areMatchingElementaryTypes(paramTypeSpec, argTypeSpecs[i]) ||
+          (isArray(paramTypeSpec) && isArray(argTypeSpecs[i]))
       )
   );
   return (
