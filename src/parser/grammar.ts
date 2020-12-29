@@ -17,6 +17,7 @@ declare var NEWLINE: any;
 declare var NUMERIC_LITERAL: any;
 declare var DIM: any;
 declare var SHARED: any;
+declare var TO: any;
 declare var LET: any;
 declare var EQ: any;
 declare var CONST: any;
@@ -27,7 +28,6 @@ declare var ELSE: any;
 declare var ELSEIF: any;
 declare var SELECT: any;
 declare var CASE: any;
-declare var TO: any;
 declare var IS: any;
 declare var NE: any;
 declare var GT: any;
@@ -94,6 +94,7 @@ import {
   DimType,
   VarDecl,
   TypeSpecExprType,
+  ArrayDimensionSpecExpr,
   GotoStmt,
   AssignStmt,
   ConstStmt,
@@ -366,6 +367,36 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
+    {"name": "varDecl$ebnf$2", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
+    {"name": "varDecl$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "dimensionSpecExprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "varDecl$ebnf$2"], "postprocess": 
+        ([$1, $2, $3, $4, $5]): VarDecl => ({
+          name: $1.value,
+          typeSpecExpr: {
+            type: TypeSpecExprType.ARRAY,
+            elementTypeSpec: $5,
+            dimensionSpecExprs: $3,
+          },
+          ...useLoc($1),
+        })
+            },
+    {"name": "dimensionSpecExprs$ebnf$1", "symbols": []},
+    {"name": "dimensionSpecExprs$ebnf$1$subexpression$1", "symbols": ["dimensionSpecExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "dimensionSpecExprs$ebnf$1", "symbols": ["dimensionSpecExprs$ebnf$1", "dimensionSpecExprs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "dimensionSpecExprs", "symbols": ["dimensionSpecExprs$ebnf$1", "dimensionSpecExpr"], "postprocess": 
+        ([$1, $2]): Array<ArrayDimensionSpecExpr> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+            },
+    {"name": "dimensionSpecExpr", "symbols": ["expr"], "postprocess": ([$1]): ArrayDimensionSpecExpr => ({ maxIdxExpr: $1, ...useLoc($1) })},
+    {"name": "dimensionSpecExpr", "symbols": ["expr", (lexer.has("TO") ? {type: "TO"} : TO), "expr"], "postprocess": 
+        ([$1, $2, $3]): ArrayDimensionSpecExpr => ({
+          minIdxExpr: $1,
+          maxIdxExpr: $3,
+          ...useLoc($1),
+        })
+            },
     {"name": "assignStmt$ebnf$1", "symbols": [(lexer.has("LET") ? {type: "LET"} : LET)], "postprocess": id},
     {"name": "assignStmt$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "assignStmt", "symbols": ["assignStmt$ebnf$1", "lhsExpr", (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"], "postprocess": 
@@ -390,7 +421,7 @@ const grammar: Grammar = {
         ]
             },
     {"name": "constDef", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"], "postprocess": 
-        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3 })
+        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3, ...useLoc($1) })
             },
     {"name": "gotoStmt", "symbols": [(lexer.has("GOTO") ? {type: "GOTO"} : GOTO), "labelRef"], "postprocess": 
         ([$1, $2]): GotoStmt =>

@@ -28,6 +28,7 @@ import {
   DimType,
   VarDecl,
   TypeSpecExprType,
+  ArrayDimensionSpecExpr,
   GotoStmt,
   AssignStmt,
   ConstStmt,
@@ -261,10 +262,39 @@ varDecls ->
     %}
 
 varDecl ->
-    %IDENTIFIER asElementaryTypeSpec:?  {%
+      %IDENTIFIER asElementaryTypeSpec:?  {%
         ([$1, $2]): VarDecl => ({
           name: $1.value,
           typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2 },
+          ...useLoc($1),
+        })
+    %}
+    | %IDENTIFIER %LPAREN dimensionSpecExprs %RPAREN asElementaryTypeSpec:?  {%
+        ([$1, $2, $3, $4, $5]): VarDecl => ({
+          name: $1.value,
+          typeSpecExpr: {
+            type: TypeSpecExprType.ARRAY,
+            elementTypeSpec: $5,
+            dimensionSpecExprs: $3,
+          },
+          ...useLoc($1),
+        })
+    %}
+
+dimensionSpecExprs ->
+    (dimensionSpecExpr %COMMA):* dimensionSpecExpr  {%
+        ([$1, $2]): Array<ArrayDimensionSpecExpr> => [
+          ...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []),
+          $2,
+        ]
+    %}
+
+dimensionSpecExpr ->
+      expr  {% ([$1]): ArrayDimensionSpecExpr => ({ maxIdxExpr: $1, ...useLoc($1) }) %}
+    | expr %TO expr  {%
+        ([$1, $2, $3]): ArrayDimensionSpecExpr => ({
+          minIdxExpr: $1,
+          maxIdxExpr: $3,
           ...useLoc($1),
         })
     %}
@@ -295,7 +325,7 @@ constDefs ->
 
 constDef ->
     %IDENTIFIER %EQ expr  {%
-        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3 })
+        ([$1, $2, $3]): ConstDef => ({ name: $1.value, valueExpr: $3, ...useLoc($1) })
     %}
 
 gotoStmt ->

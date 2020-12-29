@@ -1,5 +1,5 @@
 import ErrorWithLoc from './error-with-loc';
-import {VarScope, VarSymbolTable, VarType} from './symbol-table';
+import {VarScope, VarSymbol, VarSymbolTable, VarType} from './symbol-table';
 import {DataTypeSpec, ProcType, FnDefType, ElementaryTypeSpec} from './types';
 
 /** An AST node. */
@@ -193,14 +193,14 @@ export interface ConstStmt extends AstNodeBase {
   constDefs: Array<ConstDef>;
 }
 
-export interface ConstDef {
+export interface ConstDef extends AstNodeBase {
   name: string;
   valueExpr: Expr;
-  /** Resolved variable scope.
+  /** Resolved variable symbol.
    *
    * Populated during semantic analysis.
    */
-  varScope?: VarScope;
+  symbol?: VarSymbol;
 }
 
 export interface GotoStmt extends AstNodeBase {
@@ -400,16 +400,11 @@ export interface LiteralExpr extends ExprBase {
 export interface VarRefExpr extends ExprBase {
   type: ExprType.VAR_REF;
   name: string;
-  /** Resolved variable type.
+  /** Resolved symbol.
    *
    * Populated during semantic analysis.
    */
-  varType?: VarType;
-  /** Resolved variable scope.
-   *
-   * Populated during semantic analysis.
-   */
-  varScope?: VarScope;
+  symbol?: VarSymbol;
 }
 
 export interface FnCallExpr extends ExprBase {

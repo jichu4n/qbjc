@@ -250,17 +250,19 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         }
       }
-      const symbol = {
+      const symbolProps = {
         name: constDef.name,
         varType: VarType.CONST as const,
         typeSpec: constDef.valueExpr.typeSpec!,
       };
       if (this.currentProc) {
-        this.addLocalSymbol({...symbol, varScope: VarScope.LOCAL});
-        constDef.varScope = VarScope.LOCAL;
+        const symbol: VarSymbol = {...symbolProps, varScope: VarScope.LOCAL};
+        this.addLocalSymbol(symbol);
+        constDef.symbol = symbol;
       } else {
-        this.module.globalSymbols!.push({...symbol, varScope: VarScope.GLOBAL});
-        constDef.varScope = VarScope.GLOBAL;
+        const symbol: VarSymbol = {...symbolProps, varScope: VarScope.GLOBAL};
+        this.module.globalSymbols!.push(symbol);
+        constDef.symbol = symbol;
       }
     }
   }
@@ -489,11 +491,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       });
       this.addLocalSymbol(symbol);
     }
-    [node.typeSpec, node.varType, node.varScope] = [
-      symbol.typeSpec,
-      symbol.varType,
-      symbol.varScope,
-    ];
+    [node.typeSpec, node.symbol] = [symbol.typeSpec, symbol];
   }
 
   visitFnCallExpr(node: FnCallExpr): void {
