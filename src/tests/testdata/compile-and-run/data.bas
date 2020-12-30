@@ -5,9 +5,12 @@ RESTORE label2
 READ e$
 PRINT e$
 
-RESTORE label1
-READ a, b$, c$, d$
-PRINT a; b$; c$; d$
+SUB s1
+  RESTORE
+  READ a, b$, c$, d$
+  PRINT a; b$; c$; d$
+END SUB
+s1
 
 END
 

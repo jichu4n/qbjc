@@ -34,16 +34,14 @@ export interface Module {
   /** User-defined data types. */
   udts: Array<Udt>;
 
-  /** Local variable symbol table.
-   *
-   * Populated during semantic analysis.
-   */
+  // Populated during semantic analysis:
+
+  /** Local variable symbol table. */
   localSymbols?: VarSymbolTable;
-  /** Global (shared) variable symbol table.
-   *
-   * Populated during semantic analysis.
-   */
+  /** Global (shared) variable symbol table. */
   globalSymbols?: VarSymbolTable;
+  /** Labels in stmts.*/
+  labels?: Array<string>;
 }
 
 /** A procedure definition (a SUB or a FUNCTION). */
@@ -56,16 +54,14 @@ interface ProcBase extends AstNodeBase {
   stmts: Stmts;
   isDefaultStatic: boolean;
 
-  /** Local variable symbol table.
-   *
-   * Populated during semantic analysis.
-   */
+  // Populated during semantic analysis:
+
+  /** Local variable symbol table. */
   localSymbols?: VarSymbolTable;
-  /** Arguments symbol table.
-   *
-   * Populated during semantic analysis.
-   */
+  /** Arguments symbol table. */
   paramSymbols?: VarSymbolTable;
+  /** Labels in stmts.*/
+  labels?: Array<string>;
 }
 
 /** A SUB procedure. */

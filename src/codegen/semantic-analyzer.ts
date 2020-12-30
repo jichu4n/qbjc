@@ -2,6 +2,7 @@ import _ from 'lodash';
 import {
   AssignStmt,
   AstNodeBase,
+  AstNodeLocation,
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
@@ -39,6 +40,7 @@ import {
   RestoreStmt,
   ReturnStmt,
   SelectStmt,
+  Stmts,
   StmtType,
   SubscriptExpr,
   SwapStmt,
@@ -135,6 +137,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.currentProc = null;
     module.localSymbols = [];
     module.globalSymbols = [];
+    module.labels = this.getLabels(module.stmts);
     this.acceptAll(module.stmts);
 
     this.acceptAll(module.procs);
@@ -159,6 +162,26 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         varScope: VarScope.LOCAL,
       });
     }
+    node.labels = this.getLabels(node.stmts);
+  }
+
+  private getLabels(stmts: Stmts) {
+    const labelLocMap: {[key: string]: AstNodeLocation} = {};
+    for (const stmt of stmts) {
+      if (stmt.type !== StmtType.LABEL) {
+        continue;
+      }
+      if (labelLocMap[stmt.label]) {
+        this.throwError(
+          `Label "${stmt.label}" already defined on line ${
+            labelLocMap[stmt.label].line
+          }`,
+          stmt
+        );
+      }
+      labelLocMap[stmt.label] = stmt.loc;
+    }
+    return Object.keys(labelLocMap);
   }
 
   /** Stack of UDTs being resolved. Used to detect cycles. */
@@ -353,7 +376,13 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  visitGotoStmt(node: GotoStmt): void {}
+  visitGotoStmt(node: GotoStmt): void {
+    this.lookupLabelOrThrow(
+      node,
+      this.currentProc ?? this.module,
+      node.destLabel
+    );
+  }
 
   private requireNumericExpr(...exprs: Array<Expr>) {
     for (const expr of exprs) {
@@ -459,9 +488,23 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitExitForStmt(node: ExitForStmt): void {}
 
-  visitGosubStmt(node: GosubStmt): void {}
+  visitGosubStmt(node: GosubStmt): void {
+    this.lookupLabelOrThrow(
+      node,
+      this.currentProc ?? this.module,
+      node.destLabel
+    );
+  }
 
-  visitReturnStmt(node: ReturnStmt): void {}
+  visitReturnStmt(node: ReturnStmt): void {
+    if (node.destLabel) {
+      this.lookupLabelOrThrow(
+        node,
+        this.currentProc ?? this.module,
+        node.destLabel
+      );
+    }
+  }
 
   visitCallStmt(node: CallStmt): void {
     this.acceptAll(node.argExprs);
@@ -613,7 +656,11 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  visitRestoreStmt(node: RestoreStmt): void {}
+  visitRestoreStmt(node: RestoreStmt): void {
+    if (node.destLabel) {
+      this.lookupLabelOrThrow(node, this.module, node.destLabel);
+    }
+  }
 
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {
@@ -1099,6 +1146,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.defTypeMap[c] = singleSpec();
     }
     this.acceptAll(_.filter(this.module.stmts, ['type', StmtType.DEF_TYPE]));
+  }
+
+  private lookupLabelOrThrow<T extends AstNodeBase>(
+    node: T,
+    context: Module | Proc,
+    label: string
+  ) {
+    if (context.labels!.indexOf(label) < 0) {
+      this.throwError(`Label not found: "${label}"`, node);
+    }
   }
 
   /** The current proc being visited, or null if currently visiting module-level nodes. */
