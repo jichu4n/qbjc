@@ -69,6 +69,7 @@ declare var MOD: any;
 declare var INTDIV: any;
 declare var DIV: any;
 declare var EXP: any;
+declare var DOT: any;
 
 import _ from 'lodash';
 import {Token} from 'moo';
@@ -92,6 +93,7 @@ import {
   LiteralExpr,
   VarRefExpr,
   FnCallExpr,
+  MemberExpr,
   LhsExpr,
   Stmt,
   Stmts,
@@ -825,6 +827,7 @@ const grammar: Grammar = {
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["fnCallExpr"], "postprocess": id},
+    {"name": "lhsExpr", "symbols": ["memberExpr"], "postprocess": id},
     {"name": "expr10", "symbols": ["expr9"], "postprocess": id},
     {"name": "expr10$subexpression$1", "symbols": [(lexer.has("OR") ? {type: "OR"} : OR)]},
     {"name": "expr10", "symbols": ["expr10", "expr10$subexpression$1", "expr9"], "postprocess": buildBinaryOpExpr},
@@ -865,6 +868,7 @@ const grammar: Grammar = {
     {"name": "expr0", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "expr0", "symbols": ["fnCallExpr"], "postprocess": id},
     {"name": "expr0", "symbols": ["literalExpr"], "postprocess": id},
+    {"name": "expr0", "symbols": ["memberExpr"], "postprocess": id},
     {"name": "expr0", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "expr", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)], "postprocess": 
         ([$1, $2, $3]): UnaryOpExpr => ({
           type: ExprType.UNARY_OP,
@@ -894,6 +898,14 @@ const grammar: Grammar = {
     {"name": "numericLiteralExpr", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1]): LiteralExpr =>
             ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
+            },
+    {"name": "memberExpr", "symbols": ["lhsExpr", (lexer.has("DOT") ? {type: "DOT"} : DOT), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": 
+        ([$1, $2, $3]): MemberExpr => ({
+          type: ExprType.MEMBER,
+          udtExpr: $1,
+          fieldName: $3.value,
+          ...useLoc($1),
+        })
             },
     {"name": "exprs", "symbols": [], "postprocess": (): Array<Expr> => []},
     {"name": "exprs$ebnf$1", "symbols": []},

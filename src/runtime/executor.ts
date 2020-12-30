@@ -1,14 +1,6 @@
 import ErrorWithLoc from '../lib/error-with-loc';
 import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {
-  DataType,
-  DataTypeSpec,
-  ElementaryTypeSpec,
-  ELEMENTARY_TYPE_INIT_VALUES,
-  isElementaryType,
-  ProcType,
-  procTypeName,
-} from '../lib/types';
+import {ProcType, procTypeName} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -19,8 +11,8 @@ import {
   Ptr,
   VarContainer,
 } from './compiled-code';
+import initValue from './init-value';
 import Runtime, {RuntimePlatform} from './runtime';
-import QbArray from './qb-array';
 
 /** State for a GOSUB invocation. */
 interface GosubState {
@@ -142,22 +134,9 @@ export default class Executor {
       if (!includeVarTypes.includes(symbol.varType)) {
         continue;
       }
-      container[symbol.name] = this.getInitValue(symbol.typeSpec);
+      container[symbol.name] = initValue(symbol.typeSpec);
     }
     return container;
-  }
-
-  private getInitValue(typeSpec: DataTypeSpec): any {
-    const {type: dataType} = typeSpec;
-    if (isElementaryType(dataType)) {
-      return ELEMENTARY_TYPE_INIT_VALUES[dataType];
-    }
-    switch (typeSpec.type) {
-      case DataType.ARRAY:
-        return new QbArray(typeSpec);
-      default:
-        throw new Error(`Unknown type: ${typeSpec}`);
-    }
   }
 
   private async executeStmts(

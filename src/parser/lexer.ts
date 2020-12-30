@@ -80,6 +80,7 @@ const mooLexer = moo.states(
       COLON: ':',
       SEMICOLON: ';',
       COMMA: ',',
+      DOT: '.',
       LPAREN: '(',
       RPAREN: ')',
       ADD: '+',

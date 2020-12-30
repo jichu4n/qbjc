@@ -55,6 +55,7 @@ export type ArrayDimensionSpec = [number, number];
 
 export interface UdtTypeSpec {
   type: DataType.UDT;
+  name: string;
   fieldSpecs: Array<FieldSpec>;
 }
 
@@ -137,23 +138,39 @@ export function isSingularType(
 }
 
 export function areMatchingElementaryTypes(
-  ...types: Array<DataType | DataTypeSpec>
+  typeSpec1: DataTypeSpec,
+  typeSpec2: DataTypeSpec
 ) {
-  return types.every(isNumeric) || types.every(isString);
+  return (
+    (isNumeric(typeSpec1) && isNumeric(typeSpec2)) ||
+    (isString(typeSpec1) && isString(typeSpec2))
+  );
+}
+
+export function areMatchingSingularTypes(
+  typeSpec1: DataTypeSpec,
+  typeSpec2: DataTypeSpec
+) {
+  return (
+    areMatchingElementaryTypes(typeSpec1, typeSpec2) ||
+    (isUdt(typeSpec1) && isUdt(typeSpec2) && typeSpec1.name === typeSpec2.name)
+  );
+}
+
+export function typeSpecName(t: DataTypeSpec): string {
+  switch (t.type) {
+    case DataType.ARRAY:
+      return `${typeSpecName(t.elementTypeSpec)} array`;
+    case DataType.UDT:
+      return `"${t.name}"`;
+    default:
+      return t.type;
+  }
 }
 
 function getType(t: DataType | DataTypeSpec) {
   return typeof t === 'object' ? t.type : t;
 }
-
-/** Initial value for elementary data types. */
-export const ELEMENTARY_TYPE_INIT_VALUES = {
-  [DataType.INTEGER]: 0,
-  [DataType.LONG]: 0,
-  [DataType.SINGLE]: 0.0,
-  [DataType.DOUBLE]: 0.0,
-  [DataType.STRING]: '',
-};
 
 /** Type of a procedure. */
 export enum ProcType {

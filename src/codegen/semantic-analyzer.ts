@@ -27,9 +27,9 @@ import {
   isSingularTypeExpr,
   LabelStmt,
   LiteralExpr,
+  MemberExpr,
   Module,
   NextStmt,
-  Param,
   PrintStmt,
   Proc,
   ReturnStmt,
@@ -42,32 +42,33 @@ import {
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
-  VarDecl,
   VarRefExpr,
 } from '../lib/ast';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
-  arraySpec,
   areMatchingElementaryTypes,
+  areMatchingSingularTypes,
+  ArrayDimensionSpec,
+  arraySpec,
+  DataType,
   DataTypeSpec,
   doubleSpec,
+  ElementaryTypeSpec,
   FnDefType,
   integerSpec,
   isArray,
   isElementaryType,
   isNumeric,
   isString,
+  isUdt,
   longSpec,
   ProcType,
   procTypeName,
   singleSpec,
-  stringSpec,
-  ArrayDimensionSpec,
-  ElementaryTypeSpec,
-  DataType,
-  UdtTypeSpec,
   SingularTypeSpec,
-  isSingularType,
+  stringSpec,
+  typeSpecName,
+  UdtTypeSpec,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
@@ -176,6 +177,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.udtStack.push(udt);
     const typeSpec: UdtTypeSpec = {
       type: DataType.UDT,
+      name: udt.name,
       fieldSpecs: [],
     };
     for (const {name: fieldName, typeSpecExpr} of udt.fieldSpecExprs) {
@@ -288,10 +290,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.accept(node.valueExpr);
     const targetTypeSpec = node.targetExpr.typeSpec!;
     const valueTypeSpec = node.valueExpr.typeSpec!;
-    if (!areMatchingElementaryTypes(targetTypeSpec, valueTypeSpec)) {
+    if (!areMatchingSingularTypes(targetTypeSpec, valueTypeSpec)) {
       this.throwError(
-        `Cannot assign ${valueTypeSpec.type} value ` +
-          `to ${targetTypeSpec.type}`,
+        `Cannot assign ${typeSpecName(valueTypeSpec)} value ` +
+          `to ${typeSpecName(targetTypeSpec)}`,
         node
       );
     }
@@ -341,7 +343,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.accept(expr);
       if (!isNumeric(expr.typeSpec!)) {
         this.throwError(
-          `Expected numeric expression instead of ${expr.typeSpec!.type}`,
+          `Expected numeric expression (got ${typeSpecName(expr.typeSpec!)})`,
           expr
         );
       }
@@ -400,9 +402,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           ) {
             this.throwError(
               'Case expression type does not match test expression: ' +
-                `expected ${node.testExpr.typeSpec!.type}, got ${
-                  expr.typeSpec!.type
-                }`,
+                `expected ${typeSpecName(node.testExpr.typeSpec!)}, ` +
+                `got ${typeSpecName(expr.typeSpec!)}`,
               expr
             );
           }
@@ -479,16 +480,14 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     this.accept(node.leftExpr);
     this.accept(node.rightExpr);
     if (
-      !areMatchingElementaryTypes(
+      !areMatchingSingularTypes(
         node.leftExpr.typeSpec!,
         node.rightExpr.typeSpec!
       )
     ) {
       this.throwError(
-        'Cannot swap variables of different types: ' +
-          `${node.leftExpr.typeSpec!.type} and ${
-            node.rightExpr.typeSpec!.type
-          }`,
+        `Cannot swap a ${typeSpecName(node.leftExpr.typeSpec!)} ` +
+          `variable with a ${typeSpecName(node.rightExpr.typeSpec!)} variable`,
         node
       );
     }
@@ -628,7 +627,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const rightTypeSpec = node.rightExpr.typeSpec!;
     const errorMessage =
       `Incompatible types for ${node.op} operator: ` +
-      `${leftTypeSpec.type} and ${rightTypeSpec.type}`;
+      `${typeSpecName(leftTypeSpec)} and ${typeSpecName(rightTypeSpec)}`;
     const requireNumericOperands = () => {
       if (!(isNumeric(leftTypeSpec) && isNumeric(rightTypeSpec))) {
         this.throwError(errorMessage, node);
@@ -737,7 +736,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     if (!isArray(arrayTypeSpec)) {
       this.throwError(
         'Expected array variable in subscript expression, ' +
-          `got ${node.arrayExpr.typeSpec!.type}`,
+          `got ${typeSpecName(node.arrayExpr.typeSpec!)}`,
         node.arrayExpr
       );
     }
@@ -754,6 +753,28 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
 
     node.typeSpec = node.arrayExpr.typeSpec.elementTypeSpec;
+  }
+
+  visitMemberExpr(node: MemberExpr): void {
+    this.accept(node.udtExpr);
+    const udtTypeSpec = node.udtExpr.typeSpec!;
+    if (!isUdt(udtTypeSpec)) {
+      this.throwError(
+        `Expected user-defined type in member expression, got ${typeSpecName(
+          udtTypeSpec
+        )}`,
+        node
+      );
+    }
+    const fieldSpec = lookupSymbol(udtTypeSpec.fieldSpecs, node.fieldName);
+    if (!fieldSpec) {
+      this.throwError(
+        `Field "${node.fieldName}" does not exist ` +
+          `on type "${typeSpecName(udtTypeSpec)}"`,
+        node
+      );
+    }
+    node.typeSpec = fieldSpec.typeSpec;
   }
 
   private visitProcCall(resolvedFn: ResolvedFn, node: FnCallExpr | CallStmt) {
@@ -785,10 +806,10 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       const argTypeSpec = node.argExprs[i].typeSpec!;
       if (
         !(
-          areMatchingElementaryTypes(paramTypeSpec, argTypeSpec) ||
+          areMatchingSingularTypes(paramTypeSpec, argTypeSpec) ||
           (isArray(paramTypeSpec) &&
             isArray(argTypeSpec) &&
-            (areMatchingElementaryTypes(
+            (areMatchingSingularTypes(
               paramTypeSpec.elementTypeSpec,
               argTypeSpec.elementTypeSpec
             ) ||
@@ -798,7 +819,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       ) {
         this.throwError(
           `Incompatible argument ${i + 1} to function "${node.name}": ` +
-            `expected ${paramTypeSpec.type}, got ${argTypeSpec.type}`,
+            `expected ${typeSpecName(paramTypeSpec)}, ` +
+            `got ${typeSpecName(argTypeSpec)}`,
           node
         );
       }
@@ -846,7 +868,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         resultTypeSpec = matchingRule.result;
       } else {
         throw new Error(
-          `Unknown numeric type combination: ${resultTypeSpec.type} and ${typeSpecs[i].type}`
+          'Unknown numeric type combination: ' +
+            `${typeSpecName(resultTypeSpec)} and ${typeSpecName(typeSpecs[i])}`
         );
       }
     }

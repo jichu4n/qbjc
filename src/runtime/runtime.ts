@@ -57,7 +57,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [arraySpec(doubleSpec(), [])],
     returnTypeSpec: longSpec(),
     async run(array: QbArray) {
-      return array.arrayTypeSpec.dimensionSpecs[0][0];
+      return array.typeSpec.dimensionSpecs[0][0];
     },
   },
   {
@@ -67,11 +67,11 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     async run(array: QbArray, dimensionIdx: number) {
       if (
         dimensionIdx < 1 ||
-        dimensionIdx > array.arrayTypeSpec.dimensionSpecs.length
+        dimensionIdx > array.typeSpec.dimensionSpecs.length
       ) {
         throw new Error(`Invalid dimension index: ${dimensionIdx}`);
       }
-      return array.arrayTypeSpec.dimensionSpecs[dimensionIdx - 1][0];
+      return array.typeSpec.dimensionSpecs[dimensionIdx - 1][0];
     },
   },
   {
@@ -136,7 +136,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [arraySpec(doubleSpec(), [])],
     returnTypeSpec: longSpec(),
     async run(array: QbArray) {
-      return array.arrayTypeSpec.dimensionSpecs[0][1];
+      return array.typeSpec.dimensionSpecs[0][1];
     },
   },
   {
@@ -146,11 +146,11 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     async run(array: QbArray, dimensionIdx: number) {
       if (
         dimensionIdx < 1 ||
-        dimensionIdx > array.arrayTypeSpec.dimensionSpecs.length
+        dimensionIdx > array.typeSpec.dimensionSpecs.length
       ) {
         throw new Error(`Invalid dimension index: ${dimensionIdx}`);
       }
-      return array.arrayTypeSpec.dimensionSpecs[dimensionIdx - 1][1];
+      return array.typeSpec.dimensionSpecs[dimensionIdx - 1][1];
     },
   },
   {

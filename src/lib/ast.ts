@@ -416,10 +416,11 @@ export type Expr =
   | FnCallExpr
   | BinaryOpExpr
   | UnaryOpExpr
-  | SubscriptExpr;
+  | SubscriptExpr
+  | MemberExpr;
 
 /** An expression that can be assigned to. */
-export type LhsExpr = VarRefExpr | SubscriptExpr;
+export type LhsExpr = VarRefExpr | SubscriptExpr | MemberExpr;
 
 export enum ExprType {
   LITERAL = 'literal',
@@ -428,6 +429,7 @@ export enum ExprType {
   BINARY_OP = 'binaryOp',
   UNARY_OP = 'unaryOp',
   SUBSCRIPT = 'subscript',
+  MEMBER = 'member',
 }
 
 /** Common attributes of expression nodes. */
@@ -509,6 +511,12 @@ export interface SubscriptExpr extends ExprBase {
   indexExprs: Array<Expr>;
 }
 
+export interface MemberExpr extends ExprBase {
+  type: ExprType.MEMBER;
+  udtExpr: LhsExpr;
+  fieldName: string;
+}
+
 /** Error thrown by AST visitors. */
 export class AstVisitorError<T extends AstNodeBase> extends ErrorWithLoc {
   constructor(
@@ -552,6 +560,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitBinaryOpExpr(node: BinaryOpExpr): T;
   protected abstract visitUnaryOpExpr(node: UnaryOpExpr): T;
   protected abstract visitSubscriptExpr(node: SubscriptExpr): T;
+  protected abstract visitMemberExpr(node: MemberExpr): T;
 
   /** Invokes the visitor method corresponding to the specified AstNode. */
   protected accept(node: AstNode): T {
@@ -613,6 +622,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitUnaryOpExpr(node);
       case ExprType.SUBSCRIPT:
         return this.visitSubscriptExpr(node);
+      case ExprType.MEMBER:
+        return this.visitMemberExpr(node);
       default:
         throw new Error(`Unknown node type: ${JSON.stringify(node)}`);
     }

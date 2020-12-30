@@ -23,6 +23,7 @@ import {
   LiteralExpr,
   VarRefExpr,
   FnCallExpr,
+  MemberExpr,
   LhsExpr,
   Stmt,
   Stmts,
@@ -745,6 +746,7 @@ lhsExpr ->
     # We actually only allow array subscript expressions here, but array subscript expressions are
     # actually parsed as FnCallExprs. See comment for fnCallExpr rule below.
     | fnCallExpr  {% id %}
+    | memberExpr  {% id %}
 
 expr10 ->
       expr9  {% id %}
@@ -790,6 +792,7 @@ expr0 ->
       varRefExpr  {% id %}
     | fnCallExpr  {% id %}
     | literalExpr  {% id %}
+    | memberExpr  {% id %}
     | %LPAREN expr %RPAREN  {%
         ([$1, $2, $3]): UnaryOpExpr => ({
           type: ExprType.UNARY_OP,
@@ -832,6 +835,16 @@ numericLiteralExpr ->
     %NUMERIC_LITERAL  {%
         ([$1]): LiteralExpr =>
             ({ type: ExprType.LITERAL, value: parseFloat($1.value), ...useLoc($1) })
+    %}
+
+memberExpr ->
+    lhsExpr %DOT %IDENTIFIER  {%
+        ([$1, $2, $3]): MemberExpr => ({
+          type: ExprType.MEMBER,
+          udtExpr: $1,
+          fieldName: $3.value,
+          ...useLoc($1),
+        })
     %}
 
 exprs ->

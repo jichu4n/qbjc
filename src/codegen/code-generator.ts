@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {SourceNode} from 'source-map';
-import {FnDefType} from '../lib/types';
+import {FnDefType, isArray, isUdt} from '../lib/types';
 import {
   AssignStmt,
   AstNodeBase,
@@ -32,6 +32,7 @@ import {
   InputType,
   LabelStmt,
   LiteralExpr,
+  MemberExpr,
   Module,
   NextStmt,
   PrintStmt,
@@ -216,26 +217,35 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     const chunks: SourceChunks = [];
     for (const varDecl of node.varDecls) {
       const {typeSpecExpr} = varDecl;
-      if (typeSpecExpr.type !== TypeSpecExprType.ARRAY) {
-        continue;
+      const {typeSpec} = varDecl.symbol!;
+      switch (typeSpecExpr.type) {
+        case TypeSpecExprType.ARRAY:
+          if (!isArray(typeSpec)) {
+            this.throwError(
+              `Mismatch types: expected array, got ${typeSpec.type}`,
+              varDecl
+            );
+          }
+          chunks.push(
+            this.generateVarRefCode(varDecl, varDecl.symbol!),
+            '.init(',
+            JSON.stringify(typeSpec.elementTypeSpec),
+            ', [',
+            ...typeSpecExpr.dimensionSpecExprs.map(
+              ({minIdxExpr, maxIdxExpr}) => [
+                '[',
+                minIdxExpr ? this.accept(minIdxExpr) : '0',
+                ', ',
+                this.accept(maxIdxExpr),
+                '],',
+              ]
+            ),
+            ']); '
+          );
+          break;
+        default:
+          break;
       }
-      chunks.push(
-        this.generateVarRefCode(varDecl, varDecl.symbol!),
-        '.init(',
-        // TODO
-        JSON.stringify(
-          (typeSpecExpr.elementTypeSpecExpr as ElementaryTypeSpecExpr).typeSpec!
-        ),
-        ', [',
-        ...typeSpecExpr.dimensionSpecExprs.map(({minIdxExpr, maxIdxExpr}) => [
-          '[',
-          minIdxExpr ? this.accept(minIdxExpr) : '0',
-          ', ',
-          this.accept(maxIdxExpr),
-          '],',
-        ]),
-        ']); '
-      );
     }
     if (chunks.length > 0) {
       return this.createStmtSourceNode(node, () => chunks);
@@ -245,12 +255,16 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   }
 
   visitAssignStmt(node: AssignStmt): SourceNode {
-    return this.createStmtSourceNode(node, () => [
-      this.accept(node.targetExpr),
-      ' = ',
-      this.accept(node.valueExpr),
-      ';',
-    ]);
+    return this.createStmtSourceNode(node, () => {
+      const typeSpec = node.targetExpr.typeSpec!;
+      return [
+        this.accept(node.targetExpr),
+        ' = ',
+        this.accept(node.valueExpr),
+        isUdt(typeSpec) ? '.clone()' : '',
+        ';',
+      ];
+    });
   }
 
   visitConstStmt(node: ConstStmt): SourceNode {
@@ -826,6 +840,14 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     ];
   }
 
+  visitMemberExpr(node: MemberExpr): SourceNode {
+    return this.createSourceNode(
+      node,
+      this.accept(node.udtExpr),
+      `.values['${node.fieldName}']`
+    );
+  }
+
   private visitProcCall(node: FnCallExpr | CallStmt): SourceNode {
     const argPtrs: SourceChunks = [];
     const tempVars: Array<{name: string; expr: Expr}> = [];
@@ -859,13 +881,24 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
           argExpr.indexExprs[argExpr.indexExprs.length - 1]
         );
         argPtrs.push(
-          this.createSourceNode(argExpr, [
+          this.createSourceNode(
+            argExpr,
             '[',
             containerCode,
             ', ',
             lastIndexExprCode,
-            ']',
-          ])
+            ']'
+          )
+        );
+      } else if (argExpr.type === ExprType.MEMBER) {
+        argPtrs.push(
+          this.createSourceNode(
+            argExpr,
+            '[',
+            this.accept(argExpr.udtExpr),
+            ', ',
+            `'${argExpr.fieldName}']`
+          )
         );
       } else {
         if (!tempVarPrefix) {
@@ -893,6 +926,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       ...tempVars.map(({name, expr}) => [
         this.lines(`${this.generateTempVarRef(name)} = `),
         this.accept(expr),
+        isUdt(expr.typeSpec!) ? '.clone()' : '',
         ';\n',
       ]),
       this.lines(
