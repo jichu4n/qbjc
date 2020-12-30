@@ -12,7 +12,7 @@ import {
   isArray,
 } from '../lib/types';
 import {lookupSymbols} from '../lib/symbol-table';
-import {PrintArg, PrintArgType, Ptr} from './compiled-code';
+import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
 import QbArray from './qb-array';
 
 /** Built-in function definition. */
@@ -218,7 +218,94 @@ export default class Runtime {
     return await builtinFn.run(...args.map((ptr) => ptr[0][ptr[1]]));
   }
 
-  print(...args: Array<PrintArg>) {
+  print(formatString: string | null, ...args: Array<PrintArg>) {
+    let line = formatString
+      ? this.printWithFormatString(formatString, args)
+      : this.printWithDefaultFormat(args);
+    if (
+      args.length === 0 ||
+      args[args.length - 1].type === PrintArgType.VALUE
+    ) {
+      line += '\n';
+    }
+    this.platform.print(line);
+  }
+
+  /** Implements PRINT USING format strings.
+   *
+   * This is a VERY incomplete implementation. Supported:
+   *
+   *   - Formatting numbers with ##.##
+   *   - Formatting string with &
+   */
+  private printWithFormatString(
+    formatString: string,
+    args: Array<PrintArg>
+  ): string {
+    const pieces: Array<string> = [];
+
+    let argIdx = 0;
+    this.printFormatStringLexer.reset(formatString);
+    for (;;) {
+      while (argIdx < args.length && args[argIdx].type !== PrintArgType.VALUE) {
+        ++argIdx;
+      }
+      const nextArg =
+        argIdx < args.length ? (args[argIdx] as ValuePrintArg) : null;
+      const token = this.printFormatStringLexer.next();
+      if (!token) {
+        break;
+      }
+      switch (token.type) {
+        case 'NUMBER':
+          if (!nextArg || typeof nextArg.value !== 'number') {
+            throw new Error(
+              `Formatting error: expected number as argument #${argIdx + 1}`
+            );
+          }
+          let [integralFormat, fractionFormat] = token.value.split('.');
+          if (fractionFormat) {
+            const formattedValue =
+              `${Math.floor(nextArg.value)}`.padStart(integralFormat.length) +
+              '.' +
+              nextArg.value.toFixed(fractionFormat.length).split('.')[1];
+            pieces.push(formattedValue);
+          } else {
+            const formattedValue =
+              nextArg.value.toFixed(0).padStart(integralFormat.length) +
+              (token.value.indexOf('.') >= 0 ? '.' : '');
+            pieces.push(formattedValue);
+          }
+          break;
+        case 'STRING':
+          if (!nextArg || typeof nextArg.value !== 'string') {
+            throw new Error(
+              `Formatting error: expected string as argument #${argIdx + 1}`
+            );
+          }
+          pieces.push(nextArg.value);
+          ++argIdx;
+          break;
+        case 'LITERAL':
+          pieces.push(token.value);
+          break;
+        default:
+          throw new Error(`Unexpected token type: ${JSON.stringify(token)}`);
+      }
+    }
+    return pieces.join('');
+  }
+
+  private readonly printFormatStringLexer = moo.compile({
+    NUMBER: /#*\.#+|#+/,
+    STRING: '&',
+    LITERAL: {
+      match: /[^.#&]+/,
+      lineBreaks: true,
+    },
+  });
+
+  private printWithDefaultFormat(args: Array<PrintArg>): string {
     const PRINT_ZONE_LENGTH = 14;
     let line = '';
     for (const arg of args) {
@@ -244,13 +331,7 @@ export default class Runtime {
           throw new Error(`Unknown print arg: '${JSON.stringify(arg)}'`);
       }
     }
-    if (
-      args.length === 0 ||
-      args[args.length - 1].type === PrintArgType.VALUE
-    ) {
-      line += '\n';
-    }
-    this.platform.print(line);
+    return line;
   }
 
   async inputLine(prompt: string) {

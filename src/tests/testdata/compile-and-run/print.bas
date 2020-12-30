@@ -8,6 +8,9 @@ PRINT ,,,
 PRINT ,,,"hi"
 PRINT 1; "+"; 2;
 
+PRINT USING "[###]"; 3.5
+PRINT USING "[###.##]"; 0.789
+
 ' EXPECT {
 '   "io": [
 '     {"output": "Hello         world\n"},
@@ -18,6 +21,9 @@ PRINT 1; "+"; 2;
 '     {"output": "\n"},
 '     {"output": "                                          "},
 '     {"output": "                                          hi\n"},
-'     {"output": " 1 + 2 "}
+'     {"output": " 1 + 2 "},
+'
+'     {"output": "[  4]\n"},
+'     {"output": "[  0.79]\n"}
 '   ]
 ' }

@@ -494,6 +494,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitPrintStmt(node: PrintStmt): void {
+    if (node.formatExpr) {
+      this.accept(node.formatExpr);
+      if (!isString(node.formatExpr.typeSpec!)) {
+        this.throwError(
+          'Expected format expression to be a string, ' +
+            `got ${typeSpecName(node.formatExpr.typeSpec!)}`,
+          node.formatExpr
+        );
+      }
+    }
     for (const arg of node.args) {
       if (typeof arg === 'string') {
         continue;

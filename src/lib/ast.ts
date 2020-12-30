@@ -389,6 +389,7 @@ export type PrintArg = Expr | PrintSep;
 export interface PrintStmt extends AstNodeBase {
   type: StmtType.PRINT;
   args: Array<PrintArg>;
+  formatExpr: Expr | null;
 }
 
 export interface InputStmt extends AstNodeBase {

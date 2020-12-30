@@ -49,6 +49,7 @@ export enum Keywords {
   TO = 'to',
   TYPE = 'type',
   UNTIL = 'until',
+  USING = 'using',
   WEND = 'wend',
   WHILE = 'while',
 }

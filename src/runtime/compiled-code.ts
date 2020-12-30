@@ -120,4 +120,9 @@ export enum PrintArgType {
 /** Argument to print(). */
 export type PrintArg =
   | {type: PrintArgType.COMMA | PrintArgType.SEMICOLON}
-  | {type: PrintArgType.VALUE; value: string | number};
+  | ValuePrintArg;
+
+export interface ValuePrintArg {
+  type: PrintArgType.VALUE;
+  value: string | number;
+}

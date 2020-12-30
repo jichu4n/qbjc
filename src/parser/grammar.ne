@@ -648,8 +648,12 @@ swapStmt ->
     %}
 
 printStmt ->
-    %PRINT printArgs  {%
-        ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
+    %PRINT (%USING expr %SEMICOLON):? printArgs  {%
+        ([$1, $2, $3]): PrintStmt => ({
+          type: StmtType.PRINT,
+          args: $3,
+          formatExpr: $2 ? $2[1] : null,
+          ...useLoc($1), })
     %}
 
 printArgs ->

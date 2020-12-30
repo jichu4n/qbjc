@@ -50,6 +50,7 @@ declare var CALL: any;
 declare var SYSTEM: any;
 declare var SWAP: any;
 declare var PRINT: any;
+declare var USING: any;
 declare var SEMICOLON: any;
 declare var INPUT: any;
 declare var STRING_LITERAL: any;
@@ -730,8 +731,15 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
-    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printArgs"], "postprocess": 
-        ([$1, $2]): PrintStmt => ({ type: StmtType.PRINT, args: $2, ...useLoc($1) })
+    {"name": "printStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("USING") ? {type: "USING"} : USING), "expr", (lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)]},
+    {"name": "printStmt$ebnf$1", "symbols": ["printStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "printStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "printStmt", "symbols": [(lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "printStmt$ebnf$1", "printArgs"], "postprocess": 
+        ([$1, $2, $3]): PrintStmt => ({
+          type: StmtType.PRINT,
+          args: $3,
+          formatExpr: $2 ? $2[1] : null,
+          ...useLoc($1), })
             },
     {"name": "printArgs", "symbols": [], "postprocess": () => []},
     {"name": "printArgs", "symbols": ["expr"], "postprocess": ([$1]) => [$1]},
