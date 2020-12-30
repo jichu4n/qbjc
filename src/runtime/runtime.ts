@@ -115,11 +115,31 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'rnd',
+    paramTypeSpecs: [],
+    returnTypeSpec: doubleSpec(),
+    async run() {
+      return Math.random();
+    },
+  },
+  {
     name: 'str$',
     paramTypeSpecs: [doubleSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
       return `${n >= 0 ? ' ' : ''}${n}`;
+    },
+  },
+  {
+    name: 'timer',
+    paramTypeSpecs: [],
+    returnTypeSpec: longSpec(),
+    async run() {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(0, 0, 0, 0);
+      const result = Math.floor((now.getTime() - midnight.getTime()) / 1000);
+      return result;
     },
   },
   {

@@ -133,7 +133,8 @@ export type Stmt =
   | SwapStmt
   | PrintStmt
   | InputStmt
-  | DefTypeStmt;
+  | DefTypeStmt
+  | NopStmt;
 
 export enum StmtType {
   LABEL = 'label',
@@ -158,6 +159,7 @@ export enum StmtType {
   PRINT = 'print',
   INPUT = 'input',
   DEF_TYPE = 'defType',
+  NOP = 'nop',
 }
 
 export interface LabelStmt extends AstNodeBase {
@@ -382,6 +384,12 @@ export interface SwapStmt extends AstNodeBase {
   rightExpr: LhsExpr;
 }
 
+/** An unimplemented statement that we can ignore for codegen purposes. */
+export interface NopStmt extends AstNodeBase {
+  type: StmtType.NOP;
+  exprs?: Array<Expr>;
+}
+
 export enum PrintSep {
   COMMA = 'comma',
   SEMICOLON = 'semicolon',
@@ -568,6 +576,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
   protected abstract visitDefTypeStmt(node: DefTypeStmt): T;
+  protected abstract visitNopStmt(node: NopStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
@@ -627,6 +636,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitInputStmt(node);
       case StmtType.DEF_TYPE:
         return this.visitDefTypeStmt(node);
+      case StmtType.NOP:
+        return this.visitNopStmt(node);
       case ExprType.LITERAL:
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:

@@ -31,6 +31,7 @@ import {
   MemberExpr,
   Module,
   NextStmt,
+  NopStmt,
   PrintStmt,
   Proc,
   ReturnStmt,
@@ -581,6 +582,12 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
+  visitNopStmt(node: NopStmt): void {
+    if (node.exprs) {
+      this.acceptAll(node.exprs);
+    }
+  }
+
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {
       node.typeSpec = stringSpec();
@@ -599,21 +606,17 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     let symbol = this.lookupSymbol(node.name);
     if (!symbol) {
       // VarRef may actually be a function invocation without args.
-      let proc = lookupSymbol(this.module.procs, node.name);
+      let proc = this.lookupFn(node.name, []);
       if (proc) {
-        if (proc.type === ProcType.FN) {
-          const fnCallExpr: FnCallExpr = {
-            type: ExprType.FN_CALL,
-            name: node.name,
-            argExprs: [],
-            loc: node.loc,
-          };
-          this.accept(fnCallExpr);
-          Object.assign(node, fnCallExpr);
-          return;
-        } else {
-          this.throwError(`Function not found: "${proc.name}"`, node);
-        }
+        const fnCallExpr: FnCallExpr = {
+          type: ExprType.FN_CALL,
+          name: node.name,
+          argExprs: [],
+          loc: node.loc,
+        };
+        this.accept(fnCallExpr);
+        Object.assign(node, fnCallExpr);
+        return;
       }
 
       symbol = this.createLocalVarSymbol({

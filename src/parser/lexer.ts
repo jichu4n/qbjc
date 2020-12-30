@@ -40,6 +40,7 @@ export enum Keywords {
   OR = 'or',
   PRINT = 'print',
   REM = 'rem',
+  RANDOMIZE = 'randomize',
   RETURN = 'return',
   SELECT = 'select',
   SHARED = 'shared',

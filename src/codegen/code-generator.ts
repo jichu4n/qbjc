@@ -36,6 +36,7 @@ import {
   MemberExpr,
   Module,
   NextStmt,
+  NopStmt,
   PrintStmt,
   Proc,
   ReturnStmt,
@@ -729,6 +730,15 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitDefTypeStmt(node: DefTypeStmt): SourceNode {
     return new SourceNode();
+  }
+
+  visitNopStmt(node: NopStmt): SourceNode {
+    const {exprs} = node;
+    return exprs
+      ? this.createStmtSourceNode(node, () =>
+          exprs.map((expr) => [this.accept(expr), '; '])
+        )
+      : new SourceNode();
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(
