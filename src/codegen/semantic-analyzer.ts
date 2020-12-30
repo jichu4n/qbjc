@@ -9,6 +9,7 @@ import {
   CaseExprType,
   CondLoopStmt,
   ConstStmt,
+  DataStmt,
   DefTypeStmt,
   DimStmt,
   DimType,
@@ -587,6 +588,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       this.acceptAll(node.exprs);
     }
   }
+
+  visitDataStmt(node: DataStmt): void {}
 
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {

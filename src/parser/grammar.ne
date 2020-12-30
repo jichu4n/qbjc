@@ -61,6 +61,7 @@ import {
   DefTypeStmt,
   DefTypeRange,
   NopStmt,
+  DataStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -70,6 +71,7 @@ import {
   stringSpec,
   ProcType,
 } from '../lib/types';
+import {DataItem, DataItemValue} from '../lib/data-item';
 
 // ----
 // Helper functions.
@@ -113,6 +115,11 @@ function buildNopStmt(node: Token | AstNode, exprs?: Array<Expr>): NopStmt {
     exprs,
     ...useLoc(node),
   };
+}
+
+function buildDataItem(tokenOrAstNode: Token | AstNode, value: DataItemValue): DataItem {
+  const {line, col} = useLoc(tokenOrAstNode).loc;
+  return [[line, col], value];
 }
 
 /** Type of the 'reject' parameter passed to postprocessors. */
@@ -288,6 +295,7 @@ nonLabelStmt ->
     | inputStmt  {% id %}
     | defTypeStmt  {% id %}
     | nopStmt  {% id %}
+    | dataStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -780,6 +788,24 @@ defTypeRange ->
 
 nopStmt ->
       %RANDOMIZE expr  {% ([$1, $2]) => buildNopStmt($1, [$2]) %}
+
+dataStmt ->
+    %DATA (dataItem %COMMA):* dataItem  {%
+      ([$1, $2, $3]): DataStmt => ({
+        type: StmtType.DATA,
+        data: [
+          ...$2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : [],
+          $3,
+        ],
+        ...useLoc($1),
+      })
+    %}
+
+dataItem ->
+      null  {% () => buildDataItem(lexer.lastToken!, null) %}
+    | literalExpr  {% ([$1]) => buildDataItem($1, $1.value) %}
+    | %IDENTIFIER  {% ([$1]) => buildDataItem($1, $1.value) %}
+
 
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%

@@ -10,6 +10,7 @@ export enum Keywords {
   CALL = 'call',
   CASE = 'case',
   CONST = 'const',
+  DATA = 'data',
   DECLARE = 'declare',
   DEFINT = 'defint',
   DEFSNG = 'defsng',

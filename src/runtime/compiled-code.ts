@@ -1,6 +1,6 @@
+import {DataItems} from '../lib/data-item';
 import {VarSymbolTable} from '../lib/symbol-table';
-import {ElementaryTypeSpec, ProcType} from '../lib/types';
-import QbArray from './qb-array';
+import {ProcType} from '../lib/types';
 import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
@@ -27,7 +27,10 @@ export interface CompiledProc {
 }
 
 /** A compiled statement. */
-export type CompiledStmt = CompiledLabelStmt | CompiledCodeStmt;
+export type CompiledStmt =
+  | CompiledLabelStmt
+  | CompiledCodeStmt
+  | CompiledDataStmt;
 
 /** A label in the compiled program. */
 export interface CompiledLabelStmt extends CompiledComponentBase {
@@ -37,6 +40,11 @@ export interface CompiledLabelStmt extends CompiledComponentBase {
 /** A compiled statement with executable code. */
 export interface CompiledCodeStmt extends CompiledComponentBase {
   run(ctx: ExecutionContext): Promise<ExecutionDirective | void>;
+}
+
+/** A compiled DATA statement. */
+export interface CompiledDataStmt extends CompiledComponentBase {
+  data: Array<DataItems>;
 }
 
 /** Return value from a compiled statement. */

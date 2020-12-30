@@ -61,6 +61,7 @@ declare var DEFDBL: any;
 declare var DEFLNG: any;
 declare var DEFSTR: any;
 declare var RANDOMIZE: any;
+declare var DATA: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -138,6 +139,7 @@ import {
   DefTypeStmt,
   DefTypeRange,
   NopStmt,
+  DataStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -147,6 +149,7 @@ import {
   stringSpec,
   ProcType,
 } from '../lib/types';
+import {DataItem, DataItemValue} from '../lib/data-item';
 
 // ----
 // Helper functions.
@@ -190,6 +193,11 @@ function buildNopStmt(node: Token | AstNode, exprs?: Array<Expr>): NopStmt {
     exprs,
     ...useLoc(node),
   };
+}
+
+function buildDataItem(tokenOrAstNode: Token | AstNode, value: DataItemValue): DataItem {
+  const {line, col} = useLoc(tokenOrAstNode).loc;
+  return [[line, col], value];
 }
 
 /** Type of the 'reject' parameter passed to postprocessors. */
@@ -399,6 +407,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["defTypeStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["nopStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -875,6 +884,22 @@ const grammar: Grammar = {
         })
             },
     {"name": "nopStmt", "symbols": [(lexer.has("RANDOMIZE") ? {type: "RANDOMIZE"} : RANDOMIZE), "expr"], "postprocess": ([$1, $2]) => buildNopStmt($1, [$2])},
+    {"name": "dataStmt$ebnf$1", "symbols": []},
+    {"name": "dataStmt$ebnf$1$subexpression$1", "symbols": ["dataItem", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "dataStmt$ebnf$1", "symbols": ["dataStmt$ebnf$1", "dataStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "dataStmt", "symbols": [(lexer.has("DATA") ? {type: "DATA"} : DATA), "dataStmt$ebnf$1", "dataItem"], "postprocess": 
+        ([$1, $2, $3]): DataStmt => ({
+          type: StmtType.DATA,
+          data: [
+            ...$2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : [],
+            $3,
+          ],
+          ...useLoc($1),
+        })
+            },
+    {"name": "dataItem", "symbols": [], "postprocess": () => buildDataItem(lexer.lastToken!, null)},
+    {"name": "dataItem", "symbols": ["literalExpr"], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
+    {"name": "dataItem", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "singleLineStmts$ebnf$2", "symbols": []},

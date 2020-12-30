@@ -13,6 +13,7 @@ import {
   CondLoopStmt,
   CondLoopStructure,
   ConstStmt,
+  DataStmt,
   DefTypeStmt,
   DimStmt,
   ElementaryTypeSpecExpr,
@@ -739,6 +740,21 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
           exprs.map((expr) => [this.accept(expr), '; '])
         )
       : new SourceNode();
+  }
+
+  visitDataStmt(node: DataStmt): SourceNode {
+    return this.createSourceNode(
+      node,
+      this.lines(
+        '{',
+        +1,
+        this.generateLoc(node),
+        `data: ${JSON.stringify(node.data)},`,
+        -1,
+        `},`,
+        ''
+      )
+    );
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(
