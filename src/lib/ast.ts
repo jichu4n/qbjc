@@ -1,3 +1,4 @@
+import {DataItems} from './data-item';
 import ErrorWithLoc from './error-with-loc';
 import {VarSymbol, VarSymbolTable} from './symbol-table';
 import {
@@ -7,7 +8,6 @@ import {
   ProcType,
   UdtTypeSpec,
 } from './types';
-import {DataItem} from './data-item';
 
 /** An AST node. */
 export type AstNode = Proc | Stmt | Expr;
@@ -136,7 +136,8 @@ export type Stmt =
   | InputStmt
   | DefTypeStmt
   | NopStmt
-  | DataStmt;
+  | DataStmt
+  | ReadStmt;
 
 export enum StmtType {
   LABEL = 'label',
@@ -163,6 +164,7 @@ export enum StmtType {
   DEF_TYPE = 'defType',
   NOP = 'nop',
   DATA = 'data',
+  READ = 'read',
 }
 
 export interface LabelStmt extends AstNodeBase {
@@ -432,7 +434,12 @@ export interface DefTypeRange extends AstNodeBase {
 
 export interface DataStmt extends AstNodeBase {
   type: StmtType.DATA;
-  data: Array<DataItem>;
+  data: DataItems;
+}
+
+export interface ReadStmt extends AstNodeBase {
+  type: StmtType.READ;
+  targetExprs: Array<LhsExpr>;
 }
 
 // ----
@@ -586,6 +593,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitDefTypeStmt(node: DefTypeStmt): T;
   protected abstract visitNopStmt(node: NopStmt): T;
   protected abstract visitDataStmt(node: DataStmt): T;
+  protected abstract visitReadStmt(node: ReadStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
@@ -649,6 +657,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitNopStmt(node);
       case StmtType.DATA:
         return this.visitDataStmt(node);
+      case StmtType.READ:
+        return this.visitReadStmt(node);
       case ExprType.LITERAL:
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:

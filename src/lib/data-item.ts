@@ -49,11 +49,11 @@ export function getDataItem(item: DataItem, expectedTypeSpec: DataTypeSpec) {
 function throwDataItemTypeError(
   item: DataItem,
   expectedTypeSpec: DataTypeSpec
-) {
+): never {
   const [[line, col], _] = item;
   throw new Error(
-    `Expected ${typeSpecName(expectedTypeSpec)} constant, ` +
-      `got ${dataItemTypeName(item)} ` +
+    `expected ${typeSpecName(expectedTypeSpec)}, ` +
+      `got ${dataItemTypeName(item)} data item ` +
       `(defined at ${line}:${col})`
   );
 }

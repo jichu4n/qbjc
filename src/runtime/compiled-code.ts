@@ -1,6 +1,6 @@
 import {DataItems} from '../lib/data-item';
 import {VarSymbolTable} from '../lib/symbol-table';
-import {ProcType} from '../lib/types';
+import {DataTypeSpec, ProcType} from '../lib/types';
 import Runtime from './runtime';
 
 /** A compiled module produced by CodeGenerator. */
@@ -44,7 +44,7 @@ export interface CompiledCodeStmt extends CompiledComponentBase {
 
 /** A compiled DATA statement. */
 export interface CompiledDataStmt extends CompiledComponentBase {
-  data: Array<DataItems>;
+  data: DataItems;
 }
 
 /** Return value from a compiled statement. */
@@ -111,6 +111,9 @@ export interface ExecutionContext {
     name: string,
     ...args: Array<Ptr>
   ) => Promise<any>;
+  read: (
+    ...resultTypes: Array<DataTypeSpec>
+  ) => Promise<Array<string | number>>;
   args: ArgsContainer;
   localVars: VarContainer;
   localStaticVars: VarContainer;

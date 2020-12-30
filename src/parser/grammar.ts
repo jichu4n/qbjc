@@ -62,6 +62,7 @@ declare var DEFLNG: any;
 declare var DEFSTR: any;
 declare var RANDOMIZE: any;
 declare var DATA: any;
+declare var READ: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -140,6 +141,7 @@ import {
   DefTypeRange,
   NopStmt,
   DataStmt,
+  ReadStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -408,6 +410,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["defTypeStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["nopStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -894,6 +897,13 @@ const grammar: Grammar = {
             ...$2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : [],
             $3,
           ],
+          ...useLoc($1),
+        })
+            },
+    {"name": "readStmt", "symbols": [(lexer.has("READ") ? {type: "READ"} : READ), "lhsExprs"], "postprocess": 
+        ([$1, $2]): ReadStmt => ({
+          type: StmtType.READ,
+          targetExprs: $2,
           ...useLoc($1),
         })
             },

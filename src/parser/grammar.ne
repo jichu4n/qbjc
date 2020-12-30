@@ -62,6 +62,7 @@ import {
   DefTypeRange,
   NopStmt,
   DataStmt,
+  ReadStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -296,6 +297,7 @@ nonLabelStmt ->
     | defTypeStmt  {% id %}
     | nopStmt  {% id %}
     | dataStmt  {% id %}
+    | readStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -797,6 +799,15 @@ dataStmt ->
           ...$2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1) : [],
           $3,
         ],
+        ...useLoc($1),
+      })
+    %}
+
+readStmt ->
+    %READ lhsExprs  {%
+      ([$1, $2]): ReadStmt => ({
+        type: StmtType.READ,
+        targetExprs: $2,
         ...useLoc($1),
       })
     %}

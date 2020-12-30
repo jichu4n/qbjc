@@ -40,6 +40,7 @@ import {
   NopStmt,
   PrintStmt,
   Proc,
+  ReadStmt,
   ReturnStmt,
   SelectStmt,
   Stmts,
@@ -755,6 +756,17 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         ''
       )
     );
+  }
+
+  visitReadStmt(node: ReadStmt): SourceNode {
+    return this.createStmtSourceNode(node, () => [
+      'const results = await ctx.read(',
+      node.targetExprs.map((expr) => JSON.stringify(expr.typeSpec!)).join(', '),
+      '); ',
+      ...node.targetExprs.map((expr, i) =>
+        this.createSourceNode(expr, this.accept(expr), ` = results[${i}]; `)
+      ),
+    ]);
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(

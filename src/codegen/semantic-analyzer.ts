@@ -35,6 +35,7 @@ import {
   NopStmt,
   PrintStmt,
   Proc,
+  ReadStmt,
   ReturnStmt,
   SelectStmt,
   StmtType,
@@ -589,7 +590,27 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  visitDataStmt(node: DataStmt): void {}
+  visitDataStmt(node: DataStmt): void {
+    if (this.currentProc) {
+      this.throwError(`DATA statement must be at module level`, node);
+    }
+  }
+
+  visitReadStmt(node: ReadStmt): void {
+    if (node.targetExprs.length === 0) {
+      this.throwError('Empty READ statement', node);
+    }
+    for (const targetExpr of node.targetExprs) {
+      this.accept(targetExpr);
+      if (!isElementaryType(targetExpr.typeSpec!)) {
+        this.throwError(
+          'Expected elementary type variable in READ statement ' +
+            `(got ${typeSpecName(targetExpr.typeSpec!)})`,
+          targetExpr
+        );
+      }
+    }
+  }
 
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {

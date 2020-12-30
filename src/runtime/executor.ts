@@ -1,6 +1,7 @@
+import {DataItem, getDataItem} from '../lib/data-item';
 import ErrorWithLoc from '../lib/error-with-loc';
 import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {ProcType, procTypeName} from '../lib/types';
+import {DataTypeSpec, ProcType, procTypeName} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -45,9 +46,11 @@ export default class Executor {
   async executeModule(module: CompiledModule) {
     this.currentModule = module;
     this.localStaticVarsMap = {};
+    [this.dataCursor.stmtIdx, this.dataCursor.itemIdx] = [0, 0];
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
       executeProc: this.executeProc.bind(this),
+      read: this.read.bind(this),
       args: {},
       localVars: this.initVars(module.localSymbols, [
         VarType.VAR,
@@ -215,6 +218,45 @@ export default class Executor {
     }
   }
 
+  private async read(
+    ...resultTypes: Array<DataTypeSpec>
+  ): Promise<Array<string | number>> {
+    const results: Array<string | number> = [];
+    for (let i = 0; i < resultTypes.length; ++i) {
+      const dataItem = this.getNextDataItem();
+      if (!dataItem) {
+        throw new Error(`Data exhausted at item ${i + 1}`);
+      }
+      try {
+        results.push(getDataItem(dataItem, resultTypes[i]));
+      } catch (e) {
+        e.message = `Error reading item ${i + 1}: ${e.message}`;
+        throw e;
+      }
+    }
+    return results;
+  }
+
+  private getNextDataItem(): DataItem | null {
+    const {stmts} = this.currentModule!;
+    for (;;) {
+      if (this.dataCursor.stmtIdx >= stmts.length) {
+        return null;
+      }
+      const stmt = stmts[this.dataCursor.stmtIdx];
+      if (!('data' in stmt)) {
+        ++this.dataCursor.stmtIdx;
+        continue;
+      }
+      if (this.dataCursor.itemIdx >= stmt.data.length) {
+        ++this.dataCursor.stmtIdx;
+        this.dataCursor.itemIdx = 0;
+        continue;
+      }
+      return stmt.data[this.dataCursor.itemIdx++];
+    }
+  }
+
   private buildLabelIdxMap(stmts: Array<CompiledStmt>) {
     const labelIdxMap: {[key: string]: number} = {};
     stmts.forEach((stmt, idx) => {
@@ -236,4 +278,10 @@ export default class Executor {
 
   /** Static vars by proc name. */
   private localStaticVarsMap: {[key: string]: VarContainer} = {};
+
+  /** Cursor for READ. */
+  private dataCursor = {
+    stmtIdx: 0,
+    itemIdx: 0,
+  };
 }
