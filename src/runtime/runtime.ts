@@ -99,6 +99,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'ltrim$',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string) {
+      return s.trimStart();
+    },
+  },
+  {
     name: 'mid$',
     paramTypeSpecs: [stringSpec(), longSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
@@ -120,6 +128,22 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: doubleSpec(),
     async run() {
       return Math.random();
+    },
+  },
+  {
+    name: 'rtrim$',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(s: string) {
+      return s.trimEnd();
+    },
+  },
+  {
+    name: 'space$',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return ' '.repeat(Math.floor(n));
     },
   },
   {
