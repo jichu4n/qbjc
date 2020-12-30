@@ -13,6 +13,7 @@ import {
   CondLoopStmt,
   CondLoopStructure,
   ConstStmt,
+  DefTypeStmt,
   DimStmt,
   ElementaryTypeSpecExpr,
   ElseBranch,
@@ -724,6 +725,10 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
           );
       }
     });
+  }
+
+  visitDefTypeStmt(node: DefTypeStmt): SourceNode {
+    return new SourceNode();
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(

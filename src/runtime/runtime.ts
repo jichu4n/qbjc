@@ -260,7 +260,8 @@ export default class Runtime {
         case 'NUMBER':
           if (!nextArg || typeof nextArg.value !== 'number') {
             throw new Error(
-              `Formatting error: expected number as argument #${argIdx + 1}`
+              'Formatting error: expected number ' +
+                `as argument #${argIdx + 1}, got ${typeof nextArg?.value}`
             );
           }
           let [integralFormat, fractionFormat] = token.value.split('.');
@@ -276,6 +277,7 @@ export default class Runtime {
               (token.value.indexOf('.') >= 0 ? '.' : '');
             pieces.push(formattedValue);
           }
+          ++argIdx;
           break;
         case 'STRING':
           if (!nextArg || typeof nextArg.value !== 'string') {

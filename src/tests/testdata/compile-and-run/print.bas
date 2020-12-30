@@ -10,6 +10,7 @@ PRINT 1; "+"; 2;
 
 PRINT USING "[###]"; 3.5
 PRINT USING "[###.##]"; 0.789
+PRINT USING "& ### &"; "foo"; 1000; "bar"
 
 ' EXPECT {
 '   "io": [
@@ -24,6 +25,7 @@ PRINT USING "[###.##]"; 0.789
 '     {"output": " 1 + 2 "},
 '
 '     {"output": "[  4]\n"},
-'     {"output": "[  0.79]\n"}
+'     {"output": "[  0.79]\n"},
+'     {"output": "foo 1000 bar\n"}
 '   ]
 ' }

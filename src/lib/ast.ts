@@ -132,7 +132,8 @@ export type Stmt =
   | EndStmt
   | SwapStmt
   | PrintStmt
-  | InputStmt;
+  | InputStmt
+  | DefTypeStmt;
 
 export enum StmtType {
   LABEL = 'label',
@@ -156,6 +157,7 @@ export enum StmtType {
   SWAP = 'swap',
   PRINT = 'print',
   INPUT = 'input',
+  DEF_TYPE = 'defType',
 }
 
 export interface LabelStmt extends AstNodeBase {
@@ -406,6 +408,17 @@ export enum InputType {
   LINE = 'line',
 }
 
+export interface DefTypeStmt extends AstNodeBase {
+  type: StmtType.DEF_TYPE;
+  typeSpec: ElementaryTypeSpec;
+  ranges: Array<DefTypeRange>;
+}
+
+export interface DefTypeRange extends AstNodeBase {
+  minPrefix: string;
+  maxPrefix: string;
+}
+
 // ----
 // Expressions
 // ----
@@ -554,6 +567,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitSwapStmt(node: SwapStmt): T;
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
+  protected abstract visitDefTypeStmt(node: DefTypeStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
@@ -611,6 +625,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitPrintStmt(node);
       case StmtType.INPUT:
         return this.visitInputStmt(node);
+      case StmtType.DEF_TYPE:
+        return this.visitDefTypeStmt(node);
       case ExprType.LITERAL:
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:

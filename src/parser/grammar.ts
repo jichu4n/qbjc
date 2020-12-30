@@ -55,6 +55,11 @@ declare var SEMICOLON: any;
 declare var INPUT: any;
 declare var STRING_LITERAL: any;
 declare var LINE: any;
+declare var DEFINT: any;
+declare var DEFSNG: any;
+declare var DEFDBL: any;
+declare var DEFLNG: any;
+declare var DEFSTR: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -129,6 +134,8 @@ import {
   PrintSep,
   InputStmt,
   InputType,
+  DefTypeStmt,
+  DefTypeRange,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -380,6 +387,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["swapStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["defTypeStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -787,6 +795,66 @@ const grammar: Grammar = {
             },
     {"name": "inputStmtPromptSep", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": () => false},
     {"name": "inputStmtPromptSep", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": () => true},
+    {"name": "defTypeStmt", "symbols": [(lexer.has("DEFINT") ? {type: "DEFINT"} : DEFINT), "defTypeRanges"], "postprocess": 
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: integerSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeStmt", "symbols": [(lexer.has("DEFSNG") ? {type: "DEFSNG"} : DEFSNG), "defTypeRanges"], "postprocess": 
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: singleSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeStmt", "symbols": [(lexer.has("DEFDBL") ? {type: "DEFDBL"} : DEFDBL), "defTypeRanges"], "postprocess": 
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: doubleSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeStmt", "symbols": [(lexer.has("DEFLNG") ? {type: "DEFLNG"} : DEFLNG), "defTypeRanges"], "postprocess": 
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: longSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeStmt", "symbols": [(lexer.has("DEFSTR") ? {type: "DEFSTR"} : DEFSTR), "defTypeRanges"], "postprocess": 
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: stringSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeRanges$ebnf$1", "symbols": []},
+    {"name": "defTypeRanges$ebnf$1$subexpression$1", "symbols": ["defTypeRange", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "defTypeRanges$ebnf$1", "symbols": ["defTypeRanges$ebnf$1", "defTypeRanges$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "defTypeRanges", "symbols": ["defTypeRanges$ebnf$1", "defTypeRange"], "postprocess": 
+        ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+            },
+    {"name": "defTypeRange", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": 
+        ([$1]): DefTypeRange => ({
+          minPrefix: $1.value,
+          maxPrefix: $1.value,
+          ...useLoc($1),
+        })
+            },
+    {"name": "defTypeRange", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("SUB") ? {type: "SUB"} : SUB), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": 
+        ([$1, $2, $3]): DefTypeRange => ({
+          minPrefix: $1.value,
+          maxPrefix: $3.value,
+          ...useLoc($1),
+        })
+            },
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "singleLineStmts$ebnf$2", "symbols": []},

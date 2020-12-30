@@ -9,6 +9,7 @@ import {
   CaseExprType,
   CondLoopStmt,
   ConstStmt,
+  DefTypeStmt,
   DimStmt,
   DimType,
   EndStmt,
@@ -34,6 +35,7 @@ import {
   Proc,
   ReturnStmt,
   SelectStmt,
+  StmtType,
   SubscriptExpr,
   SwapStmt,
   TypeSpecExpr,
@@ -117,6 +119,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitModule(module: Module): void {
+    this.setUpDefTypeMap();
+
     // Resolve UDT types.
     this.udtStack = [];
     module.udts.forEach(this.visitUdt.bind(this));
@@ -142,7 +146,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     node.localSymbols = [];
     if (node.type === ProcType.FN) {
       if (!node.returnTypeSpec) {
-        node.returnTypeSpec = this.getTypeSpecFromSuffix(node.name);
+        node.returnTypeSpec = this.getDefaultTypeSpecFromName(node.name);
       }
       node.localSymbols.push({
         name: node.name,
@@ -185,7 +189,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       switch (typeSpecExpr.type) {
         case TypeSpecExprType.ELEMENTARY:
           fieldTypeSpec =
-            typeSpecExpr.typeSpec ?? this.getTypeSpecFromSuffix(fieldName);
+            typeSpecExpr.typeSpec ?? this.getDefaultTypeSpecFromName(fieldName);
           break;
         case TypeSpecExprType.UDT:
           const fieldUdt = this.lookupUdtOrThrow(
@@ -543,6 +547,31 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
+  visitDefTypeStmt(node: DefTypeStmt): void {
+    if (this.currentProc) {
+      this.throwError(
+        `DEFtype statements are only allowed at module level`,
+        node
+      );
+    }
+    for (const range of node.ranges) {
+      const [minPrefix, maxPrefix] = [
+        range.minPrefix.toLowerCase(),
+        range.maxPrefix.toLowerCase(),
+      ];
+      if (
+        ![minPrefix, maxPrefix].every(
+          (p) => p.match(/^[a-z]$/) || minPrefix > maxPrefix
+        )
+      ) {
+        this.throwError(`Invalid DEFtype range`, range);
+      }
+      for (let c = minPrefix.charCodeAt(0); c <= maxPrefix.charCodeAt(0); ++c) {
+        this.defTypeMap[String.fromCharCode(c)] = node.typeSpec;
+      }
+    }
+  }
+
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {
       node.typeSpec = stringSpec();
@@ -583,7 +612,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         // If this VarRefExpr is nested inside a SubscriptExpr, visitSubScriptExpr() will set the
         // typeSpec for this VarRefExpr based on the index expressions. So we should respect that
         // here.
-        typeSpec: node.typeSpec ?? this.getTypeSpecFromSuffix(node.name),
+        typeSpec: node.typeSpec ?? this.getDefaultTypeSpecFromName(node.name),
       });
       this.addLocalSymbol(symbol);
     }
@@ -737,7 +766,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     // Add typeSpec hint for arrayExpr. This will be used to create the underlying variable symbol
     // if not already found.
     node.arrayExpr.typeSpec = arraySpec(
-      this.getTypeSpecFromSuffix(node.arrayExpr.name),
+      this.getDefaultTypeSpecFromName(node.arrayExpr.name),
       node.indexExprs.map(() => DEFAULT_DIMENSION_SPEC)
     );
     this.accept(node.arrayExpr);
@@ -929,7 +958,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     switch (typeSpecExpr.type) {
       case TypeSpecExprType.ELEMENTARY:
         if (!typeSpecExpr.typeSpec) {
-          typeSpecExpr.typeSpec = this.getTypeSpecFromSuffix(name);
+          typeSpecExpr.typeSpec = this.getDefaultTypeSpecFromName(name);
         }
         return typeSpecExpr.typeSpec;
       case TypeSpecExprType.ARRAY:
@@ -962,7 +991,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         } else {
           typeSpecExpr.elementTypeSpecExpr = {
             type: TypeSpecExprType.ELEMENTARY,
-            typeSpec: this.getTypeSpecFromSuffix(name),
+            typeSpec: this.getDefaultTypeSpecFromName(name),
             loc: typeSpecExpr.loc,
           };
         }
@@ -985,10 +1014,11 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  private getTypeSpecFromSuffix(name: string) {
-    const lastCharInName = name[name.length - 1];
-    // TODO: Support DEFINT etc.
-    return TYPE_SUFFIX_MAP[lastCharInName] ?? singleSpec();
+  private getDefaultTypeSpecFromName(name: string) {
+    return (
+      TYPE_SUFFIX_MAP[name[name.length - 1]] ??
+      this.defTypeMap[name[0].toLowerCase()]
+    );
   }
 
   private lookupFn(
@@ -1025,6 +1055,16 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     return udt;
   }
 
+  private setUpDefTypeMap() {
+    for (const c of 'abcdefghijklmnopqrstuvwxyz') {
+      this.defTypeMap[c] = singleSpec();
+    }
+    this.acceptAll(_.filter(this.module.stmts, ['type', StmtType.DEF_TYPE]));
+  }
+
   /** The current proc being visited, or null if currently visiting module-level nodes. */
   private currentProc: Proc | null = null;
+
+  /** Default type based on first letter of identifier. */
+  private defTypeMap: {[key: string]: ElementaryTypeSpec} = {};
 }

@@ -58,6 +58,8 @@ import {
   PrintSep,
   InputStmt,
   InputType,
+  DefTypeStmt,
+  DefTypeRange,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -275,6 +277,7 @@ nonLabelStmt ->
     | swapStmt  {% id %}
     | printStmt  {% id %}
     | inputStmt  {% id %}
+    | defTypeStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -693,6 +696,69 @@ inputStmt ->
 inputStmtPromptSep ->
       %COMMA  {% () => false %}
     | %SEMICOLON  {% () => true %}
+
+defTypeStmt ->
+      %DEFINT defTypeRanges  {%
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: integerSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+    %}
+    | %DEFSNG defTypeRanges  {%
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: singleSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+    %}
+    | %DEFDBL defTypeRanges  {%
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: doubleSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+    %}
+    | %DEFLNG defTypeRanges  {%
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: longSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+    %}
+    | %DEFSTR defTypeRanges  {%
+        ([$1, $2]): DefTypeStmt => ({
+          type: StmtType.DEF_TYPE,
+          typeSpec: stringSpec(),
+          ranges: $2,
+          ...useLoc($1),
+        })
+    %}
+
+defTypeRanges ->
+    (defTypeRange %COMMA):* defTypeRange {%
+          ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
+    %}
+
+defTypeRange ->
+      %IDENTIFIER  {%
+        ([$1]): DefTypeRange => ({
+          minPrefix: $1.value,
+          maxPrefix: $1.value,
+          ...useLoc($1),
+        })
+    %}
+    | %IDENTIFIER %SUB %IDENTIFIER  {%
+        ([$1, $2, $3]): DefTypeRange => ({
+          minPrefix: $1.value,
+          maxPrefix: $3.value,
+          ...useLoc($1),
+        })
+    %}
 
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%
