@@ -63,6 +63,7 @@ import {
   NopStmt,
   DataStmt,
   ReadStmt,
+  RestoreStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -298,6 +299,7 @@ nonLabelStmt ->
     | nopStmt  {% id %}
     | dataStmt  {% id %}
     | readStmt  {% id %}
+    | restoreStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -803,6 +805,11 @@ dataStmt ->
       })
     %}
 
+dataItem ->
+      null  {% () => buildDataItem(lexer.lastToken!, null) %}
+    | literalExpr  {% ([$1]) => buildDataItem($1, $1.value) %}
+    | %IDENTIFIER  {% ([$1]) => buildDataItem($1, $1.value) %}
+
 readStmt ->
     %READ lhsExprs  {%
       ([$1, $2]): ReadStmt => ({
@@ -812,11 +819,11 @@ readStmt ->
       })
     %}
 
-dataItem ->
-      null  {% () => buildDataItem(lexer.lastToken!, null) %}
-    | literalExpr  {% ([$1]) => buildDataItem($1, $1.value) %}
-    | %IDENTIFIER  {% ([$1]) => buildDataItem($1, $1.value) %}
-
+restoreStmt ->
+    %RESTORE labelRef:?  {%
+        ([$1, $2]): RestoreStmt =>
+            ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
+    %}
 
 singleLineStmts ->
     %COLON:* nonLabelStmt (%COLON:+ nonLabelStmt):*  {%

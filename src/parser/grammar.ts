@@ -63,6 +63,7 @@ declare var DEFSTR: any;
 declare var RANDOMIZE: any;
 declare var DATA: any;
 declare var READ: any;
+declare var RESTORE: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -142,6 +143,7 @@ import {
   NopStmt,
   DataStmt,
   ReadStmt,
+  RestoreStmt,
 } from '../lib/ast';
 import {
   integerSpec,
@@ -411,6 +413,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["nopStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["restoreStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -900,6 +903,9 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
+    {"name": "dataItem", "symbols": [], "postprocess": () => buildDataItem(lexer.lastToken!, null)},
+    {"name": "dataItem", "symbols": ["literalExpr"], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
+    {"name": "dataItem", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
     {"name": "readStmt", "symbols": [(lexer.has("READ") ? {type: "READ"} : READ), "lhsExprs"], "postprocess": 
         ([$1, $2]): ReadStmt => ({
           type: StmtType.READ,
@@ -907,9 +913,12 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
-    {"name": "dataItem", "symbols": [], "postprocess": () => buildDataItem(lexer.lastToken!, null)},
-    {"name": "dataItem", "symbols": ["literalExpr"], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
-    {"name": "dataItem", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess": ([$1]) => buildDataItem($1, $1.value)},
+    {"name": "restoreStmt$ebnf$1", "symbols": ["labelRef"], "postprocess": id},
+    {"name": "restoreStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "restoreStmt", "symbols": [(lexer.has("RESTORE") ? {type: "RESTORE"} : RESTORE), "restoreStmt$ebnf$1"], "postprocess": 
+        ([$1, $2]): RestoreStmt =>
+            ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
+            },
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "singleLineStmts$ebnf$2", "symbols": []},

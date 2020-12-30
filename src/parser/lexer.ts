@@ -43,6 +43,7 @@ export enum Keywords {
   READ = 'read',
   REM = 'rem',
   RANDOMIZE = 'randomize',
+  RESTORE = 'restore',
   RETURN = 'return',
   SELECT = 'select',
   SHARED = 'shared',

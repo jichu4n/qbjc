@@ -105,19 +105,30 @@ export type ArgsContainer = {[name: string]: Ptr};
 
 /** Compiled statement execution context. */
 export interface ExecutionContext {
+  /** Handle to the Runtime instance. */
   runtime: Runtime;
+  /** Executes a procedure (FUNCTION or SUB). */
   executeProc: (
     prevCtx: ExecutionContext,
     name: string,
     ...args: Array<Ptr>
   ) => Promise<any>;
+  /** Runtime implementation of READ. */
   read: (
     ...resultTypes: Array<DataTypeSpec>
   ) => Promise<Array<string | number>>;
+  /** Runtime implementation of RESTORE. */
+  restore: (destLabel?: string) => void;
+
+  /** Arguments to the current procedure. */
   args: ArgsContainer;
+  /** Local variables. */
   localVars: VarContainer;
+  /** Static variables. */
   localStaticVars: VarContainer;
+  /** Global variables. */
   globalVars: VarContainer;
+  /** Temp variables. */
   tempVars: VarContainer;
 }
 

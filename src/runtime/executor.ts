@@ -15,10 +15,19 @@ import {
 import initValue from './init-value';
 import Runtime, {RuntimePlatform} from './runtime';
 
+/** Map from label name to statement array index. */
+type LabelIndexMap = {[key: string]: number};
+
 /** State for a GOSUB invocation. */
 interface GosubState {
   /** Index of statement to return to. */
   nextStmtIdx: number;
+}
+
+/** Read cursor for DATA statements. */
+interface DataCursor {
+  stmtIdx: number;
+  itemIdx: number;
 }
 
 export class ExecutionError extends ErrorWithLoc {
@@ -45,12 +54,15 @@ export default class Executor {
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {
     this.currentModule = module;
+    this.buildLabelIndexMaps();
     this.localStaticVarsMap = {};
-    [this.dataCursor.stmtIdx, this.dataCursor.itemIdx] = [0, 0];
+    this.restore();
+
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
       executeProc: this.executeProc.bind(this),
       read: this.read.bind(this),
+      restore: this.restore.bind(this),
       args: {},
       localVars: this.initVars(module.localSymbols, [
         VarType.VAR,
@@ -63,8 +75,9 @@ export default class Executor {
       ]),
       tempVars: {},
     };
+
     try {
-      await this.executeStmts(ctx, module.stmts);
+      await this.executeStmts(ctx, module.stmts, this.moduleLabelIndexMap);
     } catch (e) {
       if (e.isEndDirective) {
         // Swallow error
@@ -73,7 +86,10 @@ export default class Executor {
       }
     } finally {
       this.currentModule = null;
+      this.moduleLabelIndexMap = {};
+      this.procLabelIndexMap = {};
       this.localStaticVarsMap = {};
+      this.restore();
     }
   }
 
@@ -82,7 +98,7 @@ export default class Executor {
     name: string,
     ...argPtrs: Array<Ptr>
   ) {
-    const proc = lookupSymbol(this.currentModule?.procs ?? [], name);
+    const proc = lookupSymbol(this.currentModule!.procs, name);
     if (!proc) {
       throw new Error(`Procedure not found: "${name}"`);
     }
@@ -115,7 +131,10 @@ export default class Executor {
       localStaticVars: this.localStaticVarsMap[name],
       tempVars: {},
     };
-    await this.executeStmts(ctx, proc.stmts);
+    if (!this.procLabelIndexMap[proc.name]) {
+      throw new Error(`Label index map not found for "${proc.name}"`);
+    }
+    await this.executeStmts(ctx, proc.stmts, this.procLabelIndexMap[proc.name]);
 
     // Return value.
     if (proc.type === ProcType.FN) {
@@ -144,11 +163,9 @@ export default class Executor {
 
   private async executeStmts(
     ctx: ExecutionContext,
-    stmts: Array<CompiledStmt>
+    stmts: Array<CompiledStmt>,
+    labelIndexMap: LabelIndexMap
   ) {
-    // TODO: Cache this.
-    const labelIdxMap = this.buildLabelIdxMap(stmts);
-
     /** Return address stack for GOSUB / RETURN. */
     const gosubStates: Array<GosubState> = [];
 
@@ -178,7 +195,7 @@ export default class Executor {
       }
 
       const gotoLabel = (label: string) => {
-        stmtIdx = labelIdxMap[label];
+        stmtIdx = labelIndexMap[label];
         if (stmtIdx === undefined) {
           throw new ExecutionError(`Label not found: "${label}"`, errorArgs);
         }
@@ -257,30 +274,56 @@ export default class Executor {
     }
   }
 
-  private buildLabelIdxMap(stmts: Array<CompiledStmt>) {
-    const labelIdxMap: {[key: string]: number} = {};
+  private async restore(destLabel?: string) {
+    if (destLabel) {
+      const stmtIdx = this.moduleLabelIndexMap[destLabel];
+      if (stmtIdx === undefined) {
+        throw new Error(`Label not found: "${destLabel}"`);
+      }
+      [this.dataCursor.stmtIdx, this.dataCursor.itemIdx] = [stmtIdx, 0];
+    } else {
+      [this.dataCursor.stmtIdx, this.dataCursor.itemIdx] = [0, 0];
+    }
+  }
+
+  private buildLabelIndexMaps() {
+    this.moduleLabelIndexMap = this.buildLabelIndexMap(
+      this.currentModule!.stmts
+    );
+    for (const {name, stmts} of this.currentModule!.procs) {
+      this.procLabelIndexMap[name] = this.buildLabelIndexMap(stmts);
+    }
+  }
+
+  private buildLabelIndexMap(stmts: Array<CompiledStmt>) {
+    const labelIndexMap: {[key: string]: number} = {};
     stmts.forEach((stmt, idx) => {
       if ('label' in stmt) {
-        if (stmt.label in labelIdxMap) {
+        if (stmt.label in labelIndexMap) {
           throw new ExecutionError(`Duplicate label "${stmt.label}"`, {
             module: this.currentModule,
             stmt,
           });
         }
-        labelIdxMap[stmt.label] = idx;
+        labelIndexMap[stmt.label] = idx;
       }
     });
-    return labelIdxMap;
+    return labelIndexMap;
   }
 
   /** Current module being executed. */
   private currentModule: CompiledModule | null = null;
 
-  /** Static vars by proc name. */
+  /** Static vars, indexed by proc name. */
   private localStaticVarsMap: {[key: string]: VarContainer} = {};
 
+  /** Label index map for module-level statements. */
+  private moduleLabelIndexMap: LabelIndexMap = {};
+  /** Label index map for procs. */
+  private procLabelIndexMap: {[key: string]: LabelIndexMap} = {};
+
   /** Cursor for READ. */
-  private dataCursor = {
+  private dataCursor: DataCursor = {
     stmtIdx: 0,
     itemIdx: 0,
   };

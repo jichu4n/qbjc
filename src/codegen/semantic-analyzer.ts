@@ -36,6 +36,7 @@ import {
   PrintStmt,
   Proc,
   ReadStmt,
+  RestoreStmt,
   ReturnStmt,
   SelectStmt,
   StmtType,
@@ -611,6 +612,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       }
     }
   }
+
+  visitRestoreStmt(node: RestoreStmt): void {}
 
   visitLiteralExpr(node: LiteralExpr): void {
     if (typeof node.value === 'string') {

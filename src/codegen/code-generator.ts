@@ -41,6 +41,7 @@ import {
   PrintStmt,
   Proc,
   ReadStmt,
+  RestoreStmt,
   ReturnStmt,
   SelectStmt,
   Stmts,
@@ -767,6 +768,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
         this.createSourceNode(expr, this.accept(expr), ` = results[${i}]; `)
       ),
     ]);
+  }
+
+  visitRestoreStmt(node: RestoreStmt): SourceNode {
+    return this.createStmtSourceNode(
+      node,
+      () => `ctx.restore(${node.destLabel ? `'${node.destLabel}'` : ''});`
+    );
   }
 
   private createStmtSourceNode<T extends AstNodeBase>(

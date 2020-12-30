@@ -1,5 +1,14 @@
-READ a, b, c$
-PRINT a; b; c$
+READ a, b, c$, d$
+PRINT a; b; c$; d$
+
+RESTORE label2
+READ e$
+PRINT e$
+
+RESTORE label1
+READ a, b$, c$, d$
+PRINT a; b$; c$; d$
+
 END
 
 label1:
@@ -10,6 +19,8 @@ label2:
 
 ' EXPECT {
 '   "io": [
-'     {"output": " 42  0 hello\n"}
+'     {"output": " 42  0 hellohello world\n"},
+'     {"output": "hello world\n"},
+'     {"output": " 42 hellohello world\n"}
 '   ]
 ' }

@@ -137,7 +137,8 @@ export type Stmt =
   | DefTypeStmt
   | NopStmt
   | DataStmt
-  | ReadStmt;
+  | ReadStmt
+  | RestoreStmt;
 
 export enum StmtType {
   LABEL = 'label',
@@ -165,6 +166,7 @@ export enum StmtType {
   NOP = 'nop',
   DATA = 'data',
   READ = 'read',
+  RESTORE = 'restore',
 }
 
 export interface LabelStmt extends AstNodeBase {
@@ -442,6 +444,11 @@ export interface ReadStmt extends AstNodeBase {
   targetExprs: Array<LhsExpr>;
 }
 
+export interface RestoreStmt extends AstNodeBase {
+  type: StmtType.RESTORE;
+  destLabel?: string;
+}
+
 // ----
 // Expressions
 // ----
@@ -594,6 +601,7 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitNopStmt(node: NopStmt): T;
   protected abstract visitDataStmt(node: DataStmt): T;
   protected abstract visitReadStmt(node: ReadStmt): T;
+  protected abstract visitRestoreStmt(node: RestoreStmt): T;
 
   protected abstract visitLiteralExpr(node: LiteralExpr): T;
   protected abstract visitVarRefExpr(node: VarRefExpr): T;
@@ -659,6 +667,8 @@ export abstract class AstVisitor<T = any> {
         return this.visitDataStmt(node);
       case StmtType.READ:
         return this.visitReadStmt(node);
+      case StmtType.RESTORE:
+        return this.visitRestoreStmt(node);
       case ExprType.LITERAL:
         return this.visitLiteralExpr(node);
       case ExprType.VAR_REF:
