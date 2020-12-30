@@ -24,6 +24,8 @@ export type NumericDataType =
 
 export type ElementaryDataType = NumericDataType | DataType.STRING;
 
+export type SingularDataType = ElementaryDataType | DataType.UDT;
+
 /** Full data type specification. */
 export type DataTypeSpec = SingularTypeSpec | ArrayTypeSpec;
 
@@ -41,7 +43,7 @@ export interface StringTypeSpec {
 
 export interface ArrayTypeSpec {
   type: DataType.ARRAY;
-  elementTypeSpec: ElementaryTypeSpec;
+  elementTypeSpec: SingularTypeSpec;
   dimensionSpecs: Array<ArrayDimensionSpec>;
 }
 
@@ -85,7 +87,7 @@ export function stringSpec(): StringTypeSpec {
 }
 
 export function arraySpec(
-  elementTypeSpec: ElementaryTypeSpec,
+  elementTypeSpec: SingularTypeSpec,
   dimensionSpecs: Array<ArrayDimensionSpec>
 ): ArrayTypeSpec {
   return {type: DataType.ARRAY, elementTypeSpec, dimensionSpecs};
@@ -120,6 +122,18 @@ export function isElementaryType(
   t: DataType | DataTypeSpec
 ): t is ElementaryDataType | ElementaryTypeSpec {
   return isNumeric(t) || isString(t);
+}
+
+export function isUdt(
+  t: DataType | DataTypeSpec
+): t is DataType.UDT | UdtTypeSpec {
+  return getType(t) === DataType.UDT;
+}
+
+export function isSingularType(
+  t: DataType | DataTypeSpec
+): t is SingularDataType | SingularTypeSpec {
+  return isElementaryType(t) || isUdt(t);
 }
 
 export function areMatchingElementaryTypes(

@@ -189,19 +189,19 @@ params ->
     %}
 
 param ->
-      %IDENTIFIER asElementaryTypeSpec:?  {%
+      %IDENTIFIER singularTypeSpecExprOrDefault  {%
           ([$1, $2]): Param => ({
             name: $1.value,
-            typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
+            typeSpecExpr: $2,
             ...useLoc($1),
           })
     %}
-    | %IDENTIFIER %LPAREN %RPAREN asElementaryTypeSpec:?  {%
+    | %IDENTIFIER %LPAREN %RPAREN singularTypeSpecExprOrDefault  {%
           ([$1, $2, $3, $4]): Param => ({
             name: $1.value,
             typeSpecExpr: {
               type: TypeSpecExprType.ARRAY,
-              elementTypeSpec: $4,
+              elementTypeSpecExpr: $4,
               dimensionSpecExprs: [],
               ...useLoc($1),
             },
@@ -228,7 +228,7 @@ fieldExprs ->
     %}
 
 fieldExpr ->
-    %IDENTIFIER asSingularTypeSpecExpr  {%
+    %IDENTIFIER singularTypeSpecExpr  {%
         ([$1, $2]): FieldSpecExpr => ({
           name: $1.value,
           typeSpecExpr: $2,
@@ -322,19 +322,19 @@ varDecls ->
     %}
 
 varDecl ->
-      %IDENTIFIER asElementaryTypeSpec:?  {%
+      %IDENTIFIER singularTypeSpecExprOrDefault  {%
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
+          typeSpecExpr: $2,
           ...useLoc($1),
         })
     %}
-    | %IDENTIFIER %LPAREN dimensionSpecExprs %RPAREN asElementaryTypeSpec:?  {%
+    | %IDENTIFIER %LPAREN dimensionSpecExprs %RPAREN singularTypeSpecExprOrDefault  {%
         ([$1, $2, $3, $4, $5]): VarDecl => ({
           name: $1.value,
           typeSpecExpr: {
             type: TypeSpecExprType.ARRAY,
-            elementTypeSpec: $5,
+            elementTypeSpecExpr: $5,
             dimensionSpecExprs: $3,
             ...useLoc($1),
           },
@@ -709,20 +709,27 @@ elementaryTypeSpec ->
     | %DOUBLE  {% () => doubleSpec() %}
     | %STRING (%MUL expr2):?  {% () => stringSpec() %}
 
-asElementaryTypeSpec ->
-    %AS elementaryTypeSpec  {% ([$1, $2]) => $2 %}
-
-asSingularTypeSpecExpr ->
+singularTypeSpecExpr ->
       %AS elementaryTypeSpec  {% ([$1, $2]): SingularTypeSpecExpr  => ({
         type: TypeSpecExprType.ELEMENTARY,
         typeSpec: $2,
         ...useLoc($1),
-      }) %}
+      })
+    %}
     | %AS %IDENTIFIER  {% ([$1, $2]): SingularTypeSpecExpr  => ({
         type: TypeSpecExprType.UDT,
         name: $2.value,
         ...useLoc($1),
-      }) %}
+      })
+    %}
+
+singularTypeSpecExprOrDefault ->
+      null  {% ([$1]): SingularTypeSpecExpr => ({
+        type: TypeSpecExprType.ELEMENTARY,
+        loc: {line: lexer.lastToken!.line, col: lexer.lastToken!.col},
+      })
+    %}
+    | singularTypeSpecExpr  {% id %}
 
 # ----
 # Expressions

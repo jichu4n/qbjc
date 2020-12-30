@@ -2,7 +2,7 @@ import {
   ArrayDimensionSpec,
   arraySpec,
   ArrayTypeSpec,
-  ElementaryTypeSpec,
+  SingularTypeSpec,
   ELEMENTARY_TYPE_INIT_VALUES,
 } from '../lib/types';
 
@@ -14,7 +14,7 @@ class QbArray {
 
   /** Initializes the array with the provided spec, discarding any previous contents. */
   init(
-    elementTypeSpec: ElementaryTypeSpec,
+    elementTypeSpec: SingularTypeSpec,
     dimensionSpecs: Array<ArrayDimensionSpec>
   ) {
     if (dimensionSpecs.length === 0) {
@@ -32,6 +32,7 @@ class QbArray {
         if (i === dimensionSpecs.length - 1) {
           for (let j = 0; j < numElements; ++j) {
             dimensionArray.push(
+              // @ts-ignore TODO
               ELEMENTARY_TYPE_INIT_VALUES[elementTypeSpec.type]
             );
           }

@@ -196,6 +196,12 @@ export enum TypeSpecExprType {
   UDT = 'udt',
 }
 
+export function isSingularTypeExpr(
+  typeSpecExpr: TypeSpecExpr
+): typeSpecExpr is SingularTypeSpecExpr {
+  return typeSpecExpr.type !== TypeSpecExprType.ARRAY;
+}
+
 export interface ElementaryTypeSpecExpr extends AstNodeBase {
   type: TypeSpecExprType.ELEMENTARY;
   typeSpec?: ElementaryTypeSpec;
@@ -203,7 +209,7 @@ export interface ElementaryTypeSpecExpr extends AstNodeBase {
 
 export interface ArrayTypeSpecExpr extends AstNodeBase {
   type: TypeSpecExprType.ARRAY;
-  elementTypeSpec?: ElementaryTypeSpec;
+  elementTypeSpecExpr?: SingularTypeSpecExpr;
   dimensionSpecExprs: Array<ArrayDimensionSpecExpr>;
 }
 

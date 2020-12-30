@@ -288,23 +288,19 @@ const grammar: Grammar = {
     {"name": "params", "symbols": ["params$ebnf$1", "param"], "postprocess": 
         ([$1, $2]) => [...($1 ? $1.map(([$1_1, $1_2]: Array<any>) => $1_1) : []), $2]
             },
-    {"name": "param$ebnf$1", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
-    {"name": "param$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "param$ebnf$1"], "postprocess": 
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "singularTypeSpecExprOrDefault"], "postprocess": 
         ([$1, $2]): Param => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
+          typeSpecExpr: $2,
           ...useLoc($1),
         })
             },
-    {"name": "param$ebnf$2", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
-    {"name": "param$ebnf$2", "symbols": [], "postprocess": () => null},
-    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "param$ebnf$2"], "postprocess": 
+    {"name": "param", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "singularTypeSpecExprOrDefault"], "postprocess": 
         ([$1, $2, $3, $4]): Param => ({
           name: $1.value,
           typeSpecExpr: {
             type: TypeSpecExprType.ARRAY,
-            elementTypeSpec: $4,
+            elementTypeSpecExpr: $4,
             dimensionSpecExprs: [],
             ...useLoc($1),
           },
@@ -334,7 +330,7 @@ const grammar: Grammar = {
           $3,
         ]
             },
-    {"name": "fieldExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "asSingularTypeSpecExpr"], "postprocess": 
+    {"name": "fieldExpr", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "singularTypeSpecExpr"], "postprocess": 
         ([$1, $2]): FieldSpecExpr => ({
           name: $1.value,
           typeSpecExpr: $2,
@@ -426,23 +422,19 @@ const grammar: Grammar = {
           $2,
         ]
             },
-    {"name": "varDecl$ebnf$1", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
-    {"name": "varDecl$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "varDecl$ebnf$1"], "postprocess": 
+    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "singularTypeSpecExprOrDefault"], "postprocess": 
         ([$1, $2]): VarDecl => ({
           name: $1.value,
-          typeSpecExpr: { type: TypeSpecExprType.ELEMENTARY, typeSpec: $2, ...useLoc($1) },
+          typeSpecExpr: $2,
           ...useLoc($1),
         })
             },
-    {"name": "varDecl$ebnf$2", "symbols": ["asElementaryTypeSpec"], "postprocess": id},
-    {"name": "varDecl$ebnf$2", "symbols": [], "postprocess": () => null},
-    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "dimensionSpecExprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "varDecl$ebnf$2"], "postprocess": 
+    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "dimensionSpecExprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "singularTypeSpecExprOrDefault"], "postprocess": 
         ([$1, $2, $3, $4, $5]): VarDecl => ({
           name: $1.value,
           typeSpecExpr: {
             type: TypeSpecExprType.ARRAY,
-            elementTypeSpec: $5,
+            elementTypeSpecExpr: $5,
             dimensionSpecExprs: $3,
             ...useLoc($1),
           },
@@ -812,17 +804,24 @@ const grammar: Grammar = {
     {"name": "elementaryTypeSpec$ebnf$1", "symbols": ["elementaryTypeSpec$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "elementaryTypeSpec$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "elementaryTypeSpec", "symbols": [(lexer.has("STRING") ? {type: "STRING"} : STRING), "elementaryTypeSpec$ebnf$1"], "postprocess": () => stringSpec()},
-    {"name": "asElementaryTypeSpec", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess": ([$1, $2]) => $2},
-    {"name": "asSingularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
+    {"name": "singularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), "elementaryTypeSpec"], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
           type: TypeSpecExprType.ELEMENTARY,
           typeSpec: $2,
           ...useLoc($1),
-        }) },
-    {"name": "asSingularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
+        })
+            },
+    {"name": "singularTypeSpecExpr", "symbols": [(lexer.has("AS") ? {type: "AS"} : AS), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER)], "postprocess":  ([$1, $2]): SingularTypeSpecExpr  => ({
           type: TypeSpecExprType.UDT,
           name: $2.value,
           ...useLoc($1),
-        }) },
+        })
+            },
+    {"name": "singularTypeSpecExprOrDefault", "symbols": [], "postprocess":  ([$1]): SingularTypeSpecExpr => ({
+          type: TypeSpecExprType.ELEMENTARY,
+          loc: {line: lexer.lastToken!.line, col: lexer.lastToken!.col},
+        })
+            },
+    {"name": "singularTypeSpecExprOrDefault", "symbols": ["singularTypeSpecExpr"], "postprocess": id},
     {"name": "expr", "symbols": ["expr10"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["varRefExpr"], "postprocess": id},
     {"name": "lhsExpr", "symbols": ["fnCallExpr"], "postprocess": id},

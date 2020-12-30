@@ -14,6 +14,7 @@ import {
   CondLoopStructure,
   ConstStmt,
   DimStmt,
+  ElementaryTypeSpecExpr,
   ElseBranch,
   EndStmt,
   ExitForStmt,
@@ -221,7 +222,10 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
       chunks.push(
         this.generateVarRefCode(varDecl, varDecl.symbol!),
         '.init(',
-        JSON.stringify(typeSpecExpr.elementTypeSpec),
+        // TODO
+        JSON.stringify(
+          (typeSpecExpr.elementTypeSpecExpr as ElementaryTypeSpecExpr).typeSpec!
+        ),
         ', [',
         ...typeSpecExpr.dimensionSpecExprs.map(({minIdxExpr, maxIdxExpr}) => [
           '[',

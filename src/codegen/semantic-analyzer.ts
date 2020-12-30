@@ -24,6 +24,7 @@ import {
   IfStmt,
   InputStmt,
   InputType,
+  isSingularTypeExpr,
   LabelStmt,
   LiteralExpr,
   Module,
@@ -66,6 +67,7 @@ import {
   DataType,
   UdtTypeSpec,
   SingularTypeSpec,
+  isSingularType,
 } from '../lib/types';
 import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
 
@@ -888,9 +890,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private getTypeSpecForVarDeclOrParam(
-    varDeclOrParam: VarDecl | Param
+    node: AstNodeBase & {name: string; typeSpecExpr: TypeSpecExpr}
   ): DataTypeSpec {
-    const {name, typeSpecExpr} = varDeclOrParam;
+    const {name, typeSpecExpr} = node;
     switch (typeSpecExpr.type) {
       case TypeSpecExprType.ELEMENTARY:
         if (!typeSpecExpr.typeSpec) {
@@ -915,18 +917,37 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
             }
           }
         }
-        if (!typeSpecExpr.elementTypeSpec) {
-          typeSpecExpr.elementTypeSpec = this.getTypeSpecFromSuffix(name);
+        if (typeSpecExpr.elementTypeSpecExpr) {
+          if (!isSingularTypeExpr(typeSpecExpr.elementTypeSpecExpr)) {
+            this.throwError(
+              `Invalid array element type: ${JSON.stringify(
+                typeSpecExpr.elementTypeSpecExpr
+              )}`,
+              typeSpecExpr.elementTypeSpecExpr
+            );
+          }
+        } else {
+          typeSpecExpr.elementTypeSpecExpr = {
+            type: TypeSpecExprType.ELEMENTARY,
+            typeSpec: this.getTypeSpecFromSuffix(name),
+            loc: typeSpecExpr.loc,
+          };
         }
         return {
           type: DataType.ARRAY,
-          elementTypeSpec: typeSpecExpr.elementTypeSpec,
+          elementTypeSpec: this.getTypeSpecForVarDeclOrParam({
+            ...node,
+            typeSpecExpr: typeSpecExpr.elementTypeSpecExpr,
+          }) as SingularTypeSpec,
           dimensionSpecs: typeSpecExpr.dimensionSpecExprs.map(() => [0, 0]),
         };
+      case TypeSpecExprType.UDT:
+        const udt = this.lookupUdtOrThrow(typeSpecExpr, typeSpecExpr.name);
+        return udt.typeSpec!;
       default:
         this.throwError(
           `Unknown TypeSpecExpr type: ${JSON.stringify(typeSpecExpr)}`,
-          varDeclOrParam
+          node
         );
     }
   }
