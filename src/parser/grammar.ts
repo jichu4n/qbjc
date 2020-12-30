@@ -424,6 +424,14 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
+    {"name": "dimStmt", "symbols": [(lexer.has("SHARED") ? {type: "SHARED"} : SHARED), "varDecls"], "postprocess": 
+        ([$1, $2]): DimStmt => ({
+          type: StmtType.DIM,
+          dimType: DimType.SHARED,
+          varDecls: $2,
+          ...useLoc($1),
+        })
+            },
     {"name": "varDecls$ebnf$1", "symbols": []},
     {"name": "varDecls$ebnf$1$subexpression$1", "symbols": ["varDecl", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
     {"name": "varDecls$ebnf$1", "symbols": ["varDecls$ebnf$1", "varDecls$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},

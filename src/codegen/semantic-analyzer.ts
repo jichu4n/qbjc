@@ -220,13 +220,6 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   visitLabelStmt(node: LabelStmt): void {}
 
   visitDimStmt(node: DimStmt): void {
-    if (node.dimType === DimType.SHARED && this.currentProc) {
-      this.throwError(
-        'DIM SHARED statement can only be used at the module level, ' +
-          `not inside a ${procTypeName(this.currentProc.type)}`,
-        node
-      );
-    }
     if (node.dimType === DimType.STATIC && !this.currentProc) {
       this.throwError(
         'STATIC statement can only be used inside a procedure.',
@@ -234,6 +227,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       );
     }
     for (const varDecl of node.varDecls) {
+      const typeSpec = this.getTypeSpecForVarDeclOrParam(varDecl);
       const resolvedSymbol = this.lookupSymbol(varDecl.name);
       if (resolvedSymbol) {
         if (resolvedSymbol.varScope === VarScope.LOCAL) {
@@ -243,7 +237,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         } else if (
           resolvedSymbol.varScope === VarScope.GLOBAL &&
-          node.dimType === DimType.SHARED
+          node.dimType === DimType.SHARED &&
+          !_.isEqual(typeSpec, resolvedSymbol.typeSpec)
         ) {
           this.throwError(
             `Variable already defined in global scope: "${varDecl.name}"`,
@@ -251,16 +246,30 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           );
         }
       }
-      const typeSpec = this.getTypeSpecForVarDeclOrParam(varDecl);
       let symbol: VarSymbol;
       switch (node.dimType) {
         case DimType.SHARED:
-          symbol = {
-            name: varDecl.name,
-            varType: VarType.VAR,
-            typeSpec,
-            varScope: VarScope.GLOBAL,
-          };
+          // If this symbol is already defined as a local var at the module level, promote it to
+          // global.
+          const moduleLocalSymbol = lookupSymbol(
+            this.module.localSymbols!,
+            varDecl.name
+          );
+          if (moduleLocalSymbol) {
+            symbol = moduleLocalSymbol;
+            this.module.localSymbols!.splice(
+              this.module.localSymbols!.indexOf(moduleLocalSymbol),
+              1
+            );
+            symbol.varScope = VarScope.GLOBAL;
+          } else {
+            symbol = {
+              name: varDecl.name,
+              varType: VarType.VAR,
+              typeSpec,
+              varScope: VarScope.GLOBAL,
+            };
+          }
           this.module.globalSymbols!.push(symbol);
           break;
         case DimType.LOCAL:

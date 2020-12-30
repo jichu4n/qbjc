@@ -26,6 +26,19 @@ FUNCTION f3
 END FUNCTION
 PRINT e; f; g
 
+' Test SHARED.
+DIM h$ AS STRING
+SUB s1
+  SHARED h$
+  h$ = "hello"
+END SUB
+SUB s2
+  SHARED h$
+  PRINT h$
+END SUB
+s1
+s2
+
 ' EXPECT {
 '   "io": [
 '     {"output": " 0 ''\n"},
@@ -36,6 +49,8 @@ PRINT e; f; g
 '     {"output": "'foo' 'hello'\n"},
 '
 '     {"output": "test 500  42 \n"},
-'     {"output": "test 500  0 \n"}
+'     {"output": "test 500  0 \n"},
+'
+'     {"output": "hello\n"}
 '   ]
 ' }

@@ -316,6 +316,14 @@ dimStmt ->
             ...useLoc($1),
           })
     %}
+    | %SHARED varDecls  {%
+          ([$1, $2]): DimStmt => ({
+            type: StmtType.DIM,
+            dimType: DimType.SHARED,
+            varDecls: $2,
+            ...useLoc($1),
+          })
+    %}
 
 varDecls ->
     (varDecl %COMMA):* varDecl  {%
