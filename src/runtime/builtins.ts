@@ -54,6 +54,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'csrlin',
+    paramTypeSpecs: [],
+    returnTypeSpec: longSpec(),
+    async run({platform}: RunContext) {
+      return (await platform.getCursorPosition()).y + 1;
+    },
+  },
+  {
     name: 'instr',
     paramTypeSpecs: [stringSpec(), stringSpec()],
     returnTypeSpec: longSpec(),
@@ -132,6 +140,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'pos',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: longSpec(),
+    async run(_, {platform}: RunContext) {
+      return (await platform.getCursorPosition()).x + 1;
+    },
+  },
+  {
     name: 'right$',
     paramTypeSpecs: [stringSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
@@ -175,8 +191,11 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     name: 'tab',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
-    async run() {
-      // TODO
+    async run(col: number, {platform}: RunContext) {
+      const {x, y} = await platform.getCursorPosition();
+      const {cols} = await platform.getScreenSize();
+      col = (Math.max(1, Math.floor(col)) - 1) % cols;
+      await platform.moveCursorTo(col, x <= col ? y : y + 1);
       return '';
     },
   },
@@ -257,14 +276,19 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       name: 'locate',
       async run(...args: Array<any>) {
         const {platform} = args.pop() as RunContext;
-        const [row, column, cursor] = args;
-        if (Number.isFinite(row) && Number.isFinite(column)) {
-          await platform.moveCursorTo(
-            Math.floor(column) - 1,
-            Math.floor(row) - 1
-          );
-        } else {
-          // TODO
+        const [row, col, cursor] = args;
+        if (Number.isFinite(row) && Number.isFinite(col)) {
+          await platform.moveCursorTo(Math.floor(col) - 1, Math.floor(row) - 1);
+        } else if (Number.isFinite(row) || Number.isFinite(col)) {
+          const origPos = await platform.getCursorPosition();
+          const newX = Number.isFinite(col) ? Math.floor(col) - 1 : origPos.x;
+          const newY = Number.isFinite(row) ? Math.floor(row) - 1 : origPos.y;
+          if (newX !== origPos.x || newY !== origPos.y) {
+            await platform.moveCursorTo(newX, newY);
+          }
+        }
+        if (Number.isFinite(cursor)) {
+          await platform.setCursorVisibility(!!cursor);
         }
       },
     },

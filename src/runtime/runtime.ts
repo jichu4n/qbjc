@@ -15,7 +15,9 @@ export abstract class RuntimePlatform {
   /** Move cursor to the specified location. */
   abstract moveCursorTo(x: number, y: number): Promise<void>;
   /** Get current cursor position. */
-  // getCursorPosition(): Promise<{x: number; y: number}>;
+  abstract getCursorPosition(): Promise<{x: number; y: number}>;
+  /** Get the terminal size. */
+  abstract getScreenSize(): Promise<{rows: number; cols: number}>;
   /** Show / hide cursor. */
   abstract setCursorVisibility(isCursorVisible: boolean): Promise<void>;
   /** Clear the screen. */

@@ -16,6 +16,43 @@ export class NodePlatform extends AnsiTerminalRuntimPlatform {
       });
     });
   }
+
+  async getCursorPosition(): Promise<{x: number; y: number}> {
+    // Based on https://github.com/bubkoo/get-cursor-position/blob/master/index.js
+    process.stdin.resume();
+    process.stdin.setRawMode(true);
+    return new Promise<{x: number; y: number}>((resolve, reject) => {
+      process.stdin.once('data', (chunk) => {
+        const match = chunk.toString().match(/\[(\d+)\;(\d+)R/);
+        if (match) {
+          const [row, col] = [match[1], match[2]];
+          resolve({
+            // ANSI row & col numbers are 1-based.
+            x: parseInt(col) - 1,
+            y: parseInt(row) - 1,
+          });
+        } else {
+          reject();
+        }
+      });
+      process.stdout.write('\x1b[6n');
+    }).finally(() => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+    });
+  }
+
+  async getScreenSize(): Promise<{rows: number; cols: number}> {
+    // Basd on https://stackoverflow.com/a/35688423/3401268
+    const origPos = await this.getCursorPosition();
+    await this.moveCursorTo(10000, 10000);
+    const bottomRightPos = await this.getCursorPosition();
+    await this.moveCursorTo(origPos.x, origPos.y);
+    return {
+      rows: bottomRightPos.y + 1,
+      cols: bottomRightPos.x + 1,
+    };
+  }
 }
 
 export class NodeExecutor extends Executor {
