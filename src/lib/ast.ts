@@ -82,7 +82,7 @@ export interface FnProc extends ProcBase {
 /** A function parameter. */
 export interface Param extends AstNodeBase {
   name: string;
-  typeSpecExpr: TypeSpecExpr;
+  typeExpr: DataTypeExpr;
 }
 
 export interface Udt extends AstNodeBase {
@@ -98,7 +98,7 @@ export interface Udt extends AstNodeBase {
 
 export interface FieldSpecExpr extends AstNodeBase {
   name: string;
-  typeSpecExpr: SingularTypeSpecExpr;
+  typeExpr: SingularTypeExpr;
 }
 
 export type Stmts = Array<Stmt>;
@@ -185,7 +185,7 @@ export enum DimType {
 /** A variable declaration inside a DIM statement. */
 export interface VarDecl extends AstNodeBase {
   name: string;
-  typeSpecExpr: TypeSpecExpr;
+  typeExpr: DataTypeExpr;
   /** Resolved variable symbol.
    *
    * Populated during semantic analysis.
@@ -193,35 +193,35 @@ export interface VarDecl extends AstNodeBase {
   symbol?: VarSymbol;
 }
 
-export type SingularTypeSpecExpr = ElementaryTypeSpecExpr | UdtTypeSpecExpr;
+export type SingularTypeExpr = ElementaryTypeExpr | UdtTypeExpr;
 
-export type TypeSpecExpr = SingularTypeSpecExpr | ArrayTypeSpecExpr;
+export type DataTypeExpr = SingularTypeExpr | ArrayTypeExpr;
 
-export enum TypeSpecExprType {
+export enum DataTypeExprType {
   ELEMENTARY = 'elementary',
   ARRAY = 'array',
   UDT = 'udt',
 }
 
 export function isSingularTypeExpr(
-  typeSpecExpr: TypeSpecExpr
-): typeSpecExpr is SingularTypeSpecExpr {
-  return typeSpecExpr.type !== TypeSpecExprType.ARRAY;
+  typeExpr: DataTypeExpr
+): typeExpr is SingularTypeExpr {
+  return typeExpr.type !== DataTypeExprType.ARRAY;
 }
 
-export interface ElementaryTypeSpecExpr extends AstNodeBase {
-  type: TypeSpecExprType.ELEMENTARY;
+export interface ElementaryTypeExpr extends AstNodeBase {
+  type: DataTypeExprType.ELEMENTARY;
   typeSpec?: ElementaryTypeSpec;
 }
 
-export interface ArrayTypeSpecExpr extends AstNodeBase {
-  type: TypeSpecExprType.ARRAY;
-  elementTypeSpecExpr?: SingularTypeSpecExpr;
+export interface ArrayTypeExpr extends AstNodeBase {
+  type: DataTypeExprType.ARRAY;
+  elementTypeExpr?: SingularTypeExpr;
   dimensionSpecExprs: Array<ArrayDimensionSpecExpr>;
 }
 
-export interface UdtTypeSpecExpr extends AstNodeBase {
-  type: TypeSpecExprType.UDT;
+export interface UdtTypeExpr extends AstNodeBase {
+  type: DataTypeExprType.UDT;
   name: string;
 }
 

@@ -44,8 +44,8 @@ import {
   StmtType,
   SubscriptExpr,
   SwapStmt,
-  TypeSpecExpr,
-  TypeSpecExprType,
+  DataTypeExpr,
+  DataTypeExprType,
   Udt,
   UnaryOp,
   UnaryOpExpr,
@@ -211,25 +211,22 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
       name: udt.name,
       fieldSpecs: [],
     };
-    for (const {name: fieldName, typeSpecExpr} of udt.fieldSpecExprs) {
+    for (const {name: fieldName, typeExpr} of udt.fieldSpecExprs) {
       let fieldTypeSpec: SingularTypeSpec;
-      switch (typeSpecExpr.type) {
-        case TypeSpecExprType.ELEMENTARY:
+      switch (typeExpr.type) {
+        case DataTypeExprType.ELEMENTARY:
           fieldTypeSpec =
-            typeSpecExpr.typeSpec ?? this.getDefaultTypeSpecFromName(fieldName);
+            typeExpr.typeSpec ?? this.getDefaultTypeSpecFromName(fieldName);
           break;
-        case TypeSpecExprType.UDT:
-          const fieldUdt = this.lookupUdtOrThrow(
-            typeSpecExpr,
-            typeSpecExpr.name
-          );
+        case DataTypeExprType.UDT:
+          const fieldUdt = this.lookupUdtOrThrow(typeExpr, typeExpr.name);
           this.visitUdt(fieldUdt);
           fieldTypeSpec = fieldUdt.typeSpec!;
           break;
         default:
           this.throwError(
-            `Unexpected field type: ${JSON.stringify(typeSpecExpr)}`,
-            typeSpecExpr
+            `Unexpected field type: ${JSON.stringify(typeExpr)}`,
+            typeExpr
           );
       }
       typeSpec.fieldSpecs.push({name: fieldName, typeSpec: fieldTypeSpec});
@@ -1038,20 +1035,17 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private getTypeSpecForVarDeclOrParam(
-    node: AstNodeBase & {name: string; typeSpecExpr: TypeSpecExpr}
+    node: AstNodeBase & {name: string; typeExpr: DataTypeExpr}
   ): DataTypeSpec {
-    const {name, typeSpecExpr} = node;
-    switch (typeSpecExpr.type) {
-      case TypeSpecExprType.ELEMENTARY:
-        if (!typeSpecExpr.typeSpec) {
-          typeSpecExpr.typeSpec = this.getDefaultTypeSpecFromName(name);
+    const {name, typeExpr: typeExpr} = node;
+    switch (typeExpr.type) {
+      case DataTypeExprType.ELEMENTARY:
+        if (!typeExpr.typeSpec) {
+          typeExpr.typeSpec = this.getDefaultTypeSpecFromName(name);
         }
-        return typeSpecExpr.typeSpec;
-      case TypeSpecExprType.ARRAY:
-        for (const {
-          minIdxExpr,
-          maxIdxExpr,
-        } of typeSpecExpr.dimensionSpecExprs) {
+        return typeExpr.typeSpec;
+      case DataTypeExprType.ARRAY:
+        for (const {minIdxExpr, maxIdxExpr} of typeExpr.dimensionSpecExprs) {
           const idxExprs = [...(minIdxExpr ? [minIdxExpr] : []), maxIdxExpr];
           this.acceptAll(idxExprs);
           for (const idxExpr of idxExprs) {
@@ -1065,36 +1059,36 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
             }
           }
         }
-        if (typeSpecExpr.elementTypeSpecExpr) {
-          if (!isSingularTypeExpr(typeSpecExpr.elementTypeSpecExpr)) {
+        if (typeExpr.elementTypeExpr) {
+          if (!isSingularTypeExpr(typeExpr.elementTypeExpr)) {
             this.throwError(
               `Invalid array element type: ${JSON.stringify(
-                typeSpecExpr.elementTypeSpecExpr
+                typeExpr.elementTypeExpr
               )}`,
-              typeSpecExpr.elementTypeSpecExpr
+              typeExpr.elementTypeExpr
             );
           }
         } else {
-          typeSpecExpr.elementTypeSpecExpr = {
-            type: TypeSpecExprType.ELEMENTARY,
+          typeExpr.elementTypeExpr = {
+            type: DataTypeExprType.ELEMENTARY,
             typeSpec: this.getDefaultTypeSpecFromName(name),
-            loc: typeSpecExpr.loc,
+            loc: typeExpr.loc,
           };
         }
         return {
           type: DataType.ARRAY,
           elementTypeSpec: this.getTypeSpecForVarDeclOrParam({
             ...node,
-            typeSpecExpr: typeSpecExpr.elementTypeSpecExpr,
+            typeExpr: typeExpr.elementTypeExpr,
           }) as SingularTypeSpec,
-          dimensionSpecs: typeSpecExpr.dimensionSpecExprs.map(() => [0, 0]),
+          dimensionSpecs: typeExpr.dimensionSpecExprs.map(() => [0, 0]),
         };
-      case TypeSpecExprType.UDT:
-        const udt = this.lookupUdtOrThrow(typeSpecExpr, typeSpecExpr.name);
+      case DataTypeExprType.UDT:
+        const udt = this.lookupUdtOrThrow(typeExpr, typeExpr.name);
         return udt.typeSpec!;
       default:
         this.throwError(
-          `Unknown TypeSpecExpr type: ${JSON.stringify(typeSpecExpr)}`,
+          `Unknown DataTypeExpr type: ${JSON.stringify(typeExpr)}`,
           node
         );
     }

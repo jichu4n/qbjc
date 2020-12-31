@@ -16,7 +16,7 @@ import {
   DataStmt,
   DefTypeStmt,
   DimStmt,
-  ElementaryTypeSpecExpr,
+  ElementaryTypeExpr,
   ElseBranch,
   EndStmt,
   ExitForStmt,
@@ -47,7 +47,7 @@ import {
   Stmts,
   SubscriptExpr,
   SwapStmt,
-  TypeSpecExprType,
+  DataTypeExprType,
   UnaryOp,
   UnaryOpExpr,
   UncondLoopStmt,
@@ -221,10 +221,10 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
   visitDimStmt(node: DimStmt): SourceNode {
     const chunks: SourceChunks = [];
     for (const varDecl of node.varDecls) {
-      const {typeSpecExpr} = varDecl;
+      const {typeExpr} = varDecl;
       const {typeSpec} = varDecl.symbol!;
-      switch (typeSpecExpr.type) {
-        case TypeSpecExprType.ARRAY:
+      switch (typeExpr.type) {
+        case DataTypeExprType.ARRAY:
           if (!isArray(typeSpec)) {
             this.throwError(
               `Mismatch types: expected array, got ${typeSpec.type}`,
@@ -236,15 +236,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
             '.init(',
             JSON.stringify(typeSpec.elementTypeSpec),
             ', [',
-            ...typeSpecExpr.dimensionSpecExprs.map(
-              ({minIdxExpr, maxIdxExpr}) => [
-                '[',
-                minIdxExpr ? this.accept(minIdxExpr) : '0',
-                ', ',
-                this.accept(maxIdxExpr),
-                '],',
-              ]
-            ),
+            ...typeExpr.dimensionSpecExprs.map(({minIdxExpr, maxIdxExpr}) => [
+              '[',
+              minIdxExpr ? this.accept(minIdxExpr) : '0',
+              ', ',
+              this.accept(maxIdxExpr),
+              '],',
+            ]),
             ']); '
           );
           break;
