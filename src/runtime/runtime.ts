@@ -13,13 +13,13 @@ export abstract class RuntimePlatform {
   // Text mode screen manipulation.
 
   /** Move cursor to the specified location. */
-  abstract moveCursorTo(x: number, y: number): void;
+  abstract moveCursorTo(x: number, y: number): Promise<void>;
   /** Get current cursor position. */
   // getCursorPosition(): Promise<{x: number; y: number}>;
-  /** Get current cursor position. */
-  // setCursorVisibility(isCursorVisible: boolean): void;
+  /** Show / hide cursor. */
+  abstract setCursorVisibility(isCursorVisible: boolean): Promise<void>;
   /** Clear the screen. */
-  abstract clearScreen(): void;
+  abstract clearScreen(): Promise<void>;
 }
 
 /** Runtime support library.

@@ -8,13 +8,19 @@ import ansiEscapes from 'ansi-escapes';
  * https://github.com/microsoft/TypeScript/issues/35356
  */
 abstract class AnsiTerminalRuntimPlatform extends RuntimePlatform {
-  moveCursorTo(x: number, y: number) {
-    this.print(ansiEscapes.cursorTo(0, 0));
+  async moveCursorTo(x: number, y: number) {
+    this.print(ansiEscapes.cursorTo(x, y));
   }
 
-  clearScreen() {
+  async setCursorVisibility(isCursorVisible: boolean) {
+    this.print(
+      isCursorVisible ? ansiEscapes.cursorShow : ansiEscapes.cursorHide
+    );
+  }
+
+  async clearScreen() {
     this.print(ansiEscapes.eraseScreen);
-    this.moveCursorTo(0, 0);
+    await this.moveCursorTo(0, 0);
   }
 }
 

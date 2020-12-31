@@ -238,10 +238,34 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       name: 'cls',
       async run(...args: Array<any>) {
         const {platform} = args.pop() as RunContext;
-        platform.clearScreen();
+        await platform.clearScreen();
       },
     },
     [[], [longSpec()]]
+  ),
+  ...overload(
+    {
+      name: 'locate',
+      async run(...args: Array<any>) {
+        const {platform} = args.pop() as RunContext;
+        const [row, column, cursor] = args;
+        if (Number.isFinite(row) && Number.isFinite(column)) {
+          await platform.moveCursorTo(Math.floor(column), Math.floor(row));
+        } else {
+          // TODO
+          throw new Error(
+            `Unsupported LOCATE arguments: both row and column expected`
+          );
+        }
+      },
+    },
+    [
+      [longSpec()],
+      [longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec(), longSpec(), longSpec()],
+    ]
   ),
 ];
 

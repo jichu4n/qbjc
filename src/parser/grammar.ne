@@ -290,6 +290,7 @@ nonLabelStmt ->
     | dataStmt  {% id %}
     | readStmt  {% id %}
     | restoreStmt  {% id %}
+    | locateStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -810,6 +811,23 @@ restoreStmt ->
     %RESTORE labelRef:?  {%
         ([$1, $2]): RestoreStmt =>
             ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
+    %}
+
+locateStmt ->
+    %LOCATE (expr:? %COMMA):* expr  {%
+        // Hack: LOCATE is parsed as a CALL statement, and implemented as a built-in SUB.
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: 'locate',
+          argExprs: [
+            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
+              type: ExprType.LITERAL,
+              value: NaN,
+            }) : []),
+            $3,
+          ],
+          ...useLoc($1),
+        })
     %}
 
 singleLineStmts ->

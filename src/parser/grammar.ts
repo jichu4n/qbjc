@@ -63,6 +63,7 @@ declare var DEFSTR: any;
 declare var DATA: any;
 declare var READ: any;
 declare var RESTORE: any;
+declare var LOCATE: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -403,6 +404,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["restoreStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["locateStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -906,6 +908,26 @@ const grammar: Grammar = {
     {"name": "restoreStmt", "symbols": [(lexer.has("RESTORE") ? {type: "RESTORE"} : RESTORE), "restoreStmt$ebnf$1"], "postprocess": 
         ([$1, $2]): RestoreStmt =>
             ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
+            },
+    {"name": "locateStmt$ebnf$1", "symbols": []},
+    {"name": "locateStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
+    {"name": "locateStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "locateStmt$ebnf$1$subexpression$1", "symbols": ["locateStmt$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "locateStmt$ebnf$1", "symbols": ["locateStmt$ebnf$1", "locateStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "locateStmt", "symbols": [(lexer.has("LOCATE") ? {type: "LOCATE"} : LOCATE), "locateStmt$ebnf$1", "expr"], "postprocess": 
+        // Hack: LOCATE is parsed as a CALL statement, and implemented as a built-in SUB.
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: 'locate',
+          argExprs: [
+            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
+              type: ExprType.LITERAL,
+              value: NaN,
+            }) : []),
+            $3,
+          ],
+          ...useLoc($1),
+        })
             },
     {"name": "singleLineStmts$ebnf$1", "symbols": []},
     {"name": "singleLineStmts$ebnf$1", "symbols": ["singleLineStmts$ebnf$1", (lexer.has("COLON") ? {type: "COLON"} : COLON)], "postprocess": (d) => d[0].concat([d[1]])},

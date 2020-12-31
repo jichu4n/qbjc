@@ -5,6 +5,8 @@ import requireFromString from 'require-from-string';
 import compile from '../compile';
 import Executor from '../runtime/executor';
 import {NodePlatform} from '../runtime/node-runtime';
+const {AnsiTerminal} = require('node-ansiterminal');
+const AnsiParser = require('node-ansiparser');
 
 const TEST_SOURCE_DIR_PATH = path.join(
   __dirname,
@@ -30,6 +32,17 @@ class NodePlatformForTest extends NodePlatform {
     this.stdout.push(s);
   }
 
+  getStdout(enableAnsiTerminal: boolean) {
+    if (enableAnsiTerminal) {
+      const terminal = new AnsiTerminal(80, 25, 500);
+      const parser = new AnsiParser(terminal);
+      parser.parse(this.stdout.join(''));
+      return terminal.toString();
+    } else {
+      return this.stdout.join('');
+    }
+  }
+
   async inputLine(): Promise<string> {
     if (this.stdin.length === 0) {
       throw new Error(`Input exhausted`);
@@ -43,6 +56,7 @@ class NodePlatformForTest extends NodePlatform {
 
 interface ExpectSpec {
   io?: Array<{input: string} | {output: string}>;
+  enableAnsiTerminal?: boolean;
 }
 
 async function testCompileAndRun(testFile: string) {
@@ -62,7 +76,9 @@ async function testCompileAndRun(testFile: string) {
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
     'output' in ioItem ? [ioItem.output] : []
   );
-  expect(nodePlatformForTest.stdout.join('')).toEqual(expectedOutput.join(''));
+  expect(
+    nodePlatformForTest.getStdout(!!expectSpec.enableAnsiTerminal)
+  ).toEqual(expectedOutput.join(''));
 }
 
 function parseExpectSpec(source: string): ExpectSpec {

@@ -34,6 +34,7 @@ export enum Keywords {
   INTEGER = 'integer',
   LET = 'let',
   LINE = 'line',
+  LOCATE = 'locate',
   LONG = 'long',
   LOOP = 'loop',
   MOD = 'mod',
