@@ -1,6 +1,6 @@
 import moo, {Token} from 'moo';
 import {DataTypeSpec, isNumeric, isString} from '../lib/types';
-import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin} from './builtins';
+import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin, RunContext} from './builtins';
 import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
 
 /** Interface for platform-specific runtime functionality. */
@@ -30,7 +30,22 @@ export default class Runtime {
     if (!builtinProc) {
       throw new Error(`No matching built-in procedure found: "${name}"`);
     }
-    return await builtinProc.run(...args.map((ptr) => ptr[0][ptr[1]]));
+    if (argTypeSpecs.length !== args.length) {
+      throw new Error(
+        `Argument types and values do not match: ` +
+          `expected ${argTypeSpecs.length} arguments, got ${args.length}`
+      );
+    }
+    const runContext: RunContext = {
+      runtime: this,
+      platform: this.platform,
+      argTypeSpecs,
+      args,
+    };
+    return await builtinProc.run(
+      ...args.map((ptr) => ptr[0][ptr[1]]),
+      runContext
+    );
   }
 
   print(formatString: string | null, ...args: Array<PrintArg>) {

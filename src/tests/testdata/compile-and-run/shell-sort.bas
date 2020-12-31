@@ -12,7 +12,7 @@ SUB ShellSort (Array$(), Num%) STATIC
     IF Array$(J%) <= Array$(J% + Span%) THEN EXIT FOR
     ' Swap array elements that are out of order.
     SWAP Array$(J%), Array$(J% + Span%)
-NEXT J%
+    NEXT J%
 
     NEXT I%
     Span% = Span% \ 2

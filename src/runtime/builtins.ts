@@ -7,10 +7,11 @@ import {
   integerSpec,
   isArray,
   longSpec,
-  ProcType,
   stringSpec,
 } from '../lib/types';
+import {Ptr} from './compiled-code';
 import QbArray from './qb-array';
+import Runtime, {RuntimePlatform} from './runtime';
 
 type RunFn = (...args: Array<any>) => Promise<any>;
 
@@ -19,6 +20,21 @@ export interface BuiltinProc {
   name: string;
   paramTypeSpecs: Array<DataTypeSpec>;
   run: RunFn;
+}
+
+/** Invocation context for built-in procs.
+ *
+ * The invocation context is passed to the run() function as the final argument.
+ */
+export interface RunContext {
+  /** Handle to a Runtime instance. */
+  runtime: Runtime;
+  /** Handle to a RuntimePlatform instance. */
+  platform: RuntimePlatform;
+  /** DataTypeSpecs of the arguments. */
+  argTypeSpecs: Array<DataTypeSpec>;
+  /** Pointers to the underlying argument variables. */
+  args: Array<Ptr>;
 }
 
 export interface BuiltinFn extends BuiltinProc {
@@ -210,12 +226,28 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
 
 /** Simple statements implemented as built-in subs. */
 export const BUILTIN_SUBS: Array<BuiltinSub> = [
-  {
-    name: 'randomize',
-    paramTypeSpecs: [longSpec()],
-    async run() {},
-  },
+  ...overload(
+    {
+      name: 'randomize',
+      async run() {},
+    },
+    [[], [longSpec()]]
+  ),
 ];
+
+/** Helper function to generate multiple signatures that map to the same built-in proc. */
+function overload<T extends BuiltinProc>(
+  proc: Omit<T, 'paramTypeSpecs'>,
+  paramTypeSpecsList: Array<Array<DataTypeSpec>>
+): Array<T> {
+  return paramTypeSpecsList.map(
+    (paramTypeSpecs) =>
+      ({
+        ...proc,
+        paramTypeSpecs,
+      } as T)
+  );
+}
 
 export function lookupBuiltin<T extends BuiltinProc>(
   procs: Array<T>,
