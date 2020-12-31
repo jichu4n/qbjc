@@ -260,13 +260,14 @@ stmtSep ->
 stmtWithSep ->
       labelStmt stmtSep:?  {% id %}
     | nonLabelStmt stmtSep  {% id %}
+    | singleLineIfStmt stmtSep:?  {% id %}
 
 nonLabelStmt ->
       dimStmt  {% id %}
     | assignStmt  {% id %}
     | constStmt  {% id %}
     | gotoStmt  {% id %}
-    | ifStmt  {% id %}
+    | blockIfStmt  {% id %}
     | selectStmt  {% id %}
     | whileStmt  {% id %}
     | doWhileStmt  {% id %}
@@ -291,6 +292,9 @@ nonLabelStmt ->
     | readStmt  {% id %}
     | restoreStmt  {% id %}
     | locateStmt  {% id %}
+    | colorStmt  {% id %}
+    | defSegStmt  {% id %}
+    | viewPrintStmt  {% id %}
 
 labelStmt ->
       %NUMERIC_LITERAL  {%
@@ -420,13 +424,9 @@ gotoStmt ->
             ({ type: StmtType.GOTO, destLabel: $2, ...useLoc($1) })
     %}
 
-ifStmt ->
-      singleLineIfStmt  {% id %}
-    | blockIfStmt  {% id %}
-
 singleLineIfStmt ->
-    %IF expr %THEN singleLineStmts (%ELSE singleLineStmts):?  {%
-        ([$1, $2, $3, $4, $5, $6]): IfStmt =>
+    %IF expr %THEN singleLineStmts (%ELSE singleLineStmts):? %NEWLINE  {%
+        ([$1, $2, $3, $4, $5, $6, $7]): IfStmt =>
             ({
               type: StmtType.IF,
               ifBranches: [ { condExpr: $2, stmts: $4, ...useLoc($1) } ],
@@ -815,7 +815,6 @@ restoreStmt ->
 
 locateStmt ->
     %LOCATE (expr:? %COMMA):* expr  {%
-        // Hack: LOCATE is parsed as a CALL statement, and implemented as a built-in SUB.
         ([$1, $2, $3]): CallStmt => ({
           type: StmtType.CALL,
           name: 'locate',
@@ -827,6 +826,43 @@ locateStmt ->
             }) : []),
             $3,
           ],
+          ...useLoc($1),
+        })
+    %}
+
+colorStmt ->
+    %COLOR (expr:? %COMMA):* expr  {%
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: 'color',
+          argExprs: [
+            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
+              type: ExprType.LITERAL,
+              value: NaN,
+              ...useLoc($2_2),
+            }) : []),
+            $3,
+          ],
+          ...useLoc($1),
+        })
+    %}
+
+defSegStmt ->
+    %DEF %SEG (%EQ expr):?  {%
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: '__def_seg',
+          argExprs: $3 ? [$3[1]] : [],
+          ...useLoc($1),
+        })
+    %}
+
+viewPrintStmt ->
+    %VIEW %PRINT (expr %TO expr):?  {%
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: '__view_print',
+          argExprs: $3 ? [$3[0], $3[2]] : [],
           ...useLoc($1),
         })
     %}

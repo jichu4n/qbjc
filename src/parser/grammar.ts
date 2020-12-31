@@ -64,6 +64,10 @@ declare var DATA: any;
 declare var READ: any;
 declare var RESTORE: any;
 declare var LOCATE: any;
+declare var COLOR: any;
+declare var DEF: any;
+declare var SEG: any;
+declare var VIEW: any;
 declare var INTEGER: any;
 declare var LONG: any;
 declare var SINGLE: any;
@@ -376,11 +380,14 @@ const grammar: Grammar = {
     {"name": "stmtWithSep$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "stmtWithSep", "symbols": ["labelStmt", "stmtWithSep$ebnf$1"], "postprocess": id},
     {"name": "stmtWithSep", "symbols": ["nonLabelStmt", "stmtSep"], "postprocess": id},
+    {"name": "stmtWithSep$ebnf$2", "symbols": ["stmtSep"], "postprocess": id},
+    {"name": "stmtWithSep$ebnf$2", "symbols": [], "postprocess": () => null},
+    {"name": "stmtWithSep", "symbols": ["singleLineIfStmt", "stmtWithSep$ebnf$2"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["dimStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["assignStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["constStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["gotoStmt"], "postprocess": id},
-    {"name": "nonLabelStmt", "symbols": ["ifStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["blockIfStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["selectStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["whileStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["doWhileStmt"], "postprocess": id},
@@ -405,6 +412,9 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["restoreStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["locateStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["colorStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["defSegStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["viewPrintStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
         ([$1], _, reject): LabelStmt | Reject =>
             $1.isFirstTokenOnLine ? {
@@ -526,13 +536,11 @@ const grammar: Grammar = {
         ([$1, $2]): GotoStmt =>
             ({ type: StmtType.GOTO, destLabel: $2, ...useLoc($1) })
             },
-    {"name": "ifStmt", "symbols": ["singleLineIfStmt"], "postprocess": id},
-    {"name": "ifStmt", "symbols": ["blockIfStmt"], "postprocess": id},
     {"name": "singleLineIfStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("ELSE") ? {type: "ELSE"} : ELSE), "singleLineStmts"]},
     {"name": "singleLineIfStmt$ebnf$1", "symbols": ["singleLineIfStmt$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "singleLineIfStmt$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "singleLineIfStmt", "symbols": [(lexer.has("IF") ? {type: "IF"} : IF), "expr", (lexer.has("THEN") ? {type: "THEN"} : THEN), "singleLineStmts", "singleLineIfStmt$ebnf$1"], "postprocess": 
-        ([$1, $2, $3, $4, $5, $6]): IfStmt =>
+    {"name": "singleLineIfStmt", "symbols": [(lexer.has("IF") ? {type: "IF"} : IF), "expr", (lexer.has("THEN") ? {type: "THEN"} : THEN), "singleLineStmts", "singleLineIfStmt$ebnf$1", (lexer.has("NEWLINE") ? {type: "NEWLINE"} : NEWLINE)], "postprocess": 
+        ([$1, $2, $3, $4, $5, $6, $7]): IfStmt =>
             ({
               type: StmtType.IF,
               ifBranches: [ { condExpr: $2, stmts: $4, ...useLoc($1) } ],
@@ -917,7 +925,6 @@ const grammar: Grammar = {
     {"name": "locateStmt$ebnf$1$subexpression$1", "symbols": ["locateStmt$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
     {"name": "locateStmt$ebnf$1", "symbols": ["locateStmt$ebnf$1", "locateStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "locateStmt", "symbols": [(lexer.has("LOCATE") ? {type: "LOCATE"} : LOCATE), "locateStmt$ebnf$1", "expr"], "postprocess": 
-        // Hack: LOCATE is parsed as a CALL statement, and implemented as a built-in SUB.
         ([$1, $2, $3]): CallStmt => ({
           type: StmtType.CALL,
           name: 'locate',
@@ -929,6 +936,48 @@ const grammar: Grammar = {
             }) : []),
             $3,
           ],
+          ...useLoc($1),
+        })
+            },
+    {"name": "colorStmt$ebnf$1", "symbols": []},
+    {"name": "colorStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
+    {"name": "colorStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "colorStmt$ebnf$1$subexpression$1", "symbols": ["colorStmt$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "colorStmt$ebnf$1", "symbols": ["colorStmt$ebnf$1", "colorStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "colorStmt", "symbols": [(lexer.has("COLOR") ? {type: "COLOR"} : COLOR), "colorStmt$ebnf$1", "expr"], "postprocess": 
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: 'color',
+          argExprs: [
+            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
+              type: ExprType.LITERAL,
+              value: NaN,
+              ...useLoc($2_2),
+            }) : []),
+            $3,
+          ],
+          ...useLoc($1),
+        })
+            },
+    {"name": "defSegStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"]},
+    {"name": "defSegStmt$ebnf$1", "symbols": ["defSegStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "defSegStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "defSegStmt", "symbols": [(lexer.has("DEF") ? {type: "DEF"} : DEF), (lexer.has("SEG") ? {type: "SEG"} : SEG), "defSegStmt$ebnf$1"], "postprocess": 
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: '__def_seg',
+          argExprs: $3 ? [$3[1]] : [],
+          ...useLoc($1),
+        })
+            },
+    {"name": "viewPrintStmt$ebnf$1$subexpression$1", "symbols": ["expr", (lexer.has("TO") ? {type: "TO"} : TO), "expr"]},
+    {"name": "viewPrintStmt$ebnf$1", "symbols": ["viewPrintStmt$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "viewPrintStmt$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "viewPrintStmt", "symbols": [(lexer.has("VIEW") ? {type: "VIEW"} : VIEW), (lexer.has("PRINT") ? {type: "PRINT"} : PRINT), "viewPrintStmt$ebnf$1"], "postprocess": 
+        ([$1, $2, $3]): CallStmt => ({
+          type: StmtType.CALL,
+          name: '__view_print',
+          argExprs: $3 ? [$3[0], $3[2]] : [],
           ...useLoc($1),
         })
             },

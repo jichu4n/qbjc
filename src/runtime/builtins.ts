@@ -7,6 +7,7 @@ import {
   integerSpec,
   isArray,
   longSpec,
+  singleSpec,
   stringSpec,
 } from '../lib/types';
 import {Ptr} from './compiled-code';
@@ -46,6 +47,14 @@ export interface BuiltinSub extends BuiltinProc {}
 /** Built-in functions. */
 export const BUILTIN_FNS: Array<BuiltinFn> = [
   {
+    name: 'abs',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.abs(n);
+    },
+  },
+  {
     name: 'chr$',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
@@ -54,11 +63,51 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'cdbl',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return n;
+    },
+  },
+  {
+    name: 'csng',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: singleSpec(),
+    async run(n: number) {
+      return n;
+    },
+  },
+  {
+    name: 'cint',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: longSpec(),
+    async run(n: number) {
+      return Math.round(n);
+    },
+  },
+  {
+    name: 'cos',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.cos(n);
+    },
+  },
+  {
     name: 'csrlin',
     paramTypeSpecs: [],
     returnTypeSpec: longSpec(),
     async run({platform}: RunContext) {
       return (await platform.getCursorPosition()).y + 1;
+    },
+  },
+  {
+    name: 'fix',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: longSpec(),
+    async run(n: number) {
+      return Math.sign(n) * Math.floor(Math.abs(n));
     },
   },
   {
@@ -100,6 +149,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: integerSpec(),
     async run(start: number, haystack: string, needle: string) {
       return haystack.indexOf(needle, Math.floor(start) - 1) + 1;
+    },
+  },
+  {
+    name: 'int',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: longSpec(),
+    async run(n: number) {
+      return Math.floor(n);
     },
   },
   {
@@ -165,6 +222,15 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'peek',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: longSpec(),
+    async run() {
+      // STUB
+      return 0;
+    },
+  },
+  {
     name: 'pos',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: longSpec(),
@@ -180,14 +246,16 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
       return s.substr(Math.max(0, s.length - Math.floor(n)));
     },
   },
-  {
-    name: 'rnd',
-    paramTypeSpecs: [],
-    returnTypeSpec: doubleSpec(),
-    async run() {
-      return Math.random();
+  ...overload<BuiltinFn>(
+    {
+      name: 'rnd',
+      returnTypeSpec: doubleSpec(),
+      async run() {
+        return Math.random();
+      },
     },
-  },
+    [[], [longSpec()]]
+  ),
   {
     name: 'rtrim$',
     paramTypeSpecs: [stringSpec()],
@@ -197,11 +265,43 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'sgn',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: longSpec(),
+    async run(n: number) {
+      return Math.sign(n);
+    },
+  },
+  {
+    name: 'sin',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.sin(n);
+    },
+  },
+  {
+    name: 'spc',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return ' '.repeat(Math.floor(n));
+    },
+  },
+  {
     name: 'space$',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
       return ' '.repeat(Math.floor(n));
+    },
+  },
+  {
+    name: 'sqr',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.sqrt(n);
     },
   },
   {
@@ -222,6 +322,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
       col = (Math.max(1, Math.floor(col)) - 1) % cols;
       await platform.moveCursorTo(col, x <= col ? y : y + 1);
       return '';
+    },
+  },
+  {
+    name: 'tan',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.tan(n);
     },
   },
   {
@@ -281,17 +389,32 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
 export const BUILTIN_SUBS: Array<BuiltinSub> = [
   ...overload(
     {
-      name: 'randomize',
-      async run() {},
+      name: 'cls',
+      async run(...args: Array<any>) {
+        const {platform} = args.pop() as RunContext;
+        await platform.clearScreen();
+      },
     },
     [[], [longSpec()]]
   ),
   ...overload(
     {
-      name: 'cls',
-      async run(...args: Array<any>) {
-        const {platform} = args.pop() as RunContext;
-        await platform.clearScreen();
+      name: 'color',
+      async run() {
+        // STUB
+      },
+    },
+    [
+      [longSpec()],
+      [longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec()],
+    ]
+  ),
+  ...overload(
+    {
+      name: '__def_seg',
+      async run() {
+        // STUB
       },
     },
     [[], [longSpec()]]
@@ -325,6 +448,59 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       [longSpec(), longSpec(), longSpec(), longSpec(), longSpec()],
     ]
   ),
+  {
+    name: 'play',
+    paramTypeSpecs: [stringSpec()],
+    async run() {
+      // STUB
+    },
+  },
+  {
+    name: 'poke',
+    paramTypeSpecs: [longSpec(), longSpec()],
+    async run() {
+      // STUB
+    },
+  },
+  ...overload(
+    {
+      name: 'randomize',
+      async run() {
+        // STUB
+      },
+    },
+    [[], [longSpec()]]
+  ),
+  ...overload(
+    {
+      name: 'screen',
+      async run() {
+        // STUB
+      },
+    },
+    [
+      [longSpec()],
+      [longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec()],
+      [longSpec(), longSpec(), longSpec(), longSpec()],
+    ]
+  ),
+  ...overload(
+    {
+      name: '__view_print',
+      async run() {
+        // STUB
+      },
+    },
+    [[], [longSpec(), longSpec()]]
+  ),
+  {
+    name: 'width',
+    paramTypeSpecs: [longSpec(), longSpec()],
+    async run() {
+      // STUB
+    },
+  },
 ];
 
 /** Helper function to generate multiple signatures that map to the same built-in proc. */

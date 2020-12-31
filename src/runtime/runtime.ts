@@ -113,15 +113,17 @@ export default class Runtime {
             );
           }
           let [integralFormat, fractionFormat] = token.value.split('.');
+          // Not supporting commas yet.
+          const integralFormatLength = integralFormat.replace(/,/, '').length;
           if (fractionFormat) {
             const formattedValue =
-              `${Math.floor(nextArg.value)}`.padStart(integralFormat.length) +
+              `${Math.floor(nextArg.value)}`.padStart(integralFormatLength) +
               '.' +
               nextArg.value.toFixed(fractionFormat.length).split('.')[1];
             pieces.push(formattedValue);
           } else {
             const formattedValue =
-              nextArg.value.toFixed(0).padStart(integralFormat.length) +
+              nextArg.value.toFixed(0).padStart(integralFormatLength) +
               (token.value.indexOf('.') >= 0 ? '.' : '');
             pieces.push(formattedValue);
           }
@@ -147,7 +149,7 @@ export default class Runtime {
   }
 
   private readonly printFormatStringLexer = moo.compile({
-    NUMBER: /#*\.#+|#+/,
+    NUMBER: /(?:[#,])*\.#+|[#,]+/,
     STRING: '&',
     LITERAL: {
       match: /[^.#&]+/,
