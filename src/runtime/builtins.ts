@@ -233,6 +233,16 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
     },
     [[], [longSpec()]]
   ),
+  ...overload(
+    {
+      name: 'cls',
+      async run(...args: Array<any>) {
+        const {platform} = args.pop() as RunContext;
+        platform.clearScreen();
+      },
+    },
+    [[], [longSpec()]]
+  ),
 ];
 
 /** Helper function to generate multiple signatures that map to the same built-in proc. */

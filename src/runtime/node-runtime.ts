@@ -1,8 +1,8 @@
 import {CompiledModule} from './compiled-code';
 import Executor from './executor';
-import {RuntimePlatform} from './runtime';
+import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
 
-export class NodePlatform implements RuntimePlatform {
+export class NodePlatform extends AnsiTerminalRuntimPlatform {
   print(s: string) {
     process.stdout.write(s);
   }

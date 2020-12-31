@@ -4,11 +4,22 @@ import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin, RunContext} from './builtins';
 import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
 
 /** Interface for platform-specific runtime functionality. */
-export interface RuntimePlatform {
+export abstract class RuntimePlatform {
   /** Print a string to stdout. */
-  print(s: string): void;
+  abstract print(s: string): void;
   /** Reads a line of text from stdin. */
-  inputLine(): Promise<string>;
+  abstract inputLine(): Promise<string>;
+
+  // Text mode screen manipulation.
+
+  /** Move cursor to the specified location. */
+  abstract moveCursorTo(x: number, y: number): void;
+  /** Get current cursor position. */
+  // getCursorPosition(): Promise<{x: number; y: number}>;
+  /** Get current cursor position. */
+  // setCursorVisibility(isCursorVisible: boolean): void;
+  /** Clear the screen. */
+  abstract clearScreen(): void;
 }
 
 /** Runtime support library.
