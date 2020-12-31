@@ -11,6 +11,8 @@ import {
   CondLoopStmt,
   ConstStmt,
   DataStmt,
+  DataTypeExpr,
+  DataTypeExprType,
   DefTypeStmt,
   DimStmt,
   DimType,
@@ -44,8 +46,6 @@ import {
   StmtType,
   SubscriptExpr,
   SwapStmt,
-  DataTypeExpr,
-  DataTypeExprType,
   Udt,
   UnaryOp,
   UnaryOpExpr,
@@ -78,7 +78,7 @@ import {
   typeSpecName,
   UdtTypeSpec,
 } from '../lib/types';
-import {BuiltinFn, lookupBuiltinFn} from '../runtime/runtime';
+import {BuiltinFn, lookupBuiltinFn} from '../runtime/builtins';
 
 /** Map from variable type declaration suffix to the corresponding type spec. */
 const TYPE_SUFFIX_MAP: {[key: string]: ElementaryTypeSpec} = Object.freeze({
