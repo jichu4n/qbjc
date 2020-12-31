@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {SourceNode} from 'source-map';
-import {FnDefType, isArray, isUdt} from '../lib/types';
+import {ProcDefType, isArray, isUdt} from '../lib/types';
 import {
   AssignStmt,
   AstNodeBase,
@@ -37,7 +37,6 @@ import {
   MemberExpr,
   Module,
   NextStmt,
-  NopStmt,
   PrintStmt,
   Proc,
   ReadStmt,
@@ -733,15 +732,6 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     return new SourceNode();
   }
 
-  visitNopStmt(node: NopStmt): SourceNode {
-    const {exprs} = node;
-    return exprs
-      ? this.createStmtSourceNode(node, () =>
-          exprs.map((expr) => [this.accept(expr), '; '])
-        )
-      : new SourceNode();
-  }
-
   visitDataStmt(node: DataStmt): SourceNode {
     return this.createSourceNode(
       node,
@@ -962,12 +952,12 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     }
 
     const executeProcCodePrefixMap = {
-      [FnDefType.BUILTIN]:
-        'ctx.runtime.executeBuiltinFn(' +
+      [ProcDefType.BUILTIN]:
+        'ctx.runtime.executeBuiltinProc(' +
         `'${node.name}', ${JSON.stringify(
           node.argExprs.map(({typeSpec}) => typeSpec!)
         )}`,
-      [FnDefType.MODULE]: `ctx.executeProc(ctx, '${node.name}'`,
+      [ProcDefType.MODULE]: `ctx.executeProc(ctx, '${node.name}'`,
     };
 
     return this.createSourceNode(

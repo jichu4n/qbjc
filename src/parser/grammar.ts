@@ -60,7 +60,6 @@ declare var DEFSNG: any;
 declare var DEFDBL: any;
 declare var DEFLNG: any;
 declare var DEFSTR: any;
-declare var RANDOMIZE: any;
 declare var DATA: any;
 declare var READ: any;
 declare var RESTORE: any;
@@ -140,7 +139,6 @@ import {
   InputType,
   DefTypeStmt,
   DefTypeRange,
-  NopStmt,
   DataStmt,
   ReadStmt,
   RestoreStmt,
@@ -188,14 +186,6 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
     op: id($1).type.toLowerCase(),
     rightExpr: $2,
     ...useLoc(id($1)),
-  };
-}
-
-function buildNopStmt(node: Token | AstNode, exprs?: Array<Expr>): NopStmt {
-  return {
-    type: StmtType.NOP,
-    exprs,
-    ...useLoc(node),
   };
 }
 
@@ -410,7 +400,6 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["printStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["inputStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["defTypeStmt"], "postprocess": id},
-    {"name": "nonLabelStmt", "symbols": ["nopStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["restoreStmt"], "postprocess": id},
@@ -889,7 +878,6 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
-    {"name": "nopStmt", "symbols": [(lexer.has("RANDOMIZE") ? {type: "RANDOMIZE"} : RANDOMIZE), "expr"], "postprocess": ([$1, $2]) => buildNopStmt($1, [$2])},
     {"name": "dataStmt$ebnf$1", "symbols": []},
     {"name": "dataStmt$ebnf$1$subexpression$1", "symbols": ["dataItem", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
     {"name": "dataStmt$ebnf$1", "symbols": ["dataStmt$ebnf$1", "dataStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},

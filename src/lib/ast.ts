@@ -4,7 +4,7 @@ import {VarSymbol, VarSymbolTable} from './symbol-table';
 import {
   DataTypeSpec,
   ElementaryTypeSpec,
-  FnDefType,
+  ProcDefType,
   ProcType,
   UdtTypeSpec,
 } from './types';
@@ -131,7 +131,6 @@ export type Stmt =
   | PrintStmt
   | InputStmt
   | DefTypeStmt
-  | NopStmt
   | DataStmt
   | ReadStmt
   | RestoreStmt;
@@ -159,7 +158,6 @@ export enum StmtType {
   PRINT = 'print',
   INPUT = 'input',
   DEF_TYPE = 'defType',
-  NOP = 'nop',
   DATA = 'data',
   READ = 'read',
   RESTORE = 'restore',
@@ -369,7 +367,7 @@ export interface CallStmt extends AstNodeBase {
    *
    * Populated during semantic analysis.
    */
-  fnDefType?: FnDefType;
+  fnDefType?: ProcDefType;
 }
 
 export interface ExitProcStmt extends AstNodeBase {
@@ -388,11 +386,6 @@ export interface SwapStmt extends AstNodeBase {
 }
 
 /** An unimplemented statement that we can ignore for codegen purposes. */
-export interface NopStmt extends AstNodeBase {
-  type: StmtType.NOP;
-  exprs?: Array<Expr>;
-}
-
 export enum PrintSep {
   COMMA = 'comma',
   SEMICOLON = 'semicolon',
@@ -505,7 +498,7 @@ export interface FnCallExpr extends ExprBase {
    *
    * Populated during semantic analysis.
    */
-  fnDefType?: FnDefType;
+  fnDefType?: ProcDefType;
 }
 
 export enum BinaryOp {
@@ -594,7 +587,6 @@ export abstract class AstVisitor<T = any> {
   protected abstract visitPrintStmt(node: PrintStmt): T;
   protected abstract visitInputStmt(node: InputStmt): T;
   protected abstract visitDefTypeStmt(node: DefTypeStmt): T;
-  protected abstract visitNopStmt(node: NopStmt): T;
   protected abstract visitDataStmt(node: DataStmt): T;
   protected abstract visitReadStmt(node: ReadStmt): T;
   protected abstract visitRestoreStmt(node: RestoreStmt): T;
@@ -657,8 +649,6 @@ export abstract class AstVisitor<T = any> {
         return this.visitInputStmt(node);
       case StmtType.DEF_TYPE:
         return this.visitDefTypeStmt(node);
-      case StmtType.NOP:
-        return this.visitNopStmt(node);
       case StmtType.DATA:
         return this.visitDataStmt(node);
       case StmtType.READ:

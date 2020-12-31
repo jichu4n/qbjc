@@ -35,7 +35,6 @@ import {
   MemberExpr,
   Module,
   NextStmt,
-  NopStmt,
   PrintStmt,
   Proc,
   ReadStmt,
@@ -62,7 +61,7 @@ import {
   DataTypeSpec,
   doubleSpec,
   ElementaryTypeSpec,
-  FnDefType,
+  ProcDefType,
   integerSpec,
   isArray,
   isElementaryType,
@@ -78,7 +77,13 @@ import {
   typeSpecName,
   UdtTypeSpec,
 } from '../lib/types';
-import {BuiltinFn, lookupBuiltinFn} from '../runtime/builtins';
+import {
+  BuiltinFn,
+  BuiltinSub,
+  BUILTIN_FNS,
+  BUILTIN_SUBS,
+  lookupBuiltin,
+} from '../runtime/builtins';
 
 /** Map from variable type declaration suffix to the corresponding type spec. */
 const TYPE_SUFFIX_MAP: {[key: string]: ElementaryTypeSpec} = Object.freeze({
@@ -94,14 +99,24 @@ const DEFAULT_DIMENSION_SPEC: ArrayDimensionSpec = [0, 10];
 
 type ResolvedFn =
   | {
-      fnDefType: FnDefType.BUILTIN;
-      builtinFn: BuiltinFn;
+      defType: ProcDefType.BUILTIN;
+      builtinProc: BuiltinFn;
       returnTypeSpec: DataTypeSpec;
     }
   | {
-      fnDefType: FnDefType.MODULE;
+      defType: ProcDefType.MODULE;
       proc: Proc;
       returnTypeSpec: DataTypeSpec | null;
+    };
+
+type ResolvedSub =
+  | {
+      defType: ProcDefType.BUILTIN;
+      builtinProc: BuiltinSub;
+    }
+  | {
+      defType: ProcDefType.MODULE;
+      proc: Proc;
     };
 
 /** Semantic analysis pass.
@@ -505,21 +520,21 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   visitCallStmt(node: CallStmt): void {
     this.acceptAll(node.argExprs);
-    const proc = lookupSymbol(this.module.procs, node.name);
-    if (!proc || proc.type !== ProcType.SUB) {
+    const resolvedSub = this.lookupSub(
+      node.name,
+      node.argExprs.map(({typeSpec}) => typeSpec!)
+    );
+    if (
+      !resolvedSub ||
+      (resolvedSub.defType === ProcDefType.MODULE &&
+        resolvedSub.proc.type !== ProcType.SUB)
+    ) {
       this.throwError(
         `${procTypeName(ProcType.SUB)} not found: "${node.name}"`,
         node
       );
     }
-    this.visitProcCall(
-      {
-        fnDefType: FnDefType.MODULE,
-        proc,
-        returnTypeSpec: null,
-      },
-      node
-    );
+    this.visitProcCall(resolvedSub, node);
   }
 
   visitExitProcStmt(node: ExitProcStmt): void {
@@ -625,12 +640,6 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
   }
 
-  visitNopStmt(node: NopStmt): void {
-    if (node.exprs) {
-      this.acceptAll(node.exprs);
-    }
-  }
-
   visitDataStmt(node: DataStmt): void {
     if (this.currentProc) {
       this.throwError(`DATA statement must be at module level`, node);
@@ -712,7 +721,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     );
     if (resolvedFn) {
       if (
-        resolvedFn.fnDefType === FnDefType.MODULE &&
+        resolvedFn.defType === ProcDefType.MODULE &&
         resolvedFn.proc.type !== ProcType.FN
       ) {
         this.throwError(
@@ -899,20 +908,23 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     node.typeSpec = fieldSpec.typeSpec;
   }
 
-  private visitProcCall(resolvedFn: ResolvedFn, node: FnCallExpr | CallStmt) {
+  private visitProcCall(
+    resolvedProc: ResolvedFn | ResolvedSub,
+    node: FnCallExpr | CallStmt
+  ) {
     let paramTypeSpecs: Array<DataTypeSpec>;
-    switch (resolvedFn.fnDefType) {
-      case FnDefType.BUILTIN:
-        paramTypeSpecs = resolvedFn.builtinFn.paramTypeSpecs;
+    switch (resolvedProc.defType) {
+      case ProcDefType.BUILTIN:
+        paramTypeSpecs = resolvedProc.builtinProc.paramTypeSpecs;
         break;
-      case FnDefType.MODULE:
-        paramTypeSpecs = resolvedFn.proc.paramSymbols!.map(
+      case ProcDefType.MODULE:
+        paramTypeSpecs = resolvedProc.proc.paramSymbols!.map(
           ({typeSpec}) => typeSpec!
         );
         break;
       default:
         this.throwError(
-          `Unknown FnDefType: ${JSON.stringify(resolvedFn)}`,
+          `Unknown FnDefType: ${JSON.stringify(resolvedProc)}`,
           node
         );
     }
@@ -936,7 +948,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
               argTypeSpec.elementTypeSpec
             ) ||
               // Allow builtins to accept arrays of any element type.
-              resolvedFn.fnDefType === FnDefType.BUILTIN))
+              resolvedProc.defType === ProcDefType.BUILTIN))
         )
       ) {
         this.throwError(
@@ -947,7 +959,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         );
       }
     }
-    node.fnDefType = resolvedFn.fnDefType;
+    node.fnDefType = resolvedProc.defType;
   }
 
   /** Computes the output numeric type after an arithmetic operation. */
@@ -1108,20 +1120,44 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     const proc = lookupSymbol(this.module.procs, name);
     if (proc) {
       return {
-        fnDefType: FnDefType.MODULE,
+        defType: ProcDefType.MODULE,
         proc,
         returnTypeSpec: proc.type === ProcType.FN ? proc.returnTypeSpec! : null,
       };
     }
-    const builtinFn = lookupBuiltinFn(name, argTypeSpecs, {
+    const builtinProc = lookupBuiltin(BUILTIN_FNS, name, argTypeSpecs, {
       // This allows us to throw a more useful error message in visitProcCall().
       shouldReturnIfArgTypeMismatch: true,
     });
-    if (builtinFn) {
+    if (builtinProc) {
       return {
-        fnDefType: FnDefType.BUILTIN,
-        builtinFn,
-        returnTypeSpec: builtinFn.returnTypeSpec,
+        defType: ProcDefType.BUILTIN,
+        builtinProc,
+        returnTypeSpec: builtinProc.returnTypeSpec,
+      };
+    }
+    return null;
+  }
+
+  private lookupSub(
+    name: string,
+    argTypeSpecs: Array<DataTypeSpec>
+  ): ResolvedSub | null {
+    const proc = lookupSymbol(this.module.procs, name);
+    if (proc) {
+      return {
+        defType: ProcDefType.MODULE,
+        proc,
+      };
+    }
+    const builtinProc = lookupBuiltin(BUILTIN_SUBS, name, argTypeSpecs, {
+      // This allows us to throw a more useful error message in visitProcCall().
+      shouldReturnIfArgTypeMismatch: true,
+    });
+    if (builtinProc) {
+      return {
+        defType: ProcDefType.BUILTIN,
+        builtinProc,
       };
     }
     return null;
@@ -1136,8 +1172,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private setUpDefTypeMap() {
-    for (const c of 'abcdefghijklmnopqrstuvwxyz') {
-      this.defTypeMap[c] = singleSpec();
+    for (let c = 'a'.charCodeAt(0); c <= 'z'.charCodeAt(0); ++c) {
+      this.defTypeMap[String.fromCharCode(c)] = singleSpec();
     }
     this.acceptAll(_.filter(this.module.stmts, ['type', StmtType.DEF_TYPE]));
   }

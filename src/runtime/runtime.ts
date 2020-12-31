@@ -1,6 +1,6 @@
 import moo, {Token} from 'moo';
 import {DataTypeSpec, isNumeric, isString} from '../lib/types';
-import {lookupBuiltinFn} from './builtins';
+import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin} from './builtins';
 import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
 
 /** Interface for platform-specific runtime functionality. */
@@ -19,16 +19,18 @@ export interface RuntimePlatform {
 export default class Runtime {
   constructor(private readonly platform: RuntimePlatform) {}
 
-  async executeBuiltinFn(
+  async executeBuiltinProc(
     name: string,
     argTypeSpecs: Array<DataTypeSpec>,
     ...args: Array<Ptr>
   ) {
-    const builtinFn = lookupBuiltinFn(name, argTypeSpecs);
-    if (!builtinFn) {
-      throw new Error(`No matching built-in function found: "${name}"`);
+    const builtinProc =
+      lookupBuiltin(BUILTIN_FNS, name, argTypeSpecs) ||
+      lookupBuiltin(BUILTIN_SUBS, name, argTypeSpecs);
+    if (!builtinProc) {
+      throw new Error(`No matching built-in procedure found: "${name}"`);
     }
-    return await builtinFn.run(...args.map((ptr) => ptr[0][ptr[1]]));
+    return await builtinProc.run(...args.map((ptr) => ptr[0][ptr[1]]));
   }
 
   print(formatString: string | null, ...args: Array<PrintArg>) {

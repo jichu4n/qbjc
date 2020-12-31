@@ -7,22 +7,27 @@ import {
   integerSpec,
   isArray,
   longSpec,
+  ProcType,
   stringSpec,
 } from '../lib/types';
 import QbArray from './qb-array';
 
+type RunFn = (...args: Array<any>) => Promise<any>;
+
 /** Built-in function definition. */
-export interface BuiltinFn<
-  RunFnT extends (...args: Array<any>) => Promise<any> = (
-    ...args: Array<any>
-  ) => Promise<any>
-> {
+export interface BuiltinProc {
   name: string;
   paramTypeSpecs: Array<DataTypeSpec>;
-  returnTypeSpec: DataTypeSpec;
-  run: RunFnT;
+  run: RunFn;
 }
 
+export interface BuiltinFn extends BuiltinProc {
+  returnTypeSpec: DataTypeSpec;
+}
+
+export interface BuiltinSub extends BuiltinProc {}
+
+/** Built-in functions. */
 export const BUILTIN_FNS: Array<BuiltinFn> = [
   {
     name: 'chr$',
@@ -203,7 +208,17 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
   },
 ];
 
-export function lookupBuiltinFn(
+/** Simple statements implemented as built-in subs. */
+export const BUILTIN_SUBS: Array<BuiltinSub> = [
+  {
+    name: 'randomize',
+    paramTypeSpecs: [longSpec()],
+    async run() {},
+  },
+];
+
+export function lookupBuiltin<T extends BuiltinProc>(
+  procs: Array<T>,
   name: string,
   argTypeSpecs: Array<DataTypeSpec>,
   {
@@ -211,8 +226,8 @@ export function lookupBuiltinFn(
   }: {
     shouldReturnIfArgTypeMismatch?: boolean;
   } = {}
-) {
-  const builtinFnsMatchingName = lookupSymbols(BUILTIN_FNS, name);
+): T | null {
+  const builtinFnsMatchingName = lookupSymbols(procs, name);
   const builtinFn = builtinFnsMatchingName.find(
     ({paramTypeSpecs}) =>
       paramTypeSpecs.length === argTypeSpecs.length &&

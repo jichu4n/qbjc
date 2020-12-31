@@ -42,7 +42,6 @@ export enum Keywords {
   PRINT = 'print',
   READ = 'read',
   REM = 'rem',
-  RANDOMIZE = 'randomize',
   RESTORE = 'restore',
   RETURN = 'return',
   SELECT = 'select',

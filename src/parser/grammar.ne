@@ -60,7 +60,6 @@ import {
   InputType,
   DefTypeStmt,
   DefTypeRange,
-  NopStmt,
   DataStmt,
   ReadStmt,
   RestoreStmt,
@@ -108,14 +107,6 @@ function buildUnaryOpExpr([$1, $2]: Array<any>): UnaryOpExpr {
     op: id($1).type.toLowerCase(),
     rightExpr: $2,
     ...useLoc(id($1)),
-  };
-}
-
-function buildNopStmt(node: Token | AstNode, exprs?: Array<Expr>): NopStmt {
-  return {
-    type: StmtType.NOP,
-    exprs,
-    ...useLoc(node),
   };
 }
 
@@ -296,7 +287,6 @@ nonLabelStmt ->
     | printStmt  {% id %}
     | inputStmt  {% id %}
     | defTypeStmt  {% id %}
-    | nopStmt  {% id %}
     | dataStmt  {% id %}
     | readStmt  {% id %}
     | restoreStmt  {% id %}
@@ -789,9 +779,6 @@ defTypeRange ->
           ...useLoc($1),
         })
     %}
-
-nopStmt ->
-      %RANDOMIZE expr  {% ([$1, $2]) => buildNopStmt($1, [$2]) %}
 
 dataStmt ->
     %DATA (dataItem %COMMA):* dataItem  {%

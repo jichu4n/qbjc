@@ -46,6 +46,9 @@ FOR i = 1 TO 3
     PRINT "Sex$ = "; Sex$
 NEXT
 
+' Test built-in SUBs.
+RANDOMIZE TIMER
+
 ' EXPECT {
 '   "io": [
 '     {"output": "Binary number = "},

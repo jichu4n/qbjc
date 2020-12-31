@@ -189,8 +189,8 @@ export function procTypeName(procType: ProcType) {
   return NAMES[procType];
 }
 
-/** The type of a function definition. */
-export enum FnDefType {
+/** The type of a procedure definition. */
+export enum ProcDefType {
   /** Built-in function. */
   BUILTIN = 'builtin',
   /** User-defined function in the current module. */
