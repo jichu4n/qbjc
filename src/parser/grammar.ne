@@ -291,8 +291,7 @@ nonLabelStmt ->
     | dataStmt  {% id %}
     | readStmt  {% id %}
     | restoreStmt  {% id %}
-    | locateStmt  {% id %}
-    | colorStmt  {% id %}
+    | callStmtWithOptParams  {% id %}
     | defSegStmt  {% id %}
     | viewPrintStmt  {% id %}
 
@@ -813,11 +812,11 @@ restoreStmt ->
             ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
     %}
 
-locateStmt ->
-    %LOCATE (expr:? %COMMA):* expr  {%
+callStmtWithOptParams ->
+    (%LOCATE | %COLOR) (expr:? %COMMA):* expr  {%
         ([$1, $2, $3]): CallStmt => ({
           type: StmtType.CALL,
-          name: 'locate',
+          name: $1[0].value,
           argExprs: [
             ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
               type: ExprType.LITERAL,
@@ -826,24 +825,7 @@ locateStmt ->
             }) : []),
             $3,
           ],
-          ...useLoc($1),
-        })
-    %}
-
-colorStmt ->
-    %COLOR (expr:? %COMMA):* expr  {%
-        ([$1, $2, $3]): CallStmt => ({
-          type: StmtType.CALL,
-          name: 'color',
-          argExprs: [
-            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
-              type: ExprType.LITERAL,
-              value: NaN,
-              ...useLoc($2_2),
-            }) : []),
-            $3,
-          ],
-          ...useLoc($1),
+          ...useLoc($1[0]),
         })
     %}
 

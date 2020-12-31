@@ -411,8 +411,7 @@ const grammar: Grammar = {
     {"name": "nonLabelStmt", "symbols": ["dataStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["readStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["restoreStmt"], "postprocess": id},
-    {"name": "nonLabelStmt", "symbols": ["locateStmt"], "postprocess": id},
-    {"name": "nonLabelStmt", "symbols": ["colorStmt"], "postprocess": id},
+    {"name": "nonLabelStmt", "symbols": ["callStmtWithOptParams"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["defSegStmt"], "postprocess": id},
     {"name": "nonLabelStmt", "symbols": ["viewPrintStmt"], "postprocess": id},
     {"name": "labelStmt", "symbols": [(lexer.has("NUMERIC_LITERAL") ? {type: "NUMERIC_LITERAL"} : NUMERIC_LITERAL)], "postprocess": 
@@ -919,15 +918,17 @@ const grammar: Grammar = {
         ([$1, $2]): RestoreStmt =>
             ({ type: StmtType.RESTORE, destLabel: $2, ...useLoc($1) })
             },
-    {"name": "locateStmt$ebnf$1", "symbols": []},
-    {"name": "locateStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
-    {"name": "locateStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "locateStmt$ebnf$1$subexpression$1", "symbols": ["locateStmt$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
-    {"name": "locateStmt$ebnf$1", "symbols": ["locateStmt$ebnf$1", "locateStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "locateStmt", "symbols": [(lexer.has("LOCATE") ? {type: "LOCATE"} : LOCATE), "locateStmt$ebnf$1", "expr"], "postprocess": 
+    {"name": "callStmtWithOptParams$subexpression$1", "symbols": [(lexer.has("LOCATE") ? {type: "LOCATE"} : LOCATE)]},
+    {"name": "callStmtWithOptParams$subexpression$1", "symbols": [(lexer.has("COLOR") ? {type: "COLOR"} : COLOR)]},
+    {"name": "callStmtWithOptParams$ebnf$1", "symbols": []},
+    {"name": "callStmtWithOptParams$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
+    {"name": "callStmtWithOptParams$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "callStmtWithOptParams$ebnf$1$subexpression$1", "symbols": ["callStmtWithOptParams$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
+    {"name": "callStmtWithOptParams$ebnf$1", "symbols": ["callStmtWithOptParams$ebnf$1", "callStmtWithOptParams$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "callStmtWithOptParams", "symbols": ["callStmtWithOptParams$subexpression$1", "callStmtWithOptParams$ebnf$1", "expr"], "postprocess": 
         ([$1, $2, $3]): CallStmt => ({
           type: StmtType.CALL,
-          name: 'locate',
+          name: $1[0].value,
           argExprs: [
             ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
               type: ExprType.LITERAL,
@@ -936,27 +937,7 @@ const grammar: Grammar = {
             }) : []),
             $3,
           ],
-          ...useLoc($1),
-        })
-            },
-    {"name": "colorStmt$ebnf$1", "symbols": []},
-    {"name": "colorStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
-    {"name": "colorStmt$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "colorStmt$ebnf$1$subexpression$1", "symbols": ["colorStmt$ebnf$1$subexpression$1$ebnf$1", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA)]},
-    {"name": "colorStmt$ebnf$1", "symbols": ["colorStmt$ebnf$1", "colorStmt$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "colorStmt", "symbols": [(lexer.has("COLOR") ? {type: "COLOR"} : COLOR), "colorStmt$ebnf$1", "expr"], "postprocess": 
-        ([$1, $2, $3]): CallStmt => ({
-          type: StmtType.CALL,
-          name: 'color',
-          argExprs: [
-            ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
-              type: ExprType.LITERAL,
-              value: NaN,
-              ...useLoc($2_2),
-            }) : []),
-            $3,
-          ],
-          ...useLoc($1),
+          ...useLoc($1[0]),
         })
             },
     {"name": "defSegStmt$ebnf$1$subexpression$1", "symbols": [(lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"]},

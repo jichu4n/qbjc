@@ -13,6 +13,7 @@ import {
 import {Ptr} from './compiled-code';
 import QbArray from './qb-array';
 import Runtime, {RuntimePlatform} from './runtime';
+import legacyEncoding from 'legacy-encoding';
 
 type RunFn = (...args: Array<any>) => Promise<any>;
 
@@ -55,11 +56,22 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'asc',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: longSpec(),
+    async run(s: string) {
+      if (s.length === 0) {
+        throw new Error('Expected non-empty string in ASC()');
+      }
+      return legacyEncoding.encode(s[0], 'cp437')[0];
+    },
+  },
+  {
     name: 'chr$',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return (String.fromCodePoint ?? String.fromCharCode)(Math.floor(n));
+      return legacyEncoding.decode(Buffer.from([Math.floor(n)]), 'cp437');
     },
   },
   {
