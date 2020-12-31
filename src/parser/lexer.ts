@@ -86,6 +86,16 @@ const mooLexer = moo.states(
         value: (text) => text.substr(1, text.length - 2),
       },
       NUMERIC_LITERAL: /(?:\d*\.\d+|\d+)/,
+      HEX_LITERAL: {
+        match: /&[hH][\da-fA-F]+&?/,
+        type: () => 'NUMERIC_LITERAL',
+        value: (text) => `${parseInt(text.substr(2), 16)}`,
+      },
+      OCT_LITERAL: {
+        match: /&[oO]?[0-7]+&?/,
+        type: () => 'NUMERIC_LITERAL',
+        value: (text) => `${parseInt(text.match(/[0-7]+/)![0], 8)}`,
+      },
 
       COLON: ':',
       SEMICOLON: ';',

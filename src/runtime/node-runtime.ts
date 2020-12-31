@@ -1,7 +1,7 @@
 import {CompiledModule} from './compiled-code';
 import Executor from './executor';
 import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
-import {resolve} from 'path';
+import ansiEscapes from 'ansi-escapes';
 
 export class NodePlatform extends AnsiTerminalRuntimPlatform {
   print(s: string) {
@@ -61,7 +61,7 @@ export class NodePlatform extends AnsiTerminalRuntimPlatform {
           reject();
         }
       });
-      process.stdout.write('\x1b[6n');
+      process.stdout.write(ansiEscapes.cursorGetPosition);
     }).finally(() => {
       process.stdin.setRawMode(false);
       process.stdin.pause();
