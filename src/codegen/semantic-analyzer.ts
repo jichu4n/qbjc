@@ -277,63 +277,73 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
         } else if (
           resolvedSymbol.varScope === VarScope.GLOBAL &&
           node.dimType === DimType.SHARED &&
-          !_.isEqual(typeSpec, resolvedSymbol.typeSpec)
+          !(
+            areMatchingSingularTypes(typeSpec, resolvedSymbol.typeSpec) ||
+            (isArray(typeSpec) &&
+              isArray(resolvedSymbol.typeSpec) &&
+              areMatchingSingularTypes(
+                typeSpec.elementTypeSpec,
+                resolvedSymbol.typeSpec.elementTypeSpec
+              ))
+          )
         ) {
           this.throwError(
             `Variable already defined in global scope: "${varDecl.name}"`,
             node
           );
         }
-      }
-      let symbol: VarSymbol;
-      switch (node.dimType) {
-        case DimType.SHARED:
-          // If this symbol is already defined as a local var at the module level, promote it to
-          // global.
-          const moduleLocalSymbol = lookupSymbol(
-            this.module.localSymbols!,
-            varDecl.name
-          );
-          if (moduleLocalSymbol) {
-            symbol = moduleLocalSymbol;
-            this.module.localSymbols!.splice(
-              this.module.localSymbols!.indexOf(moduleLocalSymbol),
-              1
+        varDecl.symbol = resolvedSymbol;
+      } else {
+        let symbol: VarSymbol;
+        switch (node.dimType) {
+          case DimType.SHARED:
+            // If this symbol is already defined as a local var at the module level, promote it to
+            // global.
+            const moduleLocalSymbol = lookupSymbol(
+              this.module.localSymbols!,
+              varDecl.name
             );
-            symbol.varScope = VarScope.GLOBAL;
-          } else {
+            if (moduleLocalSymbol) {
+              symbol = moduleLocalSymbol;
+              this.module.localSymbols!.splice(
+                this.module.localSymbols!.indexOf(moduleLocalSymbol),
+                1
+              );
+              symbol.varScope = VarScope.GLOBAL;
+            } else {
+              symbol = {
+                name: varDecl.name,
+                varType: VarType.VAR,
+                typeSpec,
+                varScope: VarScope.GLOBAL,
+              };
+            }
+            this.module.globalSymbols!.push(symbol);
+            break;
+          case DimType.LOCAL:
+            symbol = this.createLocalVarSymbol({
+              name: varDecl.name,
+              typeSpec,
+            });
+            this.addLocalSymbol(symbol);
+            break;
+          case DimType.STATIC:
             symbol = {
               name: varDecl.name,
-              varType: VarType.VAR,
+              varType: VarType.STATIC_VAR,
               typeSpec,
-              varScope: VarScope.GLOBAL,
+              varScope: VarScope.LOCAL,
             };
-          }
-          this.module.globalSymbols!.push(symbol);
-          break;
-        case DimType.LOCAL:
-          symbol = this.createLocalVarSymbol({
-            name: varDecl.name,
-            typeSpec,
-          });
-          this.addLocalSymbol(symbol);
-          break;
-        case DimType.STATIC:
-          symbol = {
-            name: varDecl.name,
-            varType: VarType.STATIC_VAR,
-            typeSpec,
-            varScope: VarScope.LOCAL,
-          };
-          this.addLocalSymbol(symbol);
-          break;
-        default:
-          this.throwError(
-            `Unknown DimType: ${JSON.stringify(node.dimType)}`,
-            node
-          );
+            this.addLocalSymbol(symbol);
+            break;
+          default:
+            this.throwError(
+              `Unknown DimType: ${JSON.stringify(node.dimType)}`,
+              node
+            );
+        }
+        varDecl.symbol = symbol;
       }
-      varDecl.symbol = symbol;
     }
   }
 

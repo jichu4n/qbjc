@@ -151,7 +151,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     name: 'rtrim$',
     paramTypeSpecs: [stringSpec()],
     returnTypeSpec: stringSpec(),
-    async run(s: string) {
+    async run(s: string, {args}: RunContext) {
       return s.trimEnd();
     },
   },
@@ -169,6 +169,15 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: stringSpec(),
     async run(n: number) {
       return `${n >= 0 ? ' ' : ''}${n}`;
+    },
+  },
+  {
+    name: 'tab',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run() {
+      // TODO
+      return '';
     },
   },
   {
@@ -250,12 +259,12 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
         const {platform} = args.pop() as RunContext;
         const [row, column, cursor] = args;
         if (Number.isFinite(row) && Number.isFinite(column)) {
-          await platform.moveCursorTo(Math.floor(column), Math.floor(row));
+          await platform.moveCursorTo(
+            Math.floor(column) - 1,
+            Math.floor(row) - 1
+          );
         } else {
           // TODO
-          throw new Error(
-            `Unsupported LOCATE arguments: both row and column expected`
-          );
         }
       },
     },

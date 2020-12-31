@@ -51,6 +51,7 @@ import {
   UnaryOpExpr,
   UncondLoopStmt,
   VarRefExpr,
+  DimType,
 } from '../lib/ast';
 import {VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {ExecutionDirectiveType, PrintArgType} from '../runtime/compiled-code';
@@ -229,6 +230,13 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
               `Mismatch types: expected array, got ${typeSpec.type}`,
               varDecl
             );
+          }
+          if (
+            node.dimType === DimType.SHARED &&
+            typeExpr.dimensionSpecExprs.length === 0
+          ) {
+            // SHARED statement only indicating scoping.
+            continue;
           }
           chunks.push(
             this.generateVarRefCode(varDecl, varDecl.symbol!),
@@ -937,7 +945,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
             argExpr,
             '[',
             this.accept(argExpr.udtExpr),
-            ', ',
+            '.values, ',
             `'${argExpr.fieldName}']`
           )
         );

@@ -354,13 +354,13 @@ varDecl ->
           ...useLoc($1),
         })
     %}
-    | %IDENTIFIER %LPAREN dimensionSpecExprs %RPAREN singularTypeExprOrDefault  {%
+    | %IDENTIFIER %LPAREN dimensionSpecExprs:? %RPAREN singularTypeExprOrDefault  {%
         ([$1, $2, $3, $4, $5]): VarDecl => ({
           name: $1.value,
           typeExpr: {
             type: DataTypeExprType.ARRAY,
             elementTypeExpr: $5,
-            dimensionSpecExprs: $3,
+            dimensionSpecExprs: $3 ?? [],
             ...useLoc($1),
           },
           ...useLoc($1),
@@ -823,6 +823,7 @@ locateStmt ->
             ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
               type: ExprType.LITERAL,
               value: NaN,
+              ...useLoc($2_2),
             }) : []),
             $3,
           ],

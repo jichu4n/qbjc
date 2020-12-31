@@ -465,13 +465,15 @@ const grammar: Grammar = {
           ...useLoc($1),
         })
             },
-    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "dimensionSpecExprs", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "singularTypeExprOrDefault"], "postprocess": 
+    {"name": "varDecl$ebnf$1", "symbols": ["dimensionSpecExprs"], "postprocess": id},
+    {"name": "varDecl$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "varDecl", "symbols": [(lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), (lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "varDecl$ebnf$1", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN), "singularTypeExprOrDefault"], "postprocess": 
         ([$1, $2, $3, $4, $5]): VarDecl => ({
           name: $1.value,
           typeExpr: {
             type: DataTypeExprType.ARRAY,
             elementTypeExpr: $5,
-            dimensionSpecExprs: $3,
+            dimensionSpecExprs: $3 ?? [],
             ...useLoc($1),
           },
           ...useLoc($1),
@@ -923,6 +925,7 @@ const grammar: Grammar = {
             ...($2 ? $2.map(([$2_1, $2_2]: Array<any>) => $2_1 ?? {
               type: ExprType.LITERAL,
               value: NaN,
+              ...useLoc($2_2),
             }) : []),
             $3,
           ],
