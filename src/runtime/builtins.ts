@@ -62,6 +62,31 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'inkey$',
+    paramTypeSpecs: [],
+    returnTypeSpec: stringSpec(),
+    async run({platform}: RunContext) {
+      const c = await platform.getChar();
+      return c ?? '';
+    },
+  },
+  {
+    name: 'input$',
+    paramTypeSpecs: [longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number, {platform}: RunContext) {
+      n = Math.floor(n);
+      const result: Array<string> = [];
+      while (result.length < n) {
+        const c = await platform.getChar();
+        if (c) {
+          result.push(c);
+        }
+      }
+      return result.join('');
+    },
+  },
+  {
     name: 'instr',
     paramTypeSpecs: [stringSpec(), stringSpec()],
     returnTypeSpec: longSpec(),

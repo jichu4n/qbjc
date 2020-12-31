@@ -1,6 +1,7 @@
 import {CompiledModule} from './compiled-code';
 import Executor from './executor';
 import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
+import {resolve} from 'path';
 
 export class NodePlatform extends AnsiTerminalRuntimPlatform {
   print(s: string) {
@@ -14,6 +15,31 @@ export class NodePlatform extends AnsiTerminalRuntimPlatform {
         process.stdin.pause();
         resolve(chunk.toString());
       });
+    });
+  }
+
+  async getChar(): Promise<string | null> {
+    // Based on https://stackoverflow.com/a/35688423/3401268
+    let result: string | null = null;
+    process.stdin.resume();
+    process.stdin.setRawMode(true);
+    const cleanUp = () => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+    };
+    const callbackFn = (chunk: Buffer) => {
+      result = chunk.toString()[0];
+      cleanUp();
+    };
+    process.stdin.once('data', callbackFn);
+    return new Promise<string | null>((resolve) => {
+      setTimeout(() => {
+        if (result === null) {
+          process.stdin.removeListener('data', callbackFn);
+          cleanUp();
+        }
+        resolve(result);
+      }, 10);
     });
   }
 

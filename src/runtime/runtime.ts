@@ -9,6 +9,11 @@ export abstract class RuntimePlatform {
   abstract print(s: string): void;
   /** Reads a line of text from stdin. */
   abstract inputLine(): Promise<string>;
+  /** Gets a single char from stdin, or return null if no pending input.
+   *
+   * (This is basically INKEY$.)
+   */
+  abstract getChar(): Promise<string | null>;
 
   // Text mode screen manipulation.
 
