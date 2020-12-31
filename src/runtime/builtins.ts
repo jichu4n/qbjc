@@ -412,8 +412,22 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
   ...overload(
     {
       name: 'color',
-      async run() {
-        // STUB
+      async run(...args: Array<any>) {
+        const {platform, runtime} = args.pop() as RunContext;
+        const getColorName = (n: number) => {
+          n = Math.floor(n);
+          if (n < 0 || n >= runtime.currentScreenModeConfig.colorMap.length) {
+            throw new Error(`Invalid color: ${n}`);
+          }
+          return runtime.currentScreenModeConfig.colorMap[n];
+        };
+        const [fg, bg] = args;
+        if (Number.isFinite(fg)) {
+          platform.setFgColor(getColorName(fg));
+        }
+        if (Number.isFinite(bg)) {
+          platform.setBgColor(getColorName(bg));
+        }
       },
     },
     [
@@ -486,8 +500,9 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
   ...overload(
     {
       name: 'screen',
-      async run() {
-        // STUB
+      async run(mode: number, ...args: Array<any>) {
+        const {runtime} = args.pop() as RunContext;
+        runtime.setScreenMode(Math.floor(mode));
       },
     },
     [

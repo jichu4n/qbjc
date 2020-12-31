@@ -2,6 +2,7 @@ import moo, {Token} from 'moo';
 import {DataTypeSpec, isNumeric, isString} from '../lib/types';
 import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin, RunContext} from './builtins';
 import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
+import ansiStyles from 'ansi-styles';
 
 /** Interface for platform-specific runtime functionality. */
 export abstract class RuntimePlatform {
@@ -17,17 +18,55 @@ export abstract class RuntimePlatform {
 
   // Text mode screen manipulation.
 
-  /** Move cursor to the specified location. */
+  /** Moves cursor to the specified location. */
   abstract moveCursorTo(x: number, y: number): Promise<void>;
-  /** Get current cursor position. */
+  /** Gets current cursor position. */
   abstract getCursorPosition(): Promise<{x: number; y: number}>;
-  /** Get the terminal size. */
+  /** Gets the terminal size. */
   abstract getScreenSize(): Promise<{rows: number; cols: number}>;
-  /** Show / hide cursor. */
+  /** Shows / hides cursor. */
   abstract setCursorVisibility(isCursorVisible: boolean): Promise<void>;
-  /** Clear the screen. */
+  /** Clears the screen. */
   abstract clearScreen(): Promise<void>;
+  /** Sets the foreground color. */
+  abstract setFgColor(colorName: ColorName): Promise<void>;
+  /** Sets the background color. */
+  abstract setBgColor(colorName: ColorName): Promise<void>;
 }
+
+export type ColorName = keyof ansiStyles.ForegroundColor;
+
+/** SCREEN mode definition. */
+export interface ScreenModeConfig {
+  mode: number;
+  textModeDimensions: Array<{rows: number; cols: number}>;
+  colorMap: Array<ColorName>;
+}
+
+export const SCREEN_MODE_CONFIGS: Array<ScreenModeConfig> = [
+  {
+    mode: 0,
+    textModeDimensions: [{rows: 80, cols: 25}],
+    colorMap: [
+      'black',
+      'blue',
+      'green',
+      'cyan',
+      'red',
+      'magenta',
+      'yellow', // Originally brown, which has no ANSI equivalent
+      'white',
+      'gray',
+      'blueBright',
+      'greenBright',
+      'cyanBright',
+      'redBright',
+      'magentaBright',
+      'yellowBright', // Originally yellow, but mapped to yellowBright to disambiguate from brown
+      'whiteBright',
+    ],
+  },
+];
 
 /** Runtime support library.
  *
@@ -276,4 +315,20 @@ export default class Runtime {
     COMMA: ',',
     STRING: /[^,\s]+/,
   });
+
+  setScreenMode(n: number) {
+    const screenMode = SCREEN_MODE_CONFIGS.find(({mode}) => mode === n);
+    if (!screenMode) {
+      throw new Error(`Unsupported screen mode: ${n}`);
+    }
+    this.currentScreenMode = n;
+  }
+
+  get currentScreenModeConfig() {
+    return SCREEN_MODE_CONFIGS.find(
+      ({mode}) => mode === this.currentScreenMode
+    )!;
+  }
+
+  private currentScreenMode: number = 0;
 }

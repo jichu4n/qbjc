@@ -1,5 +1,6 @@
-import {RuntimePlatform} from './runtime';
+import {RuntimePlatform, ColorName} from './runtime';
 import ansiEscapes from 'ansi-escapes';
+import ansiStyles from 'ansi-styles';
 
 /** RuntimePlatform implementing screen manipulation using ANSI escape codes.
  *
@@ -21,6 +22,17 @@ abstract class AnsiTerminalRuntimPlatform extends RuntimePlatform {
   async clearScreen() {
     this.print(ansiEscapes.eraseScreen);
     await this.moveCursorTo(0, 0);
+  }
+
+  async setFgColor(colorName: ColorName) {
+    this.print(ansiStyles[colorName].open);
+  }
+
+  async setBgColor(colorName: ColorName) {
+    const bgColorName = `bg${colorName[0].toUpperCase()}${colorName.substr(
+      1
+    )}` as keyof ansiStyles.BackgroundColor;
+    this.print(ansiStyles[bgColorName].open);
   }
 }
 
