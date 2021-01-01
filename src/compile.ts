@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import {minify} from 'terser';
 import codegen from './codegen/codegen';
 import {Module} from './lib/ast';
 import parse from './parser/parser';
@@ -17,11 +18,13 @@ async function compile({
   outputFilePath: outputFilePathArg,
   enableSourceMap,
   enableBundling,
+  enableMinify,
 }: {
   sourceFilePath: string;
   outputFilePath?: string;
   enableSourceMap?: boolean;
   enableBundling?: boolean;
+  enableMinify?: boolean;
 }): Promise<CompileResult> {
   // 1. Read source file.
   const source = await fs.readFile(sourceFilePath, 'utf-8');
@@ -41,12 +44,25 @@ async function compile({
     sourceFileName,
     enableBundling,
   });
+  let sourceMapContent = sourceMap.toString();
+  if (enableMinify) {
+    const {code: minifiedCode, map: minifiedSourceMap} = await minify(code, {
+      sourceMap: {
+        filename: sourceFileName,
+        content: sourceMapContent,
+      },
+    });
+    if (minifiedCode && minifiedSourceMap) {
+      code = minifiedCode;
+      sourceMapContent = minifiedSourceMap as string;
+    }
+  }
   const outputFilePath = outputFilePathArg || `${sourceFilePath}.js`;
   if (enableSourceMap) {
     const sourceMapFileName = `${path.basename(outputFilePath)}.map`;
     await fs.writeFile(
       path.join(path.dirname(outputFilePath), sourceMapFileName),
-      sourceMap.toString()
+      sourceMapContent
     );
 
     code += `\n//# sourceMappingURL=${sourceMapFileName}\n`;

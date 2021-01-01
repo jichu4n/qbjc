@@ -47,6 +47,7 @@
     "moo": "^0.5.1",
     "nearley": "^2.20.1",
     "require-from-string": "^2.0.2",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "terser": "^5.5.1"
   }
 }

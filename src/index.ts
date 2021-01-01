@@ -17,6 +17,7 @@ if (require.main === module) {
       .arguments('<file.bas>')
       .option('-o, --output <file>', 'output file path')
       .option('-r, --run', 'run the compiled program after compilation')
+      .option('--minify', 'minify the compiled program')
       .option('--source-map', 'enable source map generation')
       .option('--no-bundle', 'disable bundling with runtime code')
       .option(
@@ -40,6 +41,7 @@ if (require.main === module) {
       outputFilePath: program.output || undefined,
       enableSourceMap: program.sourceMap,
       enableBundling: program.bundle,
+      enableMinify: program.minify,
     });
 
     if (program.debugAst) {
