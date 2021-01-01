@@ -1,6 +1,7 @@
 import {RuntimePlatform, ColorName} from './runtime';
 import ansiEscapes from 'ansi-escapes';
 import ansiStyles from 'ansi-styles';
+import ANSI_TERMINAL_KEY_CODE_MAP from './ansi-terminal-key-code-map';
 
 /** RuntimePlatform implementing screen manipulation using ANSI escape codes.
  *
@@ -10,29 +11,34 @@ import ansiStyles from 'ansi-styles';
  */
 abstract class AnsiTerminalRuntimPlatform extends RuntimePlatform {
   async moveCursorTo(x: number, y: number) {
-    this.print(ansiEscapes.cursorTo(x, y));
+    await this.print(ansiEscapes.cursorTo(x, y));
   }
 
   async setCursorVisibility(isCursorVisible: boolean) {
-    this.print(
+    await this.print(
       isCursorVisible ? ansiEscapes.cursorShow : ansiEscapes.cursorHide
     );
   }
 
   async clearScreen() {
-    this.print(ansiEscapes.eraseScreen);
+    await this.print(ansiEscapes.eraseScreen);
     await this.moveCursorTo(0, 0);
   }
 
   async setFgColor(colorName: ColorName) {
-    this.print(ansiStyles[colorName].open);
+    await this.print(ansiStyles[colorName].open);
   }
 
   async setBgColor(colorName: ColorName) {
     const bgColorName = `bg${colorName[0].toUpperCase()}${colorName.substr(
       1
     )}` as keyof ansiStyles.BackgroundColor;
-    this.print(ansiStyles[bgColorName].open);
+    await this.print(ansiStyles[bgColorName].open);
+  }
+
+  /** Translates an ANSI / VT100 key code to the DOS equivalent. */
+  translateKeyCode(c: string) {
+    return ANSI_TERMINAL_KEY_CODE_MAP[c] ?? c;
   }
 }
 

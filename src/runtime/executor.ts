@@ -15,6 +15,9 @@ import {
 import initValue from './init-value';
 import Runtime, {RuntimePlatform} from './runtime';
 
+/** Default statement execution delay in microseconds. */
+const DEFAULT_EXECUTION_DELAY_US = 5;
+
 /** Map from label name to statement array index. */
 type LabelIndexMap = {[key: string]: number};
 
@@ -57,6 +60,7 @@ export default class Executor {
     this.buildLabelIndexMaps();
     this.localStaticVarsMap = {};
     this.restore();
+    await this.platform.setCursorVisibility(false);
 
     const ctx: ExecutionContext = {
       runtime: new Runtime(this.platform),
@@ -90,6 +94,7 @@ export default class Executor {
       this.procLabelIndexMap = {};
       this.localStaticVarsMap = {};
       this.restore();
+      await this.platform.setCursorVisibility(true);
     }
   }
 
@@ -174,6 +179,11 @@ export default class Executor {
     while (stmtIdx < stmts.length) {
       const stmt = stmts[stmtIdx];
       const errorArgs = {module: this.currentModule, stmt};
+
+      // 0. Delay execution.
+      //
+      // TODO: Make the delay configurable.
+      await this.platform.delay(DEFAULT_EXECUTION_DELAY_US);
 
       // 1. Execute statement.
       let directive: ExecutionDirective | void;

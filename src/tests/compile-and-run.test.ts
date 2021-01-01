@@ -28,7 +28,7 @@ describe('Compile and run', () => {
 });
 
 class NodePlatformForTest extends NodePlatform {
-  print(s: string) {
+  async print(s: string) {
     this.stdout.push(s);
   }
 

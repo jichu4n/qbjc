@@ -1,16 +1,23 @@
+import ansiEscapes from 'ansi-escapes';
+import {performance} from 'perf_hooks';
+import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
 import {CompiledModule} from './compiled-code';
 import Executor from './executor';
-import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
-import ansiEscapes from 'ansi-escapes';
 
 export class NodePlatform extends AnsiTerminalRuntimPlatform {
-  print(s: string) {
+  async delay(delayInUs: number) {
+    const t0 = performance.now();
+    while ((performance.now() - t0) * 1000 < delayInUs) {}
+  }
+
+  async print(s: string) {
     process.stdout.write(s);
   }
 
   async inputLine(): Promise<string> {
     return new Promise<string>((resolve) => {
       process.stdin.resume();
+      process.stdin.setRawMode(false);
       process.stdin.once('data', (chunk) => {
         process.stdin.pause();
         resolve(chunk.toString());
@@ -23,48 +30,49 @@ export class NodePlatform extends AnsiTerminalRuntimPlatform {
     let result: string | null = null;
     process.stdin.resume();
     process.stdin.setRawMode(true);
-    const cleanUp = () => {
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
-    };
     const callbackFn = (chunk: Buffer) => {
-      result = chunk.toString()[0];
-      cleanUp();
+      result = this.translateKeyCode(chunk.toString());
+      // Handle Ctrl-C
+      if (result === String.fromCharCode(3)) {
+        throw new Error('Received Ctrl-C, aborting');
+      }
+      process.stdin.pause();
     };
     process.stdin.once('data', callbackFn);
     return new Promise<string | null>((resolve) => {
       setTimeout(() => {
         if (result === null) {
           process.stdin.removeListener('data', callbackFn);
-          cleanUp();
+          process.stdin.pause();
         }
         resolve(result);
-      }, 10);
+      }, 20);
     });
   }
 
   async getCursorPosition(): Promise<{x: number; y: number}> {
     // Based on https://github.com/bubkoo/get-cursor-position/blob/master/index.js
     process.stdin.resume();
+    const originalIsRaw = process.stdin.isRaw;
     process.stdin.setRawMode(true);
     return new Promise<{x: number; y: number}>((resolve, reject) => {
       process.stdin.once('data', (chunk) => {
+        process.stdin.pause();
+        process.stdin.setRawMode(originalIsRaw);
         const match = chunk.toString().match(/\[(\d+)\;(\d+)R/);
         if (match) {
           const [row, col] = [match[1], match[2]];
-          resolve({
+          const result = {
             // ANSI row & col numbers are 1-based.
             x: parseInt(col) - 1,
             y: parseInt(row) - 1,
-          });
+          };
+          resolve(result);
         } else {
           reject();
         }
       });
       process.stdout.write(ansiEscapes.cursorGetPosition);
-    }).finally(() => {
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
     });
   }
 

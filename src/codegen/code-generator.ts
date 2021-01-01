@@ -685,7 +685,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
 
   visitPrintStmt(node: PrintStmt): SourceNode {
     return this.createStmtSourceNode(node, () => [
-      'ctx.runtime.print(',
+      'await ctx.runtime.print(',
       node.formatExpr ? this.accept(node.formatExpr) : 'null',
       ', ',
       ...node.args.map((arg) =>

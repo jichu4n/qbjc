@@ -6,8 +6,11 @@ import ansiStyles from 'ansi-styles';
 
 /** Interface for platform-specific runtime functionality. */
 export abstract class RuntimePlatform {
+  /** Delay for the specified number of microseconds. */
+  abstract delay(delayInUs: number): Promise<void>;
+
   /** Print a string to stdout. */
-  abstract print(s: string): void;
+  abstract print(s: string): Promise<void>;
   /** Reads a line of text from stdin. */
   abstract inputLine(): Promise<string>;
   /** Gets a single char from stdin, or return null if no pending input.
@@ -105,7 +108,7 @@ export default class Runtime {
     );
   }
 
-  print(formatString: string | null, ...args: Array<PrintArg>) {
+  async print(formatString: string | null, ...args: Array<PrintArg>) {
     let line = formatString
       ? this.printWithFormatString(formatString, args)
       : this.printWithDefaultFormat(args);
@@ -115,7 +118,7 @@ export default class Runtime {
     ) {
       line += '\n';
     }
-    this.platform.print(line);
+    await this.platform.print(line);
   }
 
   /** Implements PRINT USING format strings.
@@ -226,15 +229,20 @@ export default class Runtime {
   }
 
   async inputLine(prompt: string) {
-    this.platform.print(prompt);
-    return await this.platform.inputLine();
+    if (prompt) {
+      await this.platform.print(prompt);
+    }
+    await this.platform.setCursorVisibility(true);
+    const line = await this.platform.inputLine();
+    await this.platform.setCursorVisibility(false);
+    return line;
   }
 
   async input(prompt: string, ...resultTypes: Array<DataTypeSpec>) {
     for (;;) {
-      this.platform.print(prompt);
+      await this.platform.print(prompt);
 
-      const line = await this.platform.inputLine();
+      const line = await this.inputLine('');
       const tokens = this.lexInput(line);
       let tokenIdx = 0;
 
@@ -278,7 +286,7 @@ export default class Runtime {
       if (results.length === resultTypes.length) {
         return results;
       } else if (results.length < resultTypes.length) {
-        this.platform.print(
+        await this.platform.print(
           `\n${errorMessage ? `${errorMessage}\n` : ''}Redo from start\n`
         );
       } else {

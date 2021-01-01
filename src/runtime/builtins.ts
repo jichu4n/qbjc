@@ -352,7 +352,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
       const now = new Date();
       const midnight = new Date(now);
       midnight.setHours(0, 0, 0, 0);
-      const result = Math.floor((now.getTime() - midnight.getTime()) / 1000);
+      const result = (now.getTime() - midnight.getTime()) / 1000;
       return result;
     },
   },
