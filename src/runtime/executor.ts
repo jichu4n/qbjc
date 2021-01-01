@@ -15,8 +15,17 @@ import {
 import initValue from './init-value';
 import Runtime, {RuntimePlatform} from './runtime';
 
+/** Options for compiled program execution. */
+export interface ExecutionOpts {
+  /** Delay before executing each statement, in microseconds.
+   *
+   * The default value is DEFAULT_STMT_EXECUTION_DELAY_US.
+   */
+  stmtExecutionDelayUs?: number;
+}
+
 /** Default statement execution delay in microseconds. */
-const DEFAULT_EXECUTION_DELAY_US = 5;
+const DEFAULT_STMT_EXECUTION_DELAY_US = 5;
 
 /** Map from label name to statement array index. */
 type LabelIndexMap = {[key: string]: number};
@@ -52,7 +61,12 @@ class EndDirective extends Error {
 
 /** Manages the execution of a compiled program. */
 export default class Executor {
-  constructor(private readonly platform: RuntimePlatform) {}
+  constructor(
+    private readonly platform: RuntimePlatform,
+    {stmtExecutionDelayUs = DEFAULT_STMT_EXECUTION_DELAY_US}: ExecutionOpts = {}
+  ) {
+    this.stmtExecutionDelayUs = stmtExecutionDelayUs;
+  }
 
   /** Executes a compiled module. */
   async executeModule(module: CompiledModule) {
@@ -181,9 +195,9 @@ export default class Executor {
       const errorArgs = {module: this.currentModule, stmt};
 
       // 0. Delay execution.
-      //
-      // TODO: Make the delay configurable.
-      await this.platform.delay(DEFAULT_EXECUTION_DELAY_US);
+      if (this.stmtExecutionDelayUs > 0) {
+        await this.platform.delay(this.stmtExecutionDelayUs);
+      }
 
       // 1. Execute statement.
       let directive: ExecutionDirective | void;
@@ -320,6 +334,9 @@ export default class Executor {
     });
     return labelIndexMap;
   }
+
+  /** Delay before executing each statement, in microseconds. */
+  private readonly stmtExecutionDelayUs: number;
 
   /** Current module being executed. */
   private currentModule: CompiledModule | null = null;

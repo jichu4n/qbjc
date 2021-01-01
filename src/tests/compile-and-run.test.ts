@@ -71,8 +71,9 @@ async function testCompileAndRun(testFile: string) {
     'input' in ioItem ? [ioItem.input] : []
   );
 
-  const executor = new Executor(nodePlatformForTest);
-  await executor.executeModule(compiledModule);
+  await new Executor(nodePlatformForTest, {
+    stmtExecutionDelayUs: 0,
+  }).executeModule(compiledModule);
 
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
     'output' in ioItem ? [ioItem.output] : []

@@ -39,7 +39,7 @@ if (require.main === module) {
       sourceFilePath,
       outputFilePath: program.output || undefined,
       enableSourceMap: program.sourceMap,
-      enableBundling: !program.noBundle,
+      enableBundling: program.bundle,
     });
 
     if (program.debugAst) {
