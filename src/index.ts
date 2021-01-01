@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs-extra';
 import {program} from 'commander';
+import fs from 'fs-extra';
 import requireFromString from 'require-from-string';
 import compile from './compile';
 import {CompiledModule} from './runtime/compiled-code';
@@ -18,7 +18,7 @@ if (require.main === module) {
       .option('-o, --output <file>', 'output file path')
       .option('-r, --run', 'run the compiled program after compilation')
       .option('--source-map', 'enable source map generation')
-      .option('--bundle', 'enable generation of standalone single file bundle')
+      .option('--no-bundle', 'disable bundling with runtime code')
       .option(
         '--debug-ast',
         'enable generation of AST file for debugging compilation'
@@ -39,7 +39,7 @@ if (require.main === module) {
       sourceFilePath,
       outputFilePath: program.output || undefined,
       enableSourceMap: program.sourceMap,
-      enableBundling: program.bundle,
+      enableBundling: !program.noBundle,
     });
 
     if (program.debugAst) {

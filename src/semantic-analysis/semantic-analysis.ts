@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import {
-  ArgTypeProps,
   AssignStmt,
   AstNodeBase,
   AstNodeLocation,
@@ -63,7 +62,6 @@ import {
   DataTypeSpec,
   doubleSpec,
   ElementaryTypeSpec,
-  ProcDefType,
   integerSpec,
   isArray,
   isElementaryType,
@@ -71,6 +69,7 @@ import {
   isString,
   isUdt,
   longSpec,
+  ProcDefType,
   ProcType,
   procTypeName,
   singleSpec,
@@ -121,6 +120,10 @@ type ResolvedSub =
       proc: Proc;
     };
 
+export interface SemanticAnalyzerOpts {
+  sourceFileName?: string;
+}
+
 /** Semantic analysis pass.
  *
  * Main tasks:
@@ -128,10 +131,10 @@ type ResolvedSub =
  * - Type analysis for symbols, expressions and statements
  * - Build symbol table and resolve references
  */
-export default class SemanticAnalyzer extends AstVisitor<void> {
+export class SemanticAnalyzer extends AstVisitor<void> {
   constructor(
     private readonly module: Module,
-    {sourceFileName}: {sourceFileName?: string}
+    {sourceFileName}: SemanticAnalyzerOpts = {}
   ) {
     super();
     this.sourceFileName = sourceFileName;
@@ -1232,4 +1235,11 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
 
   /** Default type based on first letter of identifier. */
   private defTypeMap: {[key: string]: ElementaryTypeSpec} = {};
+}
+
+export default function runSemanticAnalysis(
+  module: Module,
+  opts: SemanticAnalyzerOpts = {}
+) {
+  return new SemanticAnalyzer(module, opts).run();
 }

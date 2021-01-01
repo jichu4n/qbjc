@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
-import {Module} from './lib/ast';
 import codegen from './codegen/codegen';
+import {Module} from './lib/ast';
 import parse from './parser/parser';
+import runSemanticAnalysis from './semantic-analysis/semantic-analysis';
 
 export interface CompileResult {
   source: string;
@@ -32,7 +33,10 @@ async function compile({
     throw new Error(`Invalid parse tree`);
   }
 
-  // 3. Code generation.
+  // 3. Semantic analysis.
+  runSemanticAnalysis(astModule);
+
+  // 4. Code generation.
   let {code, map: sourceMap} = codegen(astModule, {
     sourceFileName,
     enableBundling,
