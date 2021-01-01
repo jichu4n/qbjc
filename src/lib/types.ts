@@ -107,6 +107,12 @@ export function isNumeric(
   ].includes(getType(t));
 }
 
+export function isIntegral(
+  t: DataType | DataTypeSpec
+): t is DataType.INTEGER | DataType.LONG | NumericTypeSpec {
+  return [DataType.INTEGER, DataType.LONG].includes(getType(t));
+}
+
 export function isString(
   t: DataType | DataTypeSpec
 ): t is DataType.STRING | {type: DataType.STRING} {

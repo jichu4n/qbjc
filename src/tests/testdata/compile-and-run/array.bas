@@ -36,7 +36,7 @@ FOR i = 1 TO 3
   f1 A4(i), i
   f1 A5(i, i), i
 NEXT i
-SUB f1 (s AS STRING, i AS INTEGER)
+SUB f1 (s AS STRING, i)
   s = STR$(i * 100 + i * 10 + i)
 END SUB
 PRINT A4(3)

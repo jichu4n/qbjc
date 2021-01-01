@@ -363,11 +363,12 @@ export interface CallStmt extends AstNodeBase {
   name: string;
   argExprs: Array<Expr>;
 
-  /** Resolved function definition type.
-   *
-   * Populated during semantic analysis.
-   */
-  fnDefType?: ProcDefType;
+  // Populated during semantic analysis.
+
+  /** Resolved function definition type. */
+  procDefType?: ProcDefType;
+  /** Additional type information for aguments. */
+  argTypeProps?: Array<ArgTypeProps>;
 }
 
 export interface ExitProcStmt extends AstNodeBase {
@@ -455,6 +456,12 @@ export type Expr =
 /** An expression that can be assigned to. */
 export type LhsExpr = VarRefExpr | SubscriptExpr | MemberExpr;
 
+export function isLhsExpr(expr: Expr): expr is LhsExpr {
+  return [ExprType.VAR_REF, ExprType.SUBSCRIPT, ExprType.MEMBER].includes(
+    expr.type
+  );
+}
+
 export enum ExprType {
   LITERAL = 'literal',
   VAR_REF = 'varRef',
@@ -494,11 +501,12 @@ export interface FnCallExpr extends ExprBase {
   name: string;
   argExprs: Array<Expr>;
 
-  /** Resolved function definition type.
-   *
-   * Populated during semantic analysis.
-   */
-  fnDefType?: ProcDefType;
+  // Populated during semantic analysis.
+
+  /** Resolved function definition type. */
+  procDefType?: ProcDefType;
+  /** Additional type information for aguments. */
+  argTypeProps?: Array<ArgTypeProps>;
 }
 
 export enum BinaryOp {
@@ -548,6 +556,14 @@ export interface MemberExpr extends ExprBase {
   type: ExprType.MEMBER;
   udtExpr: LhsExpr;
   fieldName: string;
+}
+
+/** Additional type info about a procedure argument. */
+export interface ArgTypeProps {
+  /** Type of the corresponding function parameter. */
+  paramTypeSpec: DataTypeSpec;
+  /** Whether this argument should be passed by ref or by value. */
+  shouldPassByRef: boolean;
 }
 
 /** Error thrown by AST visitors. */

@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
 import requireFromString from 'require-from-string';
+import stripAnsi from 'strip-ansi';
 import compile from '../compile';
 import Executor from '../runtime/executor';
 import {NodePlatform} from '../runtime/node-runtime';
@@ -39,7 +40,7 @@ class NodePlatformForTest extends NodePlatform {
       parser.parse(this.stdout.join(''));
       return terminal.toString();
     } else {
-      return this.stdout.join('');
+      return stripAnsi(this.stdout.join(''));
     }
   }
 

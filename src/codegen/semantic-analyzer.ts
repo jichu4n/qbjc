@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import {
+  ArgTypeProps,
   AssignStmt,
   AstNodeBase,
   AstNodeLocation,
@@ -29,6 +30,7 @@ import {
   IfStmt,
   InputStmt,
   InputType,
+  isLhsExpr,
   isSingularTypeExpr,
   LabelStmt,
   LiteralExpr,
@@ -355,7 +357,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     if (!areMatchingSingularTypes(targetTypeSpec, valueTypeSpec)) {
       this.throwError(
         `Cannot assign ${typeSpecName(valueTypeSpec)} value ` +
-          `to ${typeSpecName(targetTypeSpec)}`,
+          `to ${typeSpecName(targetTypeSpec)} variable`,
         node
       );
     }
@@ -922,6 +924,7 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     resolvedProc: ResolvedFn | ResolvedSub,
     node: FnCallExpr | CallStmt
   ) {
+    node.argTypeProps = [];
     let paramTypeSpecs: Array<DataTypeSpec>;
     switch (resolvedProc.defType) {
       case ProcDefType.BUILTIN:
@@ -938,6 +941,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           node
         );
     }
+    node.procDefType = resolvedProc.defType;
+
     if (paramTypeSpecs.length !== node.argExprs.length) {
       this.throwError(
         `Incorrect number of arguments to "${node.name}": ` +
@@ -947,9 +952,33 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
     }
     for (let i = 0; i < node.argExprs.length; ++i) {
       const paramTypeSpec = paramTypeSpecs[i];
-      const argTypeSpec = node.argExprs[i].typeSpec!;
-      if (
+      const argExpr = node.argExprs[i];
+      const argTypeSpec = argExpr.typeSpec!;
+      const shouldPassByRef =
+        isLhsExpr(argExpr) &&
+        // Constants cannot be allowed to be modified by the proc, so must use pass-by-value.
         !(
+          argExpr.type === ExprType.VAR_REF &&
+          argExpr.symbol!.varType === VarType.CONST
+        ) &&
+        // For built-in procs, we always pass by value in order to take advantage of automatic type
+        // casting (e.g. single -> integer).
+        resolvedProc.defType !== ProcDefType.BUILTIN;
+      let isCompatible: boolean;
+      if (shouldPassByRef) {
+        // If argument is an LHS expression, the types must match exactly as it may be assigned to
+        // from inside the proc.
+        isCompatible =
+          _.isEqual(paramTypeSpec, argTypeSpec) ||
+          (isArray(paramTypeSpec) &&
+            isArray(argTypeSpec) &&
+            _.isEqual(
+              paramTypeSpec.elementTypeSpec,
+              argTypeSpec.elementTypeSpec
+            ));
+      } else {
+        // If argument is not an LHS expression, the types just need to be generally compatible.
+        isCompatible =
           areMatchingSingularTypes(paramTypeSpec, argTypeSpec) ||
           (isArray(paramTypeSpec) &&
             isArray(argTypeSpec) &&
@@ -958,9 +987,9 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
               argTypeSpec.elementTypeSpec
             ) ||
               // Allow builtins to accept arrays of any element type.
-              resolvedProc.defType === ProcDefType.BUILTIN))
-        )
-      ) {
+              resolvedProc.defType === ProcDefType.BUILTIN));
+      }
+      if (!isCompatible) {
         this.throwError(
           `Incompatible argument ${i + 1} to function "${node.name}": ` +
             `expected ${typeSpecName(paramTypeSpec)}, ` +
@@ -968,8 +997,8 @@ export default class SemanticAnalyzer extends AstVisitor<void> {
           node
         );
       }
+      node.argTypeProps.push({paramTypeSpec, shouldPassByRef});
     }
-    node.fnDefType = resolvedProc.defType;
   }
 
   /** Computes the output numeric type after an arithmetic operation. */
