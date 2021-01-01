@@ -71,7 +71,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return legacyEncoding.decode(Buffer.from([Math.floor(n)]), 'cp437');
+      return legacyEncoding.decode(Buffer.from([n]), 'cp437');
     },
   },
   {
@@ -136,7 +136,6 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number, {platform}: RunContext) {
-      n = Math.floor(n);
       const result: Array<string> = [];
       while (result.length < n) {
         const c = await platform.getChar();
@@ -160,7 +159,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec(), stringSpec(), stringSpec()],
     returnTypeSpec: integerSpec(),
     async run(start: number, haystack: string, needle: string) {
-      return haystack.indexOf(needle, Math.floor(start) - 1) + 1;
+      return haystack.indexOf(needle, start - 1) + 1;
     },
   },
   {
@@ -206,7 +205,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [stringSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
     async run(s: string, n: number) {
-      return s.substr(0, Math.floor(n));
+      return s.substr(0, n);
     },
   },
   {
@@ -230,7 +229,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [stringSpec(), longSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
     async run(s: string, startIdx: number, length: number) {
-      return s.substr(Math.floor(startIdx) - 1, Math.floor(length));
+      return s.substr(startIdx - 1, length);
     },
   },
   {
@@ -255,7 +254,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [stringSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
     async run(s: string, n: number) {
-      return s.substr(Math.max(0, s.length - Math.floor(n)));
+      return s.substr(Math.max(0, s.length - n));
     },
   },
   ...overload<BuiltinFn>(
@@ -297,7 +296,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return ' '.repeat(Math.floor(n));
+      return ' '.repeat(n);
     },
   },
   {
@@ -305,7 +304,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return ' '.repeat(Math.floor(n));
+      return ' '.repeat(n);
     },
   },
   {
@@ -331,7 +330,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     async run(col: number, {platform}: RunContext) {
       const {x, y} = await platform.getCursorPosition();
       const {cols} = await platform.getScreenSize();
-      col = (Math.max(1, Math.floor(col)) - 1) % cols;
+      col = (Math.max(1, col) - 1) % cols;
       await platform.moveCursorTo(col, x <= col ? y : y + 1);
       return '';
     },
@@ -415,7 +414,6 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       async run(...args: Array<any>) {
         const {platform, runtime} = args.pop() as RunContext;
         const getColorName = (n: number) => {
-          n = Math.floor(n);
           if (n < 0 || n >= runtime.currentScreenModeConfig.colorMap.length) {
             throw new Error(`Invalid color: ${n}`);
           }
@@ -452,11 +450,11 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
         const {platform} = args.pop() as RunContext;
         const [row, col, cursor] = args;
         if (Number.isFinite(row) && Number.isFinite(col)) {
-          await platform.moveCursorTo(Math.floor(col) - 1, Math.floor(row) - 1);
+          await platform.moveCursorTo(col - 1, row - 1);
         } else if (Number.isFinite(row) || Number.isFinite(col)) {
           const origPos = await platform.getCursorPosition();
-          const newX = Number.isFinite(col) ? Math.floor(col) - 1 : origPos.x;
-          const newY = Number.isFinite(row) ? Math.floor(row) - 1 : origPos.y;
+          const newX = Number.isFinite(col) ? col - 1 : origPos.x;
+          const newY = Number.isFinite(row) ? row - 1 : origPos.y;
           if (newX !== origPos.x || newY !== origPos.y) {
             await platform.moveCursorTo(newX, newY);
           }
@@ -502,7 +500,7 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       name: 'screen',
       async run(mode: number, ...args: Array<any>) {
         const {runtime} = args.pop() as RunContext;
-        runtime.setScreenMode(Math.floor(mode));
+        runtime.setScreenMode(mode);
       },
     },
     [
