@@ -1,3 +1,5 @@
+import singlebyte from 'singlebyte';
+import roundHalfToEven from '../lib/round-half-to-even';
 import {lookupSymbols} from '../lib/symbol-table';
 import {
   areMatchingElementaryTypes,
@@ -13,8 +15,6 @@ import {
 import {Ptr} from './compiled-code';
 import QbArray from './qb-array';
 import Runtime, {RuntimePlatform} from './runtime';
-import legacyEncoding from 'legacy-encoding';
-import roundHalfToEven from '../lib/round-half-to-even';
 
 type RunFn = (...args: Array<any>) => Promise<any>;
 
@@ -64,7 +64,9 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
       if (s.length === 0) {
         throw new Error('Expected non-empty string in ASC()');
       }
-      return legacyEncoding.encode(s[0], 'cp437')[0];
+      // We could use iconv-lite here instead:
+      // return iconv.encode(s[0], 'cp437')[0];
+      return singlebyte.strToBuf(s[0], 'cp437')[0];
     },
   },
   {
@@ -72,7 +74,9 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return legacyEncoding.decode(Buffer.from([n]), 'cp437');
+      // We could use iconv-lite here instead:
+      // return iconv.decode(Buffer.from([n]), 'cp437');
+      return singlebyte.bufToStr(Buffer.from([n]), 'cp437');
     },
   },
   {
