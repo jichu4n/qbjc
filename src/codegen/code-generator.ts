@@ -1116,7 +1116,7 @@ export default class CodeGenerator extends AstVisitor<SourceNode> {
     const valueTypeSpec = valueExpr.typeSpec!;
     const valueCode = this.accept(valueExpr);
     if (isIntegral(targetTypeSpec) && !isIntegral(valueTypeSpec)) {
-      return ['Math.round(', valueCode, ')'];
+      return ['ctx.runtime.roundHalfToEven(', valueCode, ')'];
     } else if (isUdt(targetTypeSpec)) {
       return [valueCode, '.clone()'];
     } else {

@@ -14,6 +14,7 @@ import {Ptr} from './compiled-code';
 import QbArray from './qb-array';
 import Runtime, {RuntimePlatform} from './runtime';
 import legacyEncoding from 'legacy-encoding';
+import roundHalfToEven from '../lib/round-half-to-even';
 
 type RunFn = (...args: Array<any>) => Promise<any>;
 
@@ -83,19 +84,19 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
-    name: 'csng',
-    paramTypeSpecs: [doubleSpec()],
-    returnTypeSpec: singleSpec(),
-    async run(n: number) {
-      return n;
-    },
-  },
-  {
     name: 'cint',
     paramTypeSpecs: [doubleSpec()],
     returnTypeSpec: longSpec(),
     async run(n: number) {
-      return Math.round(n);
+      return roundHalfToEven(n);
+    },
+  },
+  {
+    name: 'clng',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: longSpec(),
+    async run(n: number) {
+      return roundHalfToEven(n);
     },
   },
   {
@@ -104,6 +105,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: doubleSpec(),
     async run(n: number) {
       return Math.cos(n);
+    },
+  },
+  {
+    name: 'csng',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: singleSpec(),
+    async run(n: number) {
+      return n;
     },
   },
   {

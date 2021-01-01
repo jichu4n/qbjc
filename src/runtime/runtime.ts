@@ -3,6 +3,7 @@ import {DataTypeSpec, isNumeric, isString} from '../lib/types';
 import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin, RunContext} from './builtins';
 import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
 import ansiStyles from 'ansi-styles';
+import roundHalfToEven from '../lib/round-half-to-even';
 
 /** Interface for platform-specific runtime functionality. */
 export abstract class RuntimePlatform {
@@ -78,6 +79,8 @@ export const SCREEN_MODE_CONFIGS: Array<ScreenModeConfig> = [
  */
 export default class Runtime {
   constructor(private readonly platform: RuntimePlatform) {}
+
+  readonly roundHalfToEven = roundHalfToEven;
 
   async executeBuiltinProc(
     name: string,
