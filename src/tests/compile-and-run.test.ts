@@ -62,7 +62,11 @@ interface ExpectSpec {
 
 async function testCompileAndRun(testFile: string) {
   const testFilePath = path.join(TEST_SOURCE_DIR_PATH, testFile);
-  const {source, code} = await compile({sourceFilePath: testFilePath});
+  const source = await fs.readFile(testFilePath, 'utf-8');
+  const {code} = await compile({
+    source: await fs.readFile(testFilePath, 'utf-8'),
+    sourceFileName: testFile,
+  });
   const compiledModule = requireFromString(code).default;
 
   const expectSpec = parseExpectSpec(source);

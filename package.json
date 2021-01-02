@@ -12,13 +12,15 @@
     "url": "https://github.com/jichu4n/qbjc/issues"
   },
   "homepage": "https://github.com/jichu4n/qbjc#readme",
-  "bin": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": "./dist/qbjc.js",
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime.js ./dist/runtime/node-runtime-bundle.js",
-    "build:tsc": "tsc && chmod +x ./dist/index.js",
+    "build:tsc": "tsc && chmod +x ./dist/qbjc.js",
     "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
-    "test": "npm run build && jest"
+    "test": "jest"
   },
   "devDependencies": {
     "@types/ansi-escapes": "^4.0.0",
