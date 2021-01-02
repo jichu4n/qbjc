@@ -1,2 +1,4 @@
 examples/
+doc/
+README.md
 *.code-workspace

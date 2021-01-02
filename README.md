@@ -48,8 +48,13 @@ What works:
   - Note that the current implementation requires a VT100-compatible terminal emulator. On Windows,
     this means using WSL or something like PuTTY.
 
-See [examples](./examples) and [test programs](./src/tests/testdata/compile-and-run) for an idea of
-what is currently implemented.
+It's just enough to run the original `NIBBLES.BAS` game that shipped with QBasic
+([examples/nibbles.bas](./examples/nibbles.bas)):
+
+![Compiling and running NIBBLES.BAS](./doc/nibbles.gif)
+
+See [examples](./examples) and [tests](./src/tests/testdata/compile-and-run) for an idea of what is
+currently possible.
 
 What doesn't work (yet):
 
@@ -57,13 +62,9 @@ What doesn't work (yet):
 - Graphics and audio
 - Error handling control flow - `ON ERROR` etc.
 - OS APIs like file I/O
-- Direct memory access (`DEF SEG`, `PEEK` and `POKE`)
+- Direct memory access - `PEEK`, `POKE` etc.
 - Less common syntax, inputs or options for statements and built-in functions
 - ...and a lot more - contributions are welcome!
-
-It's just enough to run the original `NIBBLES.BAS` game that shipped with QBasic ([examples/nibbles.bas](./examples/nibbles.bas)):
-
-![Compiling and running NIBBLES.BAS](./doc/nibbles.gif)
 
 ## About
 
