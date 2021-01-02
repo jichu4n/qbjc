@@ -1,10 +1,9 @@
 import ansiEscapes from 'ansi-escapes';
 import {performance} from 'perf_hooks';
-import AnsiTerminalRuntimPlatform from './ansi-terminal-runtime-platform';
-import {CompiledModule} from './compiled-code';
+import AnsiTerminalPlatform from './ansi-terminal-platform';
 import Executor, {ExecutionOpts} from './executor';
 
-export class NodePlatform extends AnsiTerminalRuntimPlatform {
+export class NodePlatform extends AnsiTerminalPlatform {
   async delay(delayInUs: number) {
     const t0 = performance.now();
     while ((performance.now() - t0) * 1000 < delayInUs) {}
@@ -93,37 +92,4 @@ export class NodeExecutor extends Executor {
   constructor(opts: ExecutionOpts = {}) {
     super(new NodePlatform(), opts);
   }
-}
-
-/** Bundled module compiled from BASIC source code. */
-declare var compiledModule: CompiledModule | undefined;
-
-/** Executes the bundled module.
- *
- * This is the main execution entrypoint to compiled programs.
- */
-async function run(opts: ExecutionOpts = {}) {
-  // Parse opts from environment variables.
-  let stmtExecutionDelayUs: number | undefined;
-  if (process.env.DELAY) {
-    stmtExecutionDelayUs = parseInt(process.env.DELAY);
-    if (isNaN(stmtExecutionDelayUs)) {
-      stmtExecutionDelayUs = undefined;
-    }
-  }
-
-  return await new NodeExecutor({
-    stmtExecutionDelayUs,
-    ...opts,
-  }).executeModule(compiledModule!);
-}
-
-export default {
-  ...(typeof compiledModule === 'undefined' ? {} : compiledModule),
-  run,
-};
-
-// When invoked directly as part of a compiled program, execute the bundled module.
-if (require.main === module) {
-  run();
 }

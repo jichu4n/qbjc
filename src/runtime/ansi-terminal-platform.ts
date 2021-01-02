@@ -1,7 +1,7 @@
-import {RuntimePlatform, ColorName} from './runtime';
 import ansiEscapes from 'ansi-escapes';
 import ansiStyles from 'ansi-styles';
 import ANSI_TERMINAL_KEY_CODE_MAP from './ansi-terminal-key-code-map';
+import {ColorName, RuntimePlatform} from './runtime';
 
 /** RuntimePlatform implementing screen manipulation using ANSI escape codes.
  *
@@ -9,7 +9,7 @@ import ANSI_TERMINAL_KEY_CODE_MAP from './ansi-terminal-key-code-map';
  * so must be a class and 2) abstract classes don't support mixins yet:
  * https://github.com/microsoft/TypeScript/issues/35356
  */
-abstract class AnsiTerminalRuntimPlatform extends RuntimePlatform {
+abstract class AnsiTerminalPlatform extends RuntimePlatform {
   async moveCursorTo(x: number, y: number) {
     await this.print(ansiEscapes.cursorTo(x, y));
   }
@@ -42,4 +42,4 @@ abstract class AnsiTerminalRuntimPlatform extends RuntimePlatform {
   }
 }
 
-export default AnsiTerminalRuntimPlatform;
+export default AnsiTerminalPlatform;

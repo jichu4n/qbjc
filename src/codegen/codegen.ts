@@ -136,7 +136,7 @@ export class CodeGenerator extends AstVisitor<SourceNode> {
       sourceNode.add(nodeRuntimeBundleCode);
     } else {
       sourceNode.add(compiledModuleSourceNode);
-      sourceNode.add('module.exports = { default: compiledModule };\n');
+      sourceNode.add('module.exports = compiledModule;\n');
     }
     return sourceNode;
   }

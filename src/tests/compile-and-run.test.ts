@@ -4,8 +4,9 @@ import path from 'path';
 import requireFromString from 'require-from-string';
 import stripAnsi from 'strip-ansi';
 import compile from '../compile';
+import {CompiledModule} from '../runtime/compiled-code';
 import Executor from '../runtime/executor';
-import {NodePlatform} from '../runtime/node-runtime';
+import {NodePlatform} from '../runtime/node-platform';
 const {AnsiTerminal} = require('node-ansiterminal');
 const AnsiParser = require('node-ansiparser');
 
@@ -67,7 +68,7 @@ async function testCompileAndRun(testFile: string) {
     source: await fs.readFile(testFilePath, 'utf-8'),
     sourceFileName: testFile,
   });
-  const compiledModule = requireFromString(code).default;
+  const compiledModule = requireFromString(code) as CompiledModule;
 
   const expectSpec = parseExpectSpec(source);
   const nodePlatformForTest = new NodePlatformForTest();
