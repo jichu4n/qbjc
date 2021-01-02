@@ -23,7 +23,7 @@ export interface CompileFileResult extends CompileResult {
   outputFilePath: string;
 }
 
-/** Compiles a QBASIC source file and write out the compiled program and source map. */
+/** Compiles a QBasic source file and write out the compiled program and source map. */
 export async function compileFile({
   sourceFilePath,
   outputFilePath: outputFilePathArg,

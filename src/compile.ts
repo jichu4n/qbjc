@@ -5,7 +5,7 @@ import parse from './parser/parser';
 import runSemanticAnalysis from './semantic-analysis/semantic-analysis';
 
 export interface CompileArgs {
-  /** QBASIC source code. */
+  /** QBasic source code. */
   source: string;
   /** Source file name for populating debugging information in the compiled program. */
   sourceFileName?: string;
@@ -22,7 +22,7 @@ export interface CompileResult {
 
 const DEFAULT_SOURCE_FILE_NAME = 'source.bas';
 
-/** Compiles a QBASIC program.
+/** Compiles a QBasic program.
  *
  * This is the main entrypoint to qbjc's compiler.
  */
