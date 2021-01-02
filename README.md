@@ -1,3 +1,5 @@
+![build](https://github.com/jichu4n/qbjc/workflows/build/badge.svg)
+
 # qbjc
 
 **qbjc** is a QBasic to JavaScript compiler. It compiles a QBasic program into a JavaScript module
