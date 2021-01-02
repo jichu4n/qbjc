@@ -68,6 +68,7 @@ async function testCompileAndRun(testFile: string) {
     source: await fs.readFile(testFilePath, 'utf-8'),
     sourceFileName: testFile,
   });
+  await fs.writeFile(`${testFilePath}.js`, code);
   const compiledModule = requireFromString(code) as CompiledModule;
 
   const expectSpec = parseExpectSpec(source);

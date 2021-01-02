@@ -1,4 +1,5 @@
-
+' Example from original QBasic distribution
+' Source: https://archive.org/details/NibblesQbasic
 
 '
 '                         Q B a s i c   N i b b l e s

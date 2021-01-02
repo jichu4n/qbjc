@@ -1,3 +1,5 @@
+' Example from QuickBASIC EXAMPLES folder.
+
 DEFINT A-Z               ' Default variable type is integer
 
 ' Define a data type for the names of the months and the

@@ -920,6 +920,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
         node
       );
     }
+    node.fieldName = fieldSpec.name; // Normalize case
     node.typeSpec = fieldSpec.typeSpec;
   }
 

@@ -920,11 +920,11 @@ export class CodeGenerator extends AstVisitor<SourceNode> {
               this.createSourceNode(
                 argExpr,
                 argExpr.symbol!.varType === VarType.ARG
-                  ? `ctx.args['${argExpr.name}']`
+                  ? `ctx.args['${argExpr.symbol!.name}']`
                   : `[${this.generateVarContainerCode(
                       argExpr,
                       argExpr.symbol!
-                    )}, '${argExpr.name}']`
+                    )}, '${argExpr.symbol!.name}']`
               )
             );
             break;
