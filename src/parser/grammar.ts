@@ -140,6 +140,7 @@ import {
   SwapStmt,
   PrintStmt,
   PrintSep,
+  PrintArg,
   InputStmt,
   InputType,
   DefTypeStmt,
@@ -783,23 +784,23 @@ const grammar: Grammar = {
           formatExpr: $2 ? $2[1] : null,
           ...useLoc($1), })
             },
-    {"name": "printArgs", "symbols": [], "postprocess": () => []},
-    {"name": "printArgs", "symbols": ["expr"], "postprocess": ([$1]) => [$1]},
-    {"name": "printArgs$ebnf$1$subexpression$1$ebnf$1", "symbols": ["expr"], "postprocess": id},
-    {"name": "printArgs$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["printArgs$ebnf$1$subexpression$1$ebnf$1", "printSep"]},
-    {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1$subexpression$1"]},
-    {"name": "printArgs$ebnf$1$subexpression$2$ebnf$1", "symbols": ["expr"], "postprocess": id},
-    {"name": "printArgs$ebnf$1$subexpression$2$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "printArgs$ebnf$1$subexpression$2", "symbols": ["printArgs$ebnf$1$subexpression$2$ebnf$1", "printSep"]},
-    {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$1$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "printArgs$ebnf$2", "symbols": ["expr"], "postprocess": id},
-    {"name": "printArgs$ebnf$2", "symbols": [], "postprocess": () => null},
-    {"name": "printArgs", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$2"], "postprocess":  
-        ([$1, $2]) => [
-          ..._.flatMap($1, ([$1_1, $1_2]) => [...($1_1 ? [$1_1]: []), $1_2]),
-          ...($2 ? [$2] : []),
-        ]
+    {"name": "printArgs$ebnf$1", "symbols": []},
+    {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["expr"]},
+    {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["printSep"]},
+    {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
+    {"name": "printArgs", "symbols": ["printArgs$ebnf$1"], "postprocess":  
+        ([$1], location, reject) => {
+          const args = _.flatten($1) as Array<PrintArg>;
+          // Disambiguate "fn (x)" - prefer to parse as function call.
+          for (let i = 0; i < args.length - 1; ++i) {
+            const arg1 = args[i], arg2 = args[i + 1];
+            if (typeof arg1 !== 'string' && arg1.type === ExprType.VAR_REF &&
+                typeof arg2 !== 'string' && arg2.type === ExprType.UNARY_OP && arg2.op === UnaryOp.PARENS) {
+              return reject;
+            }
+          }
+          return args;
+        }
             },
     {"name": "printSep", "symbols": [(lexer.has("COMMA") ? {type: "COMMA"} : COMMA)], "postprocess": () => PrintSep.COMMA},
     {"name": "printSep", "symbols": [(lexer.has("SEMICOLON") ? {type: "SEMICOLON"} : SEMICOLON)], "postprocess": () => PrintSep.SEMICOLON},

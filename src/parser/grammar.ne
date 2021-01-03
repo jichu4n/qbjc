@@ -56,6 +56,7 @@ import {
   SwapStmt,
   PrintStmt,
   PrintSep,
+  PrintArg,
   InputStmt,
   InputType,
   DefTypeStmt,
@@ -680,13 +681,19 @@ printStmt ->
     %}
 
 printArgs ->
-      null  {% () => [] %}
-    | expr  {% ([$1]) => [$1] %}
-    | (expr:? printSep):+ expr:?  {% 
-        ([$1, $2]) => [
-          ..._.flatMap($1, ([$1_1, $1_2]) => [...($1_1 ? [$1_1]: []), $1_2]),
-          ...($2 ? [$2] : []),
-        ]
+    (expr | printSep):*  {%
+        ([$1], location, reject) => {
+          const args = _.flatten($1) as Array<PrintArg>;
+          // Disambiguate "fn (x)" - prefer to parse as function call.
+          for (let i = 0; i < args.length - 1; ++i) {
+            const arg1 = args[i], arg2 = args[i + 1];
+            if (typeof arg1 !== 'string' && arg1.type === ExprType.VAR_REF &&
+                typeof arg2 !== 'string' && arg2.type === ExprType.UNARY_OP && arg2.op === UnaryOp.PARENS) {
+              return reject;
+            }
+          }
+          return args;
+        }
     %}
 
 printSep ->
