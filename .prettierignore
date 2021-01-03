@@ -1,0 +1,7 @@
+dist/
+
+# Generated parser.
+src/parser/grammar.ts
+
+# Compiled test or example.
+*.bas.js

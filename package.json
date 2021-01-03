@@ -20,6 +20,7 @@
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime-bundle-bootstrap.js ./dist/runtime/node-runtime-bundle.js",
     "build:tsc": "tsc && chmod +x ./dist/qbjc.js",
     "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
+    "lint": "prettier --check .",
     "test": "jest"
   },
   "devDependencies": {
@@ -35,6 +36,7 @@
     "jest": "^26.6.3",
     "node-ansiparser": "^2.2.0",
     "node-ansiterminal": "^0.2.1-beta",
+    "prettier": "^2.2.1",
     "strip-ansi": "^6.0.0",
     "typescript": "^4.1.2"
   },
