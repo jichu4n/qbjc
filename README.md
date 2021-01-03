@@ -42,7 +42,9 @@ What works:
 - Core language features
   - Control flow structures - loops, conditionals, goto, gosub etc.
   - Data types - primitive types, arrays and user-defined types (a.k.a. records)
-  - Program structure - `SUB`s and `FUNCTION`s
+  - Expressions - arithmetic, string, comparison, boolean
+  - Built-in functions like `VAL`, `STR$`, `INSTR`, `MID$` - see [full list](./src/runtime/builtins.ts)
+  - `SUB`s and `FUNCTION`s
   - `DATA` constants
 - Text mode
   - Basic text I/O - `PRINT`, `INPUT`, `INKEY$`, `INPUT$` etc.
@@ -50,8 +52,7 @@ What works:
   - Note that the current implementation requires a VT100-compatible terminal emulator. On Windows,
     this means using WSL or something like PuTTY.
 
-It's just enough to run the original `NIBBLES.BAS` game that shipped with QBasic
-([examples/nibbles.bas](./examples/nibbles.bas)):
+It's just enough to run the original [`NIBBLES.BAS` game](./examples/nibbles.bas) that shipped with QBasic:
 
 ![Compiling and running NIBBLES.BAS](./doc/nibbles.gif)
 

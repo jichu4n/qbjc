@@ -1,1 +1,0 @@
-../src/tests/testdata/compile-and-run/strtonum.bas

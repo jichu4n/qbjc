@@ -369,15 +369,6 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
-    name: 'val',
-    paramTypeSpecs: [stringSpec()],
-    returnTypeSpec: doubleSpec(),
-    async run(s: string) {
-      const v = parseFloat(s);
-      return isNaN(v) ? 0 : v;
-    },
-  },
-  {
     name: 'ubound',
     paramTypeSpecs: [arraySpec(doubleSpec(), [])],
     returnTypeSpec: longSpec(),
@@ -405,6 +396,15 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: stringSpec(),
     async run(s: string) {
       return s.toUpperCase();
+    },
+  },
+  {
+    name: 'val',
+    paramTypeSpecs: [stringSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(s: string) {
+      const v = parseFloat(s);
+      return isNaN(v) ? 0 : v;
     },
   },
 ];
