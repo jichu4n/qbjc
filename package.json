@@ -1,6 +1,6 @@
 {
   "name": "qbjc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "QBasic to JavaScript compiler",
   "repository": {
     "type": "git",

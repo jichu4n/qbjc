@@ -18,29 +18,12 @@ qbjc hello.bas
 qbjc --run hello.bas
 ```
 
-Command line options:
-
-```
-Usage: qbjc [options] <file.bas>
-
-Options:
-  -V, --version        output the version number
-  -o, --output <file>  output file path
-  -r, --run            run the compiled program after compilation
-  --minify             minify the compiled program
-  --source-map         enable source map generation
-  --no-bundle          disable bundling with runtime code
-  --debug-ast          enable generation of AST file for debugging compilation
-  --debug-trace        enable stack trace for debugging compilation
-  -h, --help           display help for command
-```
-
 ## Compatibility
 
 What works:
 
 - Core language features
-  - Control flow structures - loops, conditionals, goto, gosub etc.
+  - Control flow structures - loops, conditionals, `GOTO`, `GOSUB` etc.
   - Data types - primitive types, arrays and user-defined types (a.k.a. records)
   - Expressions - arithmetic, string, comparison, boolean
   - Built-in functions like `VAL`, `STR$`, `INSTR`, `MID$` - see [full list](./src/runtime/builtins.ts)
@@ -68,6 +51,23 @@ What doesn't work (yet):
 - Direct memory access - `PEEK`, `POKE` etc.
 - Less common syntax, inputs or options for statements and built-in functions
 - ...and a lot more - contributions are welcome!
+
+## Command line options
+
+```
+Usage: qbjc [options] <file.bas>
+
+Options:
+  -V, --version        output the version number
+  -o, --output <file>  output file path
+  -r, --run            run the compiled program after compilation
+  --minify             minify the compiled program
+  --source-map         enable source map generation
+  --no-bundle          disable bundling with runtime code
+  --debug-ast          enable generation of AST file for debugging compilation
+  --debug-trace        enable stack trace for debugging compilation
+  -h, --help           display help for command
+```
 
 ## About
 

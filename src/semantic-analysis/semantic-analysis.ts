@@ -404,7 +404,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   visitGotoStmt(node: GotoStmt): void {
-    this.lookupLabelOrThrow(
+    node.destLabel = this.lookupLabelOrThrow(
       node,
       this.currentProc ?? this.module,
       node.destLabel
@@ -516,7 +516,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
   visitExitForStmt(node: ExitForStmt): void {}
 
   visitGosubStmt(node: GosubStmt): void {
-    this.lookupLabelOrThrow(
+    node.destLabel = this.lookupLabelOrThrow(
       node,
       this.currentProc ?? this.module,
       node.destLabel
@@ -525,7 +525,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
 
   visitReturnStmt(node: ReturnStmt): void {
     if (node.destLabel) {
-      this.lookupLabelOrThrow(
+      node.destLabel = this.lookupLabelOrThrow(
         node,
         this.currentProc ?? this.module,
         node.destLabel
@@ -679,7 +679,11 @@ export class SemanticAnalyzer extends AstVisitor<void> {
 
   visitRestoreStmt(node: RestoreStmt): void {
     if (node.destLabel) {
-      this.lookupLabelOrThrow(node, this.module, node.destLabel);
+      node.destLabel = this.lookupLabelOrThrow(
+        node,
+        this.module,
+        node.destLabel
+      );
     }
   }
 
@@ -1226,9 +1230,13 @@ export class SemanticAnalyzer extends AstVisitor<void> {
     context: Module | Proc,
     label: string
   ) {
-    if (context.labels!.indexOf(label) < 0) {
+    const foundLabel = context.labels!.find(
+      (existingLabel) => existingLabel.toLowerCase() === label.toLowerCase()
+    );
+    if (!foundLabel) {
       this.throwError(`Label not found: "${label}"`, node);
     }
+    return foundLabel;
   }
 
   /** The current proc being visited, or null if currently visiting module-level nodes. */

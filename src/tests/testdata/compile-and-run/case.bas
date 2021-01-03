@@ -26,6 +26,14 @@ dim p as person
 P.name = "Bill Gates"
 print p.NAME
 
+gosub F3
+f3_end:
+end
+
+f3:
+  PRINT P.name
+  RETURN F3_END
+
 
 ' EXPECT {
 '   "io": [
@@ -33,6 +41,7 @@ print p.NAME
 '     {"output": " 5 \n"},
 '     {"output": " 42 \n"},
 '     {"output": " 42 \n"},
+'     {"output": "Bill Gates\n"},
 '     {"output": "Bill Gates\n"}
 '   ]
 ' }
