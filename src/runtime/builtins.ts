@@ -128,6 +128,17 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'date$',
+    paramTypeSpecs: [],
+    returnTypeSpec: stringSpec(),
+    async run() {
+      const now = new Date();
+      return [now.getMonth() + 1, now.getDate(), now.getFullYear()]
+        .map((p) => p.toString().padStart(2, '0'))
+        .join('-');
+    },
+  },
+  {
     name: 'fix',
     paramTypeSpecs: [doubleSpec()],
     returnTypeSpec: longSpec(),
@@ -354,6 +365,17 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: doubleSpec(),
     async run(n: number) {
       return Math.tan(n);
+    },
+  },
+  {
+    name: 'time$',
+    paramTypeSpecs: [],
+    returnTypeSpec: stringSpec(),
+    async run() {
+      const now = new Date();
+      return [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map((p) => p.toString().padStart(2, '0'))
+        .join(':');
     },
   },
   {
