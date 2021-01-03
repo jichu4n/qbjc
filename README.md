@@ -63,8 +63,8 @@ What doesn't work (yet):
 
 - Running in the browser
 - Graphics and audio
-- Error handling control flow - `ON ERROR` etc.
-- OS APIs like file I/O
+- Events - `ON ERROR`, `ON TIMER` etc.
+- OS APIs like files I/O, `CALL INTERRUPT` etc.
 - Direct memory access - `PEEK`, `POKE` etc.
 - Less common syntax, inputs or options for statements and built-in functions
 - ...and a lot more - contributions are welcome!
