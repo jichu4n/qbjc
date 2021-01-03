@@ -36,6 +36,10 @@ abstract class AnsiTerminalPlatform extends RuntimePlatform {
     await this.print(ansiStyles[bgColorName].open);
   }
 
+  async beep() {
+    await this.print(ansiEscapes.beep);
+  }
+
   /** Translates an ANSI / VT100 key code to the DOS equivalent. */
   translateKeyCode(c: string) {
     return ANSI_TERMINAL_KEY_CODE_MAP[c] ?? c;

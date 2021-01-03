@@ -36,6 +36,8 @@ export abstract class RuntimePlatform {
   abstract setFgColor(colorName: ColorName): Promise<void>;
   /** Sets the background color. */
   abstract setBgColor(colorName: ColorName): Promise<void>;
+  /** BEEPs in the terminal. */
+  abstract beep(): Promise<void>;
 }
 
 export type ColorName = keyof ansiStyles.ForegroundColor;

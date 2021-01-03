@@ -411,6 +411,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
 
 /** Simple statements implemented as built-in subs. */
 export const BUILTIN_SUBS: Array<BuiltinSub> = [
+  {
+    name: 'beep',
+    paramTypeSpecs: [],
+    async run(...args: Array<any>) {
+      const {platform} = args.pop() as RunContext;
+      await platform.beep();
+    },
+  },
   ...overload(
     {
       name: 'cls',
