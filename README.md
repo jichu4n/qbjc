@@ -5,7 +5,7 @@
 **qbjc** is a QBasic to JavaScript compiler. It compiles a QBasic program into a JavaScript module
 that can run directly as a standalone program:
 
-![Compiling and running a simple program](./doc/hello.gif)
+![Compiling and running a simple program](./docs/assets/hello.gif)
 
 ## Usage
 
@@ -37,7 +37,7 @@ What works:
 
 It's just enough to run the original [`NIBBLES.BAS` game](./examples/nibbles.bas) that shipped with QBasic:
 
-![Compiling and running NIBBLES.BAS](./doc/nibbles.gif)
+![Compiling and running NIBBLES.BAS](./docs/assets/nibbles.gif)
 
 See [examples](./examples) and [tests](./src/tests/testdata/compile-and-run) for an idea of what is
 currently possible.
