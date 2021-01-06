@@ -33,6 +33,7 @@
     "@types/nearley": "^2.11.1",
     "@types/node": "^14.14.10",
     "@types/require-from-string": "^1.2.0",
+    "airtable": "^0.10.1",
     "jest": "^26.6.3",
     "node-ansiparser": "^2.2.0",
     "node-ansiterminal": "^0.2.1-beta",
