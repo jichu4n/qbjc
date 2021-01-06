@@ -164,10 +164,10 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
   },
   {
     name: 'hex$',
-    paramTypeSpecs: [doubleSpec()],
+    paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return roundHalfToEven(n).toString(16).toUpperCase();
+      return n.toString(16).toUpperCase();
     },
   },
   {
@@ -290,10 +290,10 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
   },
   {
     name: 'oct$',
-    paramTypeSpecs: [doubleSpec()],
+    paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      return roundHalfToEven(n).toString(8);
+      return n.toString(8);
     },
   },
   {
@@ -611,6 +611,26 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
       [longSpec(), longSpec(), longSpec()],
       [longSpec(), longSpec(), longSpec(), longSpec()],
     ]
+  ),
+  ...overload(
+    {
+      name: 'sleep',
+      async run(...args: Array<any>) {
+        const {platform} = args.pop() as RunContext;
+        const numSeconds = args.length > 0 ? args[0] : 0;
+        const startTimeMs = new Date().getTime();
+        let nowMs: number;
+        let c: string | null;
+        do {
+          c = await platform.getChar();
+          nowMs = new Date().getTime();
+        } while (
+          c === null &&
+          (numSeconds <= 0 || nowMs - startTimeMs < numSeconds * 1000)
+        );
+      },
+    },
+    [[], [longSpec()]]
   ),
   ...overload(
     {
