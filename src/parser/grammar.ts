@@ -48,6 +48,7 @@ declare var GOSUB: any;
 declare var RETURN: any;
 declare var CALL: any;
 declare var SYSTEM: any;
+declare var STOP: any;
 declare var SWAP: any;
 declare var PRINT: any;
 declare var USING: any;
@@ -765,6 +766,7 @@ const grammar: Grammar = {
               },
     {"name": "endStmt$subexpression$1", "symbols": [(lexer.has("END") ? {type: "END"} : END)]},
     {"name": "endStmt$subexpression$1", "symbols": [(lexer.has("SYSTEM") ? {type: "SYSTEM"} : SYSTEM)]},
+    {"name": "endStmt$subexpression$1", "symbols": [(lexer.has("STOP") ? {type: "STOP"} : STOP)]},
     {"name": "endStmt", "symbols": ["endStmt$subexpression$1"], "postprocess": ([$1]): EndStmt => ({ type: StmtType.END, ...useLoc(id($1)) })},
     {"name": "swapStmt", "symbols": [(lexer.has("SWAP") ? {type: "SWAP"} : SWAP), "lhsExpr", (lexer.has("COMMA") ? {type: "COMMA"} : COMMA), "lhsExpr"], "postprocess": 
         ([$1, $2, $3, $4]): SwapStmt => ({

@@ -54,6 +54,7 @@ export enum Keywords {
   SINGLE = 'single',
   STATIC = 'static',
   STEP = 'step',
+  STOP = 'stop',
   STRING = 'string',
   SUB = 'sub',
   SYSTEM = 'system',
