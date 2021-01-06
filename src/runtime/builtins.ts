@@ -70,6 +70,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'atn',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.atan(n);
+    },
+  },
+  {
     name: 'chr$',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
@@ -139,11 +147,27 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'exp',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.exp(n);
+    },
+  },
+  {
     name: 'fix',
     paramTypeSpecs: [doubleSpec()],
     returnTypeSpec: longSpec(),
     async run(n: number) {
       return Math.sign(n) * Math.floor(Math.abs(n));
+    },
+  },
+  {
+    name: 'hex$',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return roundHalfToEven(n).toString(16).toUpperCase();
     },
   },
   {
@@ -241,6 +265,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'log',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: doubleSpec(),
+    async run(n: number) {
+      return Math.log(n);
+    },
+  },
+  {
     name: 'ltrim$',
     paramTypeSpecs: [stringSpec()],
     returnTypeSpec: stringSpec(),
@@ -254,6 +286,14 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: stringSpec(),
     async run(s: string, startIdx: number, length: number) {
       return s.substr(startIdx - 1, length);
+    },
+  },
+  {
+    name: 'oct$',
+    paramTypeSpecs: [doubleSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(n: number) {
+      return roundHalfToEven(n).toString(8);
     },
   },
   {

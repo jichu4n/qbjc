@@ -788,7 +788,7 @@ const grammar: Grammar = {
     {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["expr"]},
     {"name": "printArgs$ebnf$1$subexpression$1", "symbols": ["printSep"]},
     {"name": "printArgs$ebnf$1", "symbols": ["printArgs$ebnf$1", "printArgs$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
-    {"name": "printArgs", "symbols": ["printArgs$ebnf$1"], "postprocess":  
+    {"name": "printArgs", "symbols": ["printArgs$ebnf$1"], "postprocess": 
         ([$1], location, reject) => {
           const args = _.flatten($1) as Array<PrintArg>;
           // Disambiguate "fn (x)" - prefer to parse as function call.
