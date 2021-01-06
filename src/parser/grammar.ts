@@ -10,6 +10,8 @@ declare var RPAREN: any;
 declare var STATIC: any;
 declare var END: any;
 declare var SUB: any;
+declare var DEF: any;
+declare var EQ: any;
 declare var DECLARE: any;
 declare var COMMA: any;
 declare var TYPE: any;
@@ -20,7 +22,6 @@ declare var DIM: any;
 declare var SHARED: any;
 declare var TO: any;
 declare var LET: any;
-declare var EQ: any;
 declare var CONST: any;
 declare var GOTO: any;
 declare var IF: any;
@@ -66,7 +67,6 @@ declare var READ: any;
 declare var RESTORE: any;
 declare var LOCATE: any;
 declare var COLOR: any;
-declare var DEF: any;
 declare var SEG: any;
 declare var VIEW: any;
 declare var INTEGER: any;
@@ -94,6 +94,7 @@ import {
   Module,
   FnProc,
   SubProc,
+  DefFnProc,
   Param,
   DataTypeExprType,
   SingularTypeExpr,
@@ -273,6 +274,7 @@ const grammar: Grammar = {
             },
     {"name": "proc", "symbols": ["fnProc"], "postprocess": id},
     {"name": "proc", "symbols": ["subProc"], "postprocess": id},
+    {"name": "proc", "symbols": ["defFnExprProc"], "postprocess": id},
     {"name": "proc", "symbols": ["procDecl"], "postprocess": discard},
     {"name": "fnProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
     {"name": "fnProc$ebnf$1", "symbols": ["fnProc$ebnf$1$subexpression$1"], "postprocess": id},
@@ -303,6 +305,35 @@ const grammar: Grammar = {
           isDefaultStatic: !!$4,
           ...useLoc($1),
         })
+            },
+    {"name": "defFnExprProc$ebnf$1$subexpression$1", "symbols": [(lexer.has("LPAREN") ? {type: "LPAREN"} : LPAREN), "params", (lexer.has("RPAREN") ? {type: "RPAREN"} : RPAREN)]},
+    {"name": "defFnExprProc$ebnf$1", "symbols": ["defFnExprProc$ebnf$1$subexpression$1"], "postprocess": id},
+    {"name": "defFnExprProc$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "defFnExprProc", "symbols": [(lexer.has("DEF") ? {type: "DEF"} : DEF), (lexer.has("IDENTIFIER") ? {type: "IDENTIFIER"} : IDENTIFIER), "defFnExprProc$ebnf$1", (lexer.has("EQ") ? {type: "EQ"} : EQ), "expr"], "postprocess": 
+        ([$1, $2, $3, $4, $5], position, reject): DefFnProc | Reject => {
+          if (!$2.value.toLowerCase().startsWith('fn')) {
+            return reject;
+          }
+          return {
+            type: ProcType.DEF_FN,
+            name: $2.value,
+            params: $3 ? $3[1] : [],
+            stmts: [
+              {
+                type: StmtType.ASSIGN,
+                targetExpr: {
+                  type: ExprType.VAR_REF,
+                  name: $2.value,
+                  ...useLoc($4),
+                },
+                valueExpr: $5,
+                ...useLoc($4),
+              }
+            ],
+            isDefaultStatic: false,
+            ...useLoc($1),
+          };
+        }
             },
     {"name": "procDecl$subexpression$1", "symbols": [(lexer.has("FUNCTION") ? {type: "FUNCTION"} : FUNCTION)]},
     {"name": "procDecl$subexpression$1", "symbols": [(lexer.has("SUB") ? {type: "SUB"} : SUB)]},

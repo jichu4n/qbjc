@@ -9,6 +9,7 @@ import {
   Module,
   FnProc,
   SubProc,
+  DefFnProc,
   Param,
   DataTypeExprType,
   SingularTypeExpr,
@@ -166,6 +167,7 @@ moduleComponentWithSep ->
 proc ->
       fnProc  {% id %}
     | subProc  {% id %}
+    | defFnExprProc  {% id %}
     | procDecl  {% discard %}
 
 fnProc ->
@@ -190,6 +192,34 @@ subProc ->
           isDefaultStatic: !!$4,
           ...useLoc($1),
         })
+    %}
+
+defFnExprProc ->
+    %DEF %IDENTIFIER (%LPAREN params %RPAREN):? %EQ expr  {%
+        ([$1, $2, $3, $4, $5], position, reject): DefFnProc | Reject => {
+          if (!$2.value.toLowerCase().startsWith('fn')) {
+            return reject;
+          }
+          return {
+            type: ProcType.DEF_FN,
+            name: $2.value,
+            params: $3 ? $3[1] : [],
+            stmts: [
+              {
+                type: StmtType.ASSIGN,
+                targetExpr: {
+                  type: ExprType.VAR_REF,
+                  name: $2.value,
+                  ...useLoc($4),
+                },
+                valueExpr: $5,
+                ...useLoc($4),
+              }
+            ],
+            isDefaultStatic: false,
+            ...useLoc($1),
+          };
+        }
     %}
 
 procDecl ->

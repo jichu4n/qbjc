@@ -1,7 +1,7 @@
 import {DataItem, getDataItem} from '../lib/data-item';
 import ErrorWithLoc from '../lib/error-with-loc';
 import {lookupSymbol, VarSymbolTable, VarType} from '../lib/symbol-table';
-import {DataTypeSpec, ProcType, procTypeName} from '../lib/types';
+import {DataTypeSpec, isFnOrDefFn, ProcType, procTypeName} from '../lib/types';
 import {
   ArgsContainer,
   CompiledModule,
@@ -136,8 +136,8 @@ export default class Executor {
     }
 
     // Init static vars.
-    if (!this.localStaticVarsMap[name]) {
-      this.localStaticVarsMap[name] = this.initVars(proc.localSymbols, [
+    if (!this.localStaticVarsMap[proc.name]) {
+      this.localStaticVarsMap[proc.name] = this.initVars(proc.localSymbols, [
         VarType.STATIC_VAR,
       ]);
     }
@@ -147,7 +147,7 @@ export default class Executor {
       ...prevCtx,
       args,
       localVars: this.initVars(proc.localSymbols, [VarType.VAR, VarType.CONST]),
-      localStaticVars: this.localStaticVarsMap[name],
+      localStaticVars: this.localStaticVarsMap[proc.name],
       tempVars: {},
     };
     if (!this.procLabelIndexMap[proc.name]) {
@@ -156,13 +156,8 @@ export default class Executor {
     await this.executeStmts(ctx, proc.stmts, this.procLabelIndexMap[proc.name]);
 
     // Return value.
-    if (proc.type === ProcType.FN) {
-      if (!(name in ctx.localVars)) {
-        throw new Error(
-          `${procTypeName(proc.type)} "${proc.name}" did not return a value`
-        );
-      }
-      return ctx.localVars[name];
+    if (isFnOrDefFn(proc.type)) {
+      return ctx.localVars[proc.name];
     }
   }
 

@@ -4,6 +4,7 @@ import {VarSymbol, VarSymbolTable} from './symbol-table';
 import {
   DataTypeSpec,
   ElementaryTypeSpec,
+  isFnOrDefFn,
   ProcDefType,
   ProcType,
   UdtTypeSpec,
@@ -44,8 +45,8 @@ export interface Module {
   labels?: Array<string>;
 }
 
-/** A procedure definition (a SUB or a FUNCTION). */
-export type Proc = SubProc | FnProc;
+/** A procedure definition (a SUB, FUNCTION or DEF FN). */
+export type Proc = SubProc | FnProc | DefFnProc;
 
 /** Common properties of procedure definitions. */
 interface ProcBase extends AstNodeBase {
@@ -72,11 +73,25 @@ export interface SubProc extends ProcBase {
 /** A FUNCTION procedure. */
 export interface FnProc extends ProcBase {
   type: ProcType.FN;
-  /** Return type of this function.
-   *
-   * Populated during parsing (if AS <type> provided) or during semantic analysis.
-   */
+
+  // Populated during semantic analysis:
+
+  /** Return type of this function. */
   returnTypeSpec?: DataTypeSpec;
+}
+
+/** A DEF FN procedure. */
+export interface DefFnProc extends ProcBase {
+  type: ProcType.DEF_FN;
+
+  // Populated during semantic analysis:
+
+  /** Return type of this function. */
+  returnTypeSpec?: DataTypeSpec;
+}
+
+export function isFnProcOrDefFnProc(proc: Proc): proc is FnProc | DefFnProc {
+  return isFnOrDefFn(proc.type);
 }
 
 /** A function parameter. */
@@ -618,8 +633,9 @@ export abstract class AstVisitor<T = any> {
   /** Invokes the visitor method corresponding to the specified AstNode. */
   protected accept(node: AstNode): T {
     switch (node.type) {
-      case ProcType.FN:
       case ProcType.SUB:
+      case ProcType.FN:
+      case ProcType.DEF_FN:
         return this.visitProc(node);
       case StmtType.LABEL:
         return this.visitLabelStmt(node);

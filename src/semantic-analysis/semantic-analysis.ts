@@ -29,6 +29,7 @@ import {
   IfStmt,
   InputStmt,
   InputType,
+  isFnProcOrDefFnProc,
   isLhsExpr,
   isSingularTypeExpr,
   LabelStmt,
@@ -171,7 +172,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
       varScope: VarScope.LOCAL,
     }));
     node.localSymbols = [];
-    if (node.type === ProcType.FN) {
+    if (isFnProcOrDefFnProc(node)) {
       if (!node.returnTypeSpec) {
         node.returnTypeSpec = this.getDefaultTypeSpecFromName(node.name);
       }
@@ -741,7 +742,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
     if (resolvedFn) {
       if (
         resolvedFn.defType === ProcDefType.MODULE &&
-        resolvedFn.proc.type !== ProcType.FN
+        !isFnProcOrDefFnProc(resolvedFn.proc)
       ) {
         this.throwError(
           `A ${procTypeName(
@@ -1058,6 +1059,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private getLocalSymbols() {
+    // TODO: Handle multiline DEF FN procs.
     return this.currentProc
       ? this.currentProc.localSymbols!
       : this.module.localSymbols!;
@@ -1169,7 +1171,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
       return {
         defType: ProcDefType.MODULE,
         proc,
-        returnTypeSpec: proc.type === ProcType.FN ? proc.returnTypeSpec! : null,
+        returnTypeSpec: isFnProcOrDefFnProc(proc) ? proc.returnTypeSpec! : null,
       };
     }
     const builtinProc = lookupBuiltin(BUILTIN_FNS, name, argTypeSpecs, {

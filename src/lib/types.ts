@@ -184,6 +184,14 @@ export enum ProcType {
   SUB = 'sub',
   /** FUNCTION procedure. */
   FN = 'fn',
+  /** DEF FN procedure. */
+  DEF_FN = 'defFn',
+}
+
+export function isFnOrDefFn(
+  procType: ProcType
+): procType is ProcType.FN | ProcType.DEF_FN {
+  return procType === ProcType.FN || procType === ProcType.DEF_FN;
 }
 
 /** Returns the user-facing name of a ProcType. */
@@ -191,6 +199,7 @@ export function procTypeName(procType: ProcType) {
   const NAMES = {
     [ProcType.SUB]: 'SUB procedure',
     [ProcType.FN]: 'FUNCTION procedure',
+    [ProcType.DEF_FN]: 'DEF FN procedure',
   };
   return NAMES[procType];
 }
