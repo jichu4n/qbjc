@@ -388,6 +388,25 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     },
   },
   {
+    name: 'string$',
+    paramTypeSpecs: [longSpec(), longSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(m: number, n: number) {
+      return singlebyte.bufToStr(Buffer.from([n]), 'cp437').repeat(m);
+    },
+  },
+  {
+    name: 'string$',
+    paramTypeSpecs: [longSpec(), stringSpec()],
+    returnTypeSpec: stringSpec(),
+    async run(m: number, s: string) {
+      if (s.length === 0) {
+        throw new Error(`Empty string argument to STRING$`);
+      }
+      return s[0].repeat(m);
+    },
+  },
+  {
     name: 'tab',
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
