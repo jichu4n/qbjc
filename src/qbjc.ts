@@ -3,9 +3,7 @@
 import {program} from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
-import requireFromString from 'require-from-string';
 import compile, {CompileArgs, CompileResult} from './compile';
-import {CompiledModule} from './runtime/compiled-code';
 import {NodeExecutor} from './runtime/node-platform';
 // Not using resolveJsonModule because it causes the output to be generated relative to the root
 // directory instead of src/.
@@ -36,12 +34,13 @@ export async function compileFile({
 
   // 2. Compile code.
   const sourceFileName = path.basename(sourceFilePath);
-  let {code, map: sourceMapContent, astModule} = await compile({
+  const compileResult = await compile({
     source,
     sourceFileName,
     enableBundling,
     enableMinify,
   });
+  let {code, map: sourceMapContent} = compileResult;
 
   // 3. Write compiled program and source map.
   const outputFilePath = outputFilePathArg || `${sourceFilePath}.js`;
@@ -60,10 +59,10 @@ export async function compileFile({
   }
 
   return {
+    ...compileResult,
     source,
     code,
     map: sourceMapContent,
-    astModule,
     outputFilePath,
   };
 }
@@ -96,7 +95,7 @@ if (require.main === module) {
     }
     const sourceFilePath = program.args[0];
 
-    const result = await compileFile({
+    const compileFileResult = await compileFile({
       sourceFilePath,
       outputFilePath: program.output,
       enableSourceMap: program.sourceMap,
@@ -105,15 +104,18 @@ if (require.main === module) {
     });
 
     if (program.debugAst) {
-      await fs.writeJson(`${sourceFilePath}.ast.json`, result.astModule, {
-        spaces: 4,
-      });
+      await fs.writeJson(
+        `${sourceFilePath}.ast.json`,
+        compileFileResult.astModule,
+        {
+          spaces: 4,
+        }
+      );
     }
 
     if (program.run) {
-      const compiledModule = requireFromString(result.code) as CompiledModule;
       const executor = new NodeExecutor();
-      await executor.executeModule(compiledModule);
+      await executor.executeModule(compileFileResult.compiledModule);
     }
   })().catch((e) => {
     if ('message' in e) {

@@ -1,10 +1,8 @@
 import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
-import requireFromString from 'require-from-string';
 import stripAnsi from 'strip-ansi';
 import compile from '../compile';
-import {CompiledModule} from '../runtime/compiled-code';
 import Executor from '../runtime/executor';
 import {NodePlatform} from '../runtime/node-platform';
 const {AnsiTerminal} = require('node-ansiterminal');
@@ -64,12 +62,11 @@ interface ExpectSpec {
 async function testCompileAndRun(testFile: string) {
   const testFilePath = path.join(TEST_SOURCE_DIR_PATH, testFile);
   const source = await fs.readFile(testFilePath, 'utf-8');
-  const {code} = await compile({
+  const {code, compiledModule} = await compile({
     source: await fs.readFile(testFilePath, 'utf-8'),
     sourceFileName: testFile,
   });
   await fs.writeFile(`${testFilePath}.js`, code);
-  const compiledModule = requireFromString(code) as CompiledModule;
 
   const expectSpec = parseExpectSpec(source);
   const nodePlatformForTest = new NodePlatformForTest();
