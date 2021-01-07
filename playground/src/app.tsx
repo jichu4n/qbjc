@@ -7,9 +7,12 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import React from 'react';
+import {Ace} from 'ace-builds';
+import React, {useCallback, useRef} from 'react';
+import {Terminal} from 'xterm';
 import './app.css';
 import Editor from './editor';
+import QbjcManager from './qbjc-manager';
 import Screen from './screen';
 
 const darkTheme = createMuiTheme({
@@ -40,6 +43,10 @@ function Header() {
 }
 
 function App() {
+  const editorRef = useRef<Ace.Editor | null>(null);
+  const terminalRef = useRef<Terminal | null>(null);
+  const qbjcManagerRef = useRef<QbjcManager | null>(null);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <div
@@ -61,8 +68,19 @@ function App() {
           }}
         >
           <div style={{position: 'relative', width: '50%', height: '100%'}}>
-            <Editor style={{width: '100%', height: '100%'}} />
+            <Editor
+              onInit={useCallback((editor) => (editorRef.current = editor), [])}
+              style={{width: '100%', height: '100%'}}
+            />
             <Fab
+              onClick={async () => {
+                const {current: editor} = editorRef;
+                const {current: qbjcManager} = qbjcManagerRef;
+                if (!qbjcManager || !editor) {
+                  return;
+                }
+                await qbjcManager.compileAndRun(editor.getValue());
+              }}
               color="primary"
               style={{
                 position: 'absolute',
@@ -74,7 +92,13 @@ function App() {
               <PlayArrowIcon />
             </Fab>
           </div>
-          <Screen style={{width: '50%', height: '100%'}} />
+          <Screen
+            onInit={(terminal) => {
+              terminalRef.current = terminal;
+              qbjcManagerRef.current = new QbjcManager(terminal);
+            }}
+            style={{width: '50%', height: '100%'}}
+          />
         </div>
       </div>
     </ThemeProvider>
