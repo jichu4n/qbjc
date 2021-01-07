@@ -17,7 +17,7 @@ function Screen({style = {}}: {style?: React.CSSProperties} = {}) {
     terminalRef.current = terminal;
   }, []);
 
-  return <div ref={init} style={{height: '100%', ...style}}></div>;
+  return <div ref={init} style={style}></div>;
 }
 
 export default Screen;

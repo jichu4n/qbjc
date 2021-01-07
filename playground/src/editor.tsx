@@ -15,7 +15,7 @@ function Editor({style = {}}: {style?: React.CSSProperties} = {}) {
     editorRef.current = editor;
   }, []);
 
-  return <div ref={init} style={{height: '100%', ...style}}></div>;
+  return <div ref={init} style={style}></div>;
 }
 
 export default Editor;
