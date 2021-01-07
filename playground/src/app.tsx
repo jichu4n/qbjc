@@ -2,6 +2,7 @@ import {createMuiTheme, ThemeProvider} from '@material-ui/core/styles';
 import React from 'react';
 import './app.css';
 import Editor from './editor';
+import Screen from './screen';
 
 const darkTheme = createMuiTheme({
   palette: {
@@ -21,7 +22,8 @@ function App() {
           backgroundColor: darkTheme.palette.background.default,
         }}
       >
-        <Editor style={{flexGrow: 1}} />
+        <Editor style={{width: '50%'}} />
+        <Screen style={{width: '50%'}} />
       </div>
     </ThemeProvider>
   );

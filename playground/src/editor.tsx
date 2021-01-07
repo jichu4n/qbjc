@@ -4,8 +4,8 @@ import React, {useCallback, useRef} from 'react';
 
 function Editor({style = {}}: {style?: React.CSSProperties} = {}) {
   const editorRef = useRef<Ace.Editor | null>(null);
-  const onRender = useCallback((node: HTMLDivElement | null) => {
-    if (!node) {
+  const init = useCallback((node: HTMLDivElement | null) => {
+    if (!node || editorRef.current) {
       return;
     }
     const editor = ace.edit(node);
@@ -15,9 +15,7 @@ function Editor({style = {}}: {style?: React.CSSProperties} = {}) {
     editorRef.current = editor;
   }, []);
 
-  return (
-    <div ref={onRender} style={{height: '100%', minWidth: 400, ...style}}></div>
-  );
+  return <div ref={init} style={{height: '100%', ...style}}></div>;
 }
 
 export default Editor;
