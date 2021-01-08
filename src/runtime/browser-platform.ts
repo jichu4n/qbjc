@@ -1,12 +1,26 @@
 import ansiEscapes from 'ansi-escapes';
 import {Terminal} from 'xterm';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
+import {CompiledModule} from './compiled-code';
 import Executor, {ExecutionOpts} from './executor';
 
 /** RuntimePlatform for the browser environment based on xterm.js. */
 export class BrowserPlatform extends AnsiTerminalPlatform {
   constructor(private readonly terminal: Terminal) {
     super();
+  }
+
+  async loadCompiledModule(code: string) {
+    // Drop "#!/usr/bin/env node" shebang line.
+    const match = code.match(/^(?:#![^\n]+\n)?([\s\S]+)$/);
+    if (!match) {
+      throw new Error(`Empty code string`);
+    }
+
+    const fn = new Function('module', match[1]);
+    const moduleObj = {exports: {}};
+    fn(moduleObj);
+    return moduleObj.exports as CompiledModule;
   }
 
   async delay(delayInUs: number) {

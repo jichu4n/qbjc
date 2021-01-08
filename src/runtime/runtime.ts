@@ -1,12 +1,26 @@
 import moo, {Token} from 'moo';
 import {DataTypeSpec, isNumeric, isString} from '../lib/types';
 import {BUILTIN_FNS, BUILTIN_SUBS, lookupBuiltin, RunContext} from './builtins';
-import {PrintArg, PrintArgType, Ptr, ValuePrintArg} from './compiled-code';
+import {
+  CompiledModule,
+  PrintArg,
+  PrintArgType,
+  Ptr,
+  ValuePrintArg,
+} from './compiled-code';
 import ansiStyles from 'ansi-styles';
 import roundHalfToEven from '../lib/round-half-to-even';
 
 /** Interface for platform-specific runtime functionality. */
 export abstract class RuntimePlatform {
+  /** Load a compiled module from output code.
+   *
+   * Warning: This will execute any module-level code with side effects in the string, so should NOT
+   * be used for untrusted input. Compiled code from qbjc does not have any module-level code with
+   * side effects.
+   */
+  abstract loadCompiledModule(code: string): Promise<CompiledModule>;
+
   /** Delay for the specified number of microseconds. */
   abstract delay(delayInUs: number): Promise<void>;
 

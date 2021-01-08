@@ -117,7 +117,7 @@ if (require.main === module) {
 
     if (opts.run) {
       const executor = new NodeExecutor();
-      await executor.executeModule(compileFileResult.compiledModule);
+      await executor.executeModule(compileFileResult.code);
     }
   })().catch((e) => {
     if ('message' in e) {

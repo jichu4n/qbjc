@@ -69,7 +69,11 @@ export default class Executor {
   }
 
   /** Executes a compiled module. */
-  async executeModule(module: CompiledModule) {
+  async executeModule(moduleOrCode: CompiledModule | string) {
+    const module =
+      typeof moduleOrCode === 'string'
+        ? await this.platform.loadCompiledModule(moduleOrCode)
+        : moduleOrCode;
     this.currentModule = module;
     this.buildLabelIndexMaps();
     this.localStaticVarsMap = {};

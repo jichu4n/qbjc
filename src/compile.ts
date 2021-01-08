@@ -19,31 +19,9 @@ export interface CompileResult {
   code: string;
   map: string;
   astModule: Module;
-  compiledModule: CompiledModule;
 }
 
 const DEFAULT_SOURCE_FILE_NAME = 'source.bas';
-
-/** Evaluates a compiled program and returns the CompiledModule.
- *
- * Warning: This will execute any module-level code with side effects in the string, so should NOT
- * be used for untrusted input. Compiled code from qbjc does not have any module-level code with
- * side effects.
- *
- * Inspired by https://github.com/amio/require-cjs-string/blob/master/index.js
- */
-function requireCompiledModule(code: string): CompiledModule {
-  // Drop "#!/usr/bin/env node" shebang line.
-  const match = code.match(/^(?:#![^\n]+\n)?([\s\S]+)$/);
-  if (!match) {
-    throw new Error(`Empty code string`);
-  }
-
-  const fn = new Function('module', match[1]);
-  const moduleObj = {exports: {}};
-  fn(moduleObj);
-  return moduleObj.exports as CompiledModule;
-}
 
 /** Compiles a QBasic program.
  *
@@ -89,7 +67,6 @@ async function compile({
     code,
     map: sourceMapContent,
     astModule,
-    compiledModule: requireCompiledModule(code),
   };
 }
 

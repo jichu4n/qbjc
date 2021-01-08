@@ -62,7 +62,7 @@ interface ExpectSpec {
 async function testCompileAndRun(testFile: string) {
   const testFilePath = path.join(TEST_SOURCE_DIR_PATH, testFile);
   const source = await fs.readFile(testFilePath, 'utf-8');
-  const {code, compiledModule} = await compile({
+  const {code} = await compile({
     source: await fs.readFile(testFilePath, 'utf-8'),
     sourceFileName: testFile,
   });
@@ -76,7 +76,7 @@ async function testCompileAndRun(testFile: string) {
 
   await new Executor(nodePlatformForTest, {
     stmtExecutionDelayUs: 0,
-  }).executeModule(compiledModule);
+  }).executeModule(code);
 
   const expectedOutput = _.flatMap(expectSpec.io ?? [], (ioItem) =>
     'output' in ioItem ? [ioItem.output] : []

@@ -1,0 +1,4 @@
+# Intermediate debugging output generated during testing.
+*.ast.json
+*.bas.js
+*.bas.js.map

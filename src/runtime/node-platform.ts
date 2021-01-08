@@ -1,10 +1,16 @@
 import ansiEscapes from 'ansi-escapes';
 import {performance} from 'perf_hooks';
+import requireFromString from 'require-from-string';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
+import {CompiledModule} from './compiled-code';
 import Executor, {ExecutionOpts} from './executor';
 
 /** RuntimePlatform for Node.JS on TTY. */
 export class NodePlatform extends AnsiTerminalPlatform {
+  async loadCompiledModule(code: string) {
+    return requireFromString(code) as CompiledModule;
+  }
+
   async delay(delayInUs: number) {
     const t0 = performance.now();
     while ((performance.now() - t0) * 1000 < delayInUs) {}

@@ -25,7 +25,7 @@ class QbjcManager {
     }
     this.executor = new BrowserExecutor(this.terminal);
     try {
-      await this.executor.executeModule(compileResult.compiledModule);
+      await this.executor.executeModule(compileResult.code);
     } finally {
       this.executor = null;
     }
