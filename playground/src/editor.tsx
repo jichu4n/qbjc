@@ -14,6 +14,10 @@ function Editor({
       }
       const editor = ace.edit(node);
       editor.setTheme('ace/theme/nord_dark');
+      editor.setOptions({
+        fontFamily: 'Cascadia Mono',
+        fontSize: '12px',
+      });
       editor.setShowPrintMargin(false);
       editor.session.setMode('ace/mode/vbscript');
       editorRef.current = editor;

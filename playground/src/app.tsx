@@ -1,3 +1,4 @@
+import '@fontsource/cascadia-mono';
 import AppBar from '@material-ui/core/AppBar';
 import Fab from '@material-ui/core/Fab';
 import IconButton from '@material-ui/core/IconButton';
