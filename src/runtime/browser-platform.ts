@@ -32,81 +32,91 @@ export class BrowserPlatform extends AnsiTerminalPlatform {
     let cursorIdx = 0;
     let {x: initialX} = await this.getCursorPosition();
     const {cols} = await this.getScreenSize();
+    const disposeFns: Array<() => void> = [];
     await new Promise<void>((resolve) => {
-      const {dispose} = this.terminal.onData(async (chunk: string) => {
-        switch (chunk) {
-          case '\r':
-            dispose();
-            this.print('\n');
-            resolve();
-            break;
-          case '\x7f': // backspace
-            if (text.length > 0 && cursorIdx > 0) {
-              text.splice(--cursorIdx, 1);
-              this.print(ansiEscapes.cursorBackward());
-              this.print(ansiEscapes.cursorSavePosition);
-              this.print(ansiEscapes.eraseEndLine);
-              this.print(text.slice(cursorIdx).join(''));
-              this.print(ansiEscapes.cursorRestorePosition);
-            }
-            break;
-          case '\x1b[3~': // delete
-            if (cursorIdx < text.length) {
-              text.splice(cursorIdx, 1);
-              this.print(ansiEscapes.cursorSavePosition);
-              this.print(ansiEscapes.eraseEndLine);
-              this.print(text.slice(cursorIdx).join(''));
-              this.print(ansiEscapes.cursorRestorePosition);
-            }
-            break;
-          case '\x1b[C': // right
-            if (cursorIdx < text.length) {
-              ++cursorIdx;
-              this.print(chunk);
-            }
-            break;
-          case '\x1b[D': // left
-            if (cursorIdx > 0) {
-              --cursorIdx;
-              this.print(chunk);
-            }
-            break;
-          case '\x1b[F': // end
-            if (cursorIdx < text.length) {
-              this.print(ansiEscapes.cursorForward(text.length - cursorIdx));
-              cursorIdx = text.length;
-            }
-            break;
-          case '\x1b[H': // home
-            if (cursorIdx > 0) {
-              this.print(ansiEscapes.cursorBackward(cursorIdx));
-              cursorIdx = 0;
-            }
-            break;
-          default:
-            // TODO: Support multi-line line editing.
-            if (
-              chunk.match(/^[\x20-\x7e]$/) &&
-              initialX + text.length < cols - 2
-            ) {
-              // Printable ASCII
-              text.splice(cursorIdx++, 0, chunk);
-              this.print(chunk);
-              this.print(ansiEscapes.cursorSavePosition);
-              this.print(text.slice(cursorIdx).join(''));
-              this.print(ansiEscapes.cursorRestorePosition);
-            } else {
-              console.log(
-                chunk
-                  .split('')
-                  .map((c) => c.charCodeAt(0))
-                  .join(', ')
-              );
-            }
-            break;
+      const {dispose: removeOnDataListenerFn} = this.terminal.onData(
+        async (chunk: string) => {
+          switch (chunk) {
+            case '\r':
+              this.print('\n');
+              resolve();
+              break;
+            case '\x7f': // backspace
+              if (text.length > 0 && cursorIdx > 0) {
+                text.splice(--cursorIdx, 1);
+                this.print(ansiEscapes.cursorBackward());
+                this.print(ansiEscapes.cursorSavePosition);
+                this.print(ansiEscapes.eraseEndLine);
+                this.print(text.slice(cursorIdx).join(''));
+                this.print(ansiEscapes.cursorRestorePosition);
+              }
+              break;
+            case '\x1b[3~': // delete
+              if (cursorIdx < text.length) {
+                text.splice(cursorIdx, 1);
+                this.print(ansiEscapes.cursorSavePosition);
+                this.print(ansiEscapes.eraseEndLine);
+                this.print(text.slice(cursorIdx).join(''));
+                this.print(ansiEscapes.cursorRestorePosition);
+              }
+              break;
+            case '\x1b[C': // right
+              if (cursorIdx < text.length) {
+                ++cursorIdx;
+                this.print(chunk);
+              }
+              break;
+            case '\x1b[D': // left
+              if (cursorIdx > 0) {
+                --cursorIdx;
+                this.print(chunk);
+              }
+              break;
+            case '\x1b[F': // end
+              if (cursorIdx < text.length) {
+                this.print(ansiEscapes.cursorForward(text.length - cursorIdx));
+                cursorIdx = text.length;
+              }
+              break;
+            case '\x1b[H': // home
+              if (cursorIdx > 0) {
+                this.print(ansiEscapes.cursorBackward(cursorIdx));
+                cursorIdx = 0;
+              }
+              break;
+            default:
+              // TODO: Support multi-line line editing.
+              if (
+                chunk.match(/^[\x20-\x7e]$/) &&
+                initialX + text.length < cols - 2
+              ) {
+                // Printable ASCII
+                text.splice(cursorIdx++, 0, chunk);
+                this.print(chunk);
+                this.print(ansiEscapes.cursorSavePosition);
+                this.print(text.slice(cursorIdx).join(''));
+                this.print(ansiEscapes.cursorRestorePosition);
+              } else {
+                console.log(
+                  chunk
+                    .split('')
+                    .map((c) => c.charCodeAt(0))
+                    .join(', ')
+                );
+              }
+              break;
+          }
         }
-      });
+      );
+      disposeFns.push(removeOnDataListenerFn);
+      const checkShouldStopExecutionIntervalId = setInterval(() => {
+        if (this.shouldStopExecution) {
+          resolve();
+        }
+      }, 20);
+      disposeFns.push(() => clearInterval(checkShouldStopExecutionIntervalId));
     });
+    disposeFns.forEach((fn) => fn());
     return text.join('');
   }
 

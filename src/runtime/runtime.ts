@@ -38,6 +38,12 @@ export abstract class RuntimePlatform {
   abstract setBgColor(colorName: ColorName): Promise<void>;
   /** BEEPs in the terminal. */
   abstract beep(): Promise<void>;
+
+  /** Flag indicating we should stop executing.
+   *
+   * Setting this flag will cause blocking methods like `inputLine()` to exit early.
+   */
+  shouldStopExecution: boolean = false;
 }
 
 export type ColorName = keyof ansiStyles.ForegroundColor;
@@ -243,15 +249,22 @@ export default class Runtime {
     return line;
   }
 
-  async input(prompt: string, ...resultTypes: Array<DataTypeSpec>) {
+  async input(
+    prompt: string,
+    ...resultTypes: Array<DataTypeSpec>
+  ): Promise<Array<string | number>> {
     for (;;) {
-      await this.platform.print(prompt);
+      const results: Array<string | number> = [];
 
+      await this.platform.print(prompt);
       const line = await this.inputLine('');
+      if (this.platform.shouldStopExecution) {
+        return results;
+      }
+
       const tokens = this.lexInput(line);
       let tokenIdx = 0;
 
-      const results: Array<string | number> = [];
       let errorMessage: string | null = null;
       for (let resultIdx = 0; resultIdx < resultTypes.length; ++resultIdx) {
         const resultType = resultTypes[resultIdx];
@@ -295,6 +308,8 @@ export default class Runtime {
           `\n${errorMessage ? `${errorMessage}\n` : ''}Redo from start\n`
         );
       } else {
+        // This would indicate a logic error above - we should stop consuming from input once the
+        // expected number of results has been reached.
         throw new Error(
           `Too many results: expected ${resultTypes.length}, got ${results.length}`
         );

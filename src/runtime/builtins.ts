@@ -185,7 +185,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     returnTypeSpec: stringSpec(),
     async run(n: number, {platform}: RunContext) {
       const result: Array<string> = [];
-      while (result.length < n) {
+      while (result.length < n && !platform.shouldStopExecution) {
         const c = await platform.getChar();
         if (c) {
           result.push(c);
@@ -626,7 +626,8 @@ export const BUILTIN_SUBS: Array<BuiltinSub> = [
           nowMs = new Date().getTime();
         } while (
           c === null &&
-          (numSeconds <= 0 || nowMs - startTimeMs < numSeconds * 1000)
+          (numSeconds <= 0 || nowMs - startTimeMs < numSeconds * 1000) &&
+          !platform.shouldStopExecution
         );
       },
     },
