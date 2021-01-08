@@ -3,9 +3,9 @@ import 'ace-builds/webpack-resolver';
 import React, {useCallback, useRef} from 'react';
 
 function Editor({
-  onInit = () => {},
+  onReady = () => {},
   style = {},
-}: {onInit?: (editor: Ace.Editor) => void; style?: React.CSSProperties} = {}) {
+}: {onReady?: (editor: Ace.Editor) => void; style?: React.CSSProperties} = {}) {
   const editorRef = useRef<Ace.Editor | null>(null);
   const init = useCallback(
     (node: HTMLDivElement | null) => {
@@ -17,9 +17,9 @@ function Editor({
       editor.setShowPrintMargin(false);
       editor.session.setMode('ace/mode/vbscript');
       editorRef.current = editor;
-      onInit(editor);
+      onReady(editor);
     },
-    [onInit]
+    [onReady]
   );
 
   return <div ref={init} style={style}></div>;

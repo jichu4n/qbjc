@@ -4,9 +4,9 @@ import {FitAddon} from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 
 function Screen({
-  onInit = () => {},
+  onReady = () => {},
   style = {},
-}: {onInit?: (terminal: Terminal) => void; style?: React.CSSProperties} = {}) {
+}: {onReady?: (terminal: Terminal) => void; style?: React.CSSProperties} = {}) {
   const terminalRef = useRef<Terminal | null>(null);
   const init = useCallback(
     (node: HTMLDivElement | null) => {
@@ -22,10 +22,13 @@ function Screen({
       terminal.loadAddon(fitAddon);
       terminal.open(node);
       fitAddon.fit();
+      window.addEventListener('resize', () => {
+        fitAddon.fit();
+      });
       terminalRef.current = terminal;
-      onInit(terminal);
+      onReady(terminal);
     },
-    [onInit]
+    [onReady]
   );
 
   return <div ref={init} style={style}></div>;

@@ -69,7 +69,10 @@ function App() {
         >
           <div style={{position: 'relative', width: '50%', height: '100%'}}>
             <Editor
-              onInit={useCallback((editor) => (editorRef.current = editor), [])}
+              onReady={useCallback(
+                (editor) => (editorRef.current = editor),
+                []
+              )}
               style={{width: '100%', height: '100%'}}
             />
             <Fab
@@ -82,6 +85,7 @@ function App() {
                 }
                 terminal.focus();
                 await qbjcManager.compileAndRun(editor.getValue());
+                editor.focus();
               }, [])}
               color="primary"
               style={{
@@ -95,10 +99,10 @@ function App() {
             </Fab>
           </div>
           <Screen
-            onInit={(terminal) => {
+            onReady={useCallback((terminal) => {
               terminalRef.current = terminal;
               qbjcManagerRef.current = new QbjcManager(terminal);
-            }}
+            }, [])}
             style={{width: '50%', height: '100%'}}
           />
         </div>
