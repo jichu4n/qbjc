@@ -3,6 +3,7 @@ import {performance} from 'perf_hooks';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
 import Executor, {ExecutionOpts} from './executor';
 
+/** RuntimePlatform for Node.JS on TTY. */
 export class NodePlatform extends AnsiTerminalPlatform {
   async delay(delayInUs: number) {
     const t0 = performance.now();

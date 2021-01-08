@@ -73,14 +73,16 @@ function App() {
               style={{width: '100%', height: '100%'}}
             />
             <Fab
-              onClick={async () => {
+              onClick={useCallback(async () => {
                 const {current: editor} = editorRef;
+                const {current: terminal} = terminalRef;
                 const {current: qbjcManager} = qbjcManagerRef;
-                if (!qbjcManager || !editor) {
+                if (!qbjcManager || !editor || !terminal) {
                   return;
                 }
+                terminal.focus();
                 await qbjcManager.compileAndRun(editor.getValue());
-              }}
+              }, [])}
               color="primary"
               style={{
                 position: 'absolute',

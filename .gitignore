@@ -1,6 +1,10 @@
 /node_modules
 
 /dist
+/browser.js
+/browser.d.ts
+/node.js
+/node.d.ts
 
 .DS_Store
 

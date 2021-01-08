@@ -1,7 +1,13 @@
-dist/
+/dist/
+
+# Generated files.
+/node.js
+/node.d.ts
+/browser.js
+/browser.d.ts
 
 # Generated parser.
-src/parser/grammar.ts
+/src/parser/grammar.ts
 
 # Intermediate debugging output generated during testing.
 *.bas.js

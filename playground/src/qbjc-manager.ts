@@ -1,4 +1,5 @@
 import {compile, CompileResult} from 'qbjc';
+import {BrowserExecutor} from 'qbjc/browser';
 import {Terminal} from 'xterm';
 
 class QbjcManager {
@@ -18,7 +19,8 @@ class QbjcManager {
       }
       return;
     }
-    this.terminal.writeln(compileResult.code);
+    const executor = new BrowserExecutor(this.terminal);
+    await executor.executeModule(compileResult.compiledModule);
   }
 }
 
