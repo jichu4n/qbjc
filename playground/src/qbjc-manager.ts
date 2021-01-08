@@ -6,6 +6,10 @@ class QbjcManager {
   constructor(private readonly terminal: Terminal) {}
 
   async compileAndRun(source: string) {
+    if (this.executor) {
+      return;
+    }
+
     let compileResult: CompileResult;
     try {
       compileResult = await compile({
@@ -19,9 +23,23 @@ class QbjcManager {
       }
       return;
     }
-    const executor = new BrowserExecutor(this.terminal);
-    await executor.executeModule(compileResult.compiledModule);
+    this.executor = new BrowserExecutor(this.terminal);
+    try {
+      await this.executor.executeModule(compileResult.compiledModule);
+    } finally {
+      this.executor = null;
+    }
   }
+
+  stop() {
+    if (!this.executor) {
+      return;
+    }
+    this.executor.stopExecution();
+  }
+
+  /** Current executor. */
+  private executor: BrowserExecutor | null = null;
 }
 
 export default QbjcManager;

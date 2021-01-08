@@ -74,6 +74,7 @@ export default class Executor {
     this.buildLabelIndexMaps();
     this.localStaticVarsMap = {};
     this.restore();
+    this.stopExecutionFlag = false;
     await this.platform.setCursorVisibility(false);
 
     const ctx: ExecutionContext = {
@@ -110,6 +111,11 @@ export default class Executor {
       this.restore();
       await this.platform.setCursorVisibility(true);
     }
+  }
+
+  /** Sets flag to stop execution. */
+  stopExecution() {
+    this.stopExecutionFlag = true;
   }
 
   private async executeProc(
@@ -186,6 +192,11 @@ export default class Executor {
     /** Index of the current statement to execute. */
     let stmtIdx = 0;
     while (stmtIdx < stmts.length) {
+      if (this.stopExecutionFlag) {
+        this.stopExecutionFlag = false;
+        throw new EndDirective();
+      }
+
       const stmt = stmts[stmtIdx];
       const errorArgs = {module: this.currentModule, stmt};
 
@@ -349,4 +360,7 @@ export default class Executor {
     stmtIdx: 0,
     itemIdx: 0,
   };
+
+  /** Flag indicating we should stop executing at the next statement. */
+  private stopExecutionFlag: boolean = false;
 }

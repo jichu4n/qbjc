@@ -7,9 +7,10 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import GitHubIcon from '@material-ui/icons/GitHub';
+import StopIcon from '@material-ui/icons/Stop';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import {Ace} from 'ace-builds';
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {Terminal} from 'xterm';
 import './app.css';
 import Editor from './editor';
@@ -47,6 +48,7 @@ function App() {
   const editorRef = useRef<Ace.Editor | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const qbjcManagerRef = useRef<QbjcManager | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -84,11 +86,20 @@ function App() {
                 if (!qbjcManager || !editor || !terminal) {
                   return;
                 }
-                terminal.focus();
-                await qbjcManager.compileAndRun(editor.getValue());
-                editor.focus();
-              }, [])}
-              color="primary"
+                if (isRunning) {
+                  qbjcManager.stop();
+                } else {
+                  setIsRunning(true);
+                  terminal.focus();
+                  try {
+                    await qbjcManager.compileAndRun(editor.getValue());
+                  } finally {
+                    setIsRunning(false);
+                    editor.focus();
+                  }
+                }
+              }, [isRunning])}
+              color={isRunning ? 'secondary' : 'primary'}
               style={{
                 position: 'absolute',
                 right: '2rem',
@@ -96,7 +107,7 @@ function App() {
                 zIndex: 10,
               }}
             >
-              <PlayArrowIcon />
+              {isRunning ? <StopIcon /> : <PlayArrowIcon />}
             </Fab>
           </div>
           <Screen
