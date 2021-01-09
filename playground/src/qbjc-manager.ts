@@ -4,17 +4,33 @@ import {compile, CompileResult} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
 import {Terminal} from 'xterm';
 
+export enum QbjcMessageType {
+  ERROR = 'error',
+  INFO = 'info',
+}
+
+export enum QbjcMessageIconType {
+  ERROR = 'error',
+  PLAY_CIRCLE = 'playCircle',
+}
+
+export interface QbjcMessage {
+  /** Parsed location in the source code. */
+  loc?: {line: number; col: number};
+  /** Message type. */
+  type: QbjcMessageType;
+  /** Message text. */
+  message: string;
+  /** Message icon. */
+  iconType?: QbjcMessageIconType;
+}
+
 class QbjcManager {
   /** Whether we're currently compiling / running code. */
   isRunning: boolean = false;
 
-  setEditor(editor: Ace.Editor) {
-    this.editor = editor;
-  }
-
-  setTerminal(terminal: Terminal) {
-    this.terminal = terminal;
-  }
+  /** Compiler errors and status messages. */
+  messages: Array<QbjcMessage> = [];
 
   async run() {
     if (!this.editor || !this.terminal || this.isRunning) {
@@ -28,24 +44,43 @@ class QbjcManager {
         source: this.editor.getValue(),
         sourceFileName: 'source',
       });
+      console.log(compileResult.code);
     } catch (e) {
       console.error(`Compile error: ${e.message ?? JSON.stringify(e)}`);
-      if (e.message) {
-        this.terminal.writeln(e.message);
-      }
       runInAction(() => {
         this.isRunning = false;
+        if (e.message) {
+          this.messages.push({
+            loc: e.loc,
+            type: QbjcMessageType.ERROR,
+            message: e.message,
+            iconType: QbjcMessageIconType.ERROR,
+          });
+        }
       });
       return;
     }
 
+    this.messages.push({
+      type: QbjcMessageType.INFO,
+      message: 'Running...',
+      iconType: QbjcMessageIconType.PLAY_CIRCLE,
+    });
+    const startTs = new Date();
     this.terminal.focus();
     this.executor = new BrowserExecutor(this.terminal);
     try {
       await this.executor.executeModule(compileResult.code);
     } finally {
+      const endTs = new Date();
       runInAction(() => {
         this.isRunning = false;
+        this.messages.push({
+          type: QbjcMessageType.INFO,
+          message:
+            'Exited in ' +
+            `${((endTs.getTime() - startTs.getTime()) / 1000).toFixed(3)}s`,
+        });
       });
       this.executor = null;
       this.editor.focus();
@@ -59,20 +94,30 @@ class QbjcManager {
     this.executor.stopExecution();
   }
 
+  goToMessageLocInEditor<
+    T extends {loc?: {line: number; col: number}} = QbjcMessage
+  >(message: T) {
+    if (!this.editor || !message.loc) {
+      return;
+    }
+    const {line, col} = message.loc;
+    this.editor.moveCursorTo(line - 1, col - 1);
+    this.editor.selection.selectWordRight();
+  }
+
   constructor() {
     makeObservable(this, {
       isRunning: observable,
-      setEditor: action,
-      setTerminal: action,
+      messages: observable,
       run: action,
     });
   }
 
   /** Ace editor. */
-  private editor: Ace.Editor | null = null;
+  editor: Ace.Editor | null = null;
 
   /** xterm.js terminal. */
-  private terminal: Terminal | null = null;
+  terminal: Terminal | null = null;
 
   /** Current executor. */
   private executor: BrowserExecutor | null = null;

@@ -40,7 +40,7 @@ async function compile({
   }
 
   // 2. Semantic analysis.
-  runSemanticAnalysis(astModule);
+  runSemanticAnalysis(astModule, {sourceFileName});
 
   // 3. Code generation.
   let {code, map: sourceMap} = codegen(astModule, {

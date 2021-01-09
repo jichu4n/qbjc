@@ -12,6 +12,9 @@ export default class ErrorWithLoc extends Error {
       const sourceFileNamePrefix = sourceFileName ? `${sourceFileName}:` : '';
       const locPrefix = `${loc.line}:${loc.col}`;
       this.message = `${sourceFileNamePrefix}${locPrefix} - ${this.message}`;
+      this.loc = loc;
     }
   }
+
+  loc?: {line: number; col: number};
 }
