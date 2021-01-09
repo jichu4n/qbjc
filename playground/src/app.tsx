@@ -7,11 +7,10 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import GitHubIcon from '@material-ui/icons/GitHub';
-import StopIcon from '@material-ui/icons/Stop';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import {Ace} from 'ace-builds';
-import React, {useCallback, useRef, useState} from 'react';
-import {Terminal} from 'xterm';
+import StopIcon from '@material-ui/icons/Stop';
+import {observer} from 'mobx-react';
+import React, {useCallback, useRef} from 'react';
 import './app.css';
 import Editor from './editor';
 import QbjcManager from './qbjc-manager';
@@ -44,11 +43,33 @@ function Header() {
   );
 }
 
-function App() {
-  const editorRef = useRef<Ace.Editor | null>(null);
-  const terminalRef = useRef<Terminal | null>(null);
-  const qbjcManagerRef = useRef<QbjcManager | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
+const RunFab = observer(({qbjcManager}: {qbjcManager: QbjcManager}) => {
+  const isRunning = qbjcManager.isRunning;
+  return (
+    <Fab
+      onClick={useCallback(async () => {
+        if (isRunning) {
+          qbjcManager.stop();
+        } else {
+          await qbjcManager.run();
+        }
+      }, [qbjcManager, isRunning])}
+      color={isRunning ? 'secondary' : 'primary'}
+      style={{
+        position: 'absolute',
+        right: '2rem',
+        bottom: '2rem',
+        zIndex: 10,
+      }}
+    >
+      {isRunning ? <StopIcon /> : <PlayArrowIcon />}
+    </Fab>
+  );
+});
+
+const App = observer(() => {
+  const qbjcManagerRef = useRef<QbjcManager>(new QbjcManager());
+  const qbjcManager = qbjcManagerRef.current;
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -72,55 +93,19 @@ function App() {
         >
           <div style={{position: 'relative', width: '50%', height: '100%'}}>
             <Editor
-              onReady={useCallback(
-                (editor) => (editorRef.current = editor),
-                []
-              )}
+              onReady={qbjcManager.setEditor.bind(qbjcManager)}
               style={{width: '100%', height: '100%'}}
             />
-            <Fab
-              onClick={useCallback(async () => {
-                const {current: editor} = editorRef;
-                const {current: terminal} = terminalRef;
-                const {current: qbjcManager} = qbjcManagerRef;
-                if (!qbjcManager || !editor || !terminal) {
-                  return;
-                }
-                if (isRunning) {
-                  qbjcManager.stop();
-                } else {
-                  setIsRunning(true);
-                  terminal.focus();
-                  try {
-                    await qbjcManager.compileAndRun(editor.getValue());
-                  } finally {
-                    setIsRunning(false);
-                    editor.focus();
-                  }
-                }
-              }, [isRunning])}
-              color={isRunning ? 'secondary' : 'primary'}
-              style={{
-                position: 'absolute',
-                right: '2rem',
-                bottom: '2rem',
-                zIndex: 10,
-              }}
-            >
-              {isRunning ? <StopIcon /> : <PlayArrowIcon />}
-            </Fab>
+            <RunFab qbjcManager={qbjcManager} />
           </div>
           <Screen
-            onReady={useCallback((terminal) => {
-              terminalRef.current = terminal;
-              qbjcManagerRef.current = new QbjcManager(terminal);
-            }, [])}
+            onReady={qbjcManager.setTerminal.bind(qbjcManager)}
             style={{width: '50%', height: '100%'}}
           />
         </div>
       </div>
     </ThemeProvider>
   );
-}
+});
 
 export default App;

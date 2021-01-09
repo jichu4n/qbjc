@@ -49,6 +49,8 @@
     "commander": "^7.1.0",
     "fs-extra": "^10.0.0",
     "lodash": "^4.17.21",
+    "mobx": "^6.0.4",
+    "mobx-react": "^7.0.5",
     "moo": "^0.5.1",
     "nearley": "^2.20.1",
     "require-from-string": "^2.0.2",
