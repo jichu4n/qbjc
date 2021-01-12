@@ -1,5 +1,5 @@
 import {DataItems} from './data-item';
-import ErrorWithLoc from './error-with-loc';
+import ErrorWithLoc, {Loc} from './error-with-loc';
 import {VarSymbol, VarSymbolTable} from './symbol-table';
 import {
   DataTypeSpec,
@@ -15,13 +15,7 @@ export type AstNode = Proc | Stmt | Expr;
 
 /** Common properties of AST nodes. */
 export interface AstNodeBase {
-  loc: AstNodeLocation;
-}
-
-/** Location of an AST node in the source file. */
-export interface AstNodeLocation {
-  line: number;
-  col: number;
+  loc: Loc;
 }
 
 // ----

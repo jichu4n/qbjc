@@ -1,6 +1,6 @@
 import {Ace} from 'ace-builds';
 import {action, makeObservable, observable, runInAction} from 'mobx';
-import {compile, CompileResult} from 'qbjc';
+import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
 import {Terminal} from 'xterm';
 
@@ -16,7 +16,7 @@ export enum QbjcMessageIconType {
 
 export interface QbjcMessage {
   /** Parsed location in the source code. */
-  loc?: {line: number; col: number};
+  loc?: Loc;
   /** Message type. */
   type: QbjcMessageType;
   /** Message text. */
@@ -94,13 +94,11 @@ class QbjcManager {
     this.executor.stopExecution();
   }
 
-  goToMessageLocInEditor<
-    T extends {loc?: {line: number; col: number}} = QbjcMessage
-  >(message: T) {
-    if (!this.editor || !message.loc) {
+  goToMessageLocInEditor(loc: Loc) {
+    if (!this.editor || !loc) {
       return;
     }
-    const {line, col} = message.loc;
+    const {line, col} = loc;
     this.editor.moveCursorTo(line - 1, col - 1);
     this.editor.selection.selectWordRight();
   }

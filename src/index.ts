@@ -1,5 +1,6 @@
 export {CompileArgs, CompileResult, default as compile} from './compile';
 
+export * from './lib/error-with-loc';
 export * from './lib/types';
 export {
   ExecutionOpts,

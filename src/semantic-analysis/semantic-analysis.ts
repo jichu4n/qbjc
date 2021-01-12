@@ -2,7 +2,6 @@ import _ from 'lodash';
 import {
   AssignStmt,
   AstNodeBase,
-  AstNodeLocation,
   AstVisitor,
   BinaryOp,
   BinaryOpExpr,
@@ -53,6 +52,7 @@ import {
   UncondLoopStmt,
   VarRefExpr,
 } from '../lib/ast';
+import {Loc} from '../lib/error-with-loc';
 import {lookupSymbol, VarScope, VarSymbol, VarType} from '../lib/symbol-table';
 import {
   areMatchingElementaryTypes,
@@ -187,7 +187,7 @@ export class SemanticAnalyzer extends AstVisitor<void> {
   }
 
   private getLabels(stmts: Stmts) {
-    const labelLocMap: {[key: string]: AstNodeLocation} = {};
+    const labelLocMap: {[key: string]: Loc} = {};
     for (const stmt of stmts) {
       if (stmt.type !== StmtType.LABEL) {
         continue;

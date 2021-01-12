@@ -1,3 +1,9 @@
+/** Location of an error in the source file. */
+export interface Loc {
+  line: number;
+  col: number;
+}
+
 /** An error with source file and location info. */
 export default class ErrorWithLoc extends Error {
   constructor(
@@ -16,5 +22,5 @@ export default class ErrorWithLoc extends Error {
     }
   }
 
-  loc?: {line: number; col: number};
+  loc?: Loc;
 }
