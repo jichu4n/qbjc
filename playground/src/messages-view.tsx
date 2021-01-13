@@ -2,7 +2,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import {Theme} from '@material-ui/core/styles';
+import {useTheme} from '@material-ui/core/styles';
 import ErrorIcon from '@material-ui/icons/Error';
 import PlayCircleIcon from '@material-ui/icons/PlayCircleFilled';
 import {observer} from 'mobx-react';
@@ -22,15 +22,14 @@ const QBJC_ICON_TYPE_MAP = {
 const MessagesView = observer(
   ({
     messages,
-    theme,
     onLocClick,
     style = {},
   }: {
     messages: Array<QbjcMessage>;
-    theme: Theme;
     onLocClick: (loc: Loc) => void;
     style?: React.CSSProperties;
   }) => {
+    const theme = useTheme();
     const QBJC_MESSAGE_TYPE_COLOR_MAP = useMemo(
       () =>
         ({

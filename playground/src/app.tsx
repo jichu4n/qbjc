@@ -8,39 +8,64 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import SettingsIcon from '@material-ui/icons/Settings';
 import StopIcon from '@material-ui/icons/Stop';
 import {observer} from 'mobx-react';
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import './app.css';
 import Editor from './editor';
-import QbjcManager from './qbjc-manager';
 import MessagesView from './messages-view';
+import QbjcManager from './qbjc-manager';
 import Screen from './screen';
+import SettingsDialog from './settings-dialog';
+import blue from '@material-ui/core/colors/blue';
 
 const darkTheme = createMuiTheme({
   palette: {
     type: 'dark',
+    primary: {
+      light: blue[300],
+      main: blue[400],
+      dark: blue[700],
+      contrastText: 'white',
+    },
   },
 });
 
 function Header() {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   return (
-    <AppBar position="relative" color="default">
-      <Toolbar>
-        <Typography variant="h6" style={{flexGrow: 1}}>
-          qbjc Playground
-        </Typography>
-        <Tooltip title="View project on GitHub">
-          <IconButton
-            aria-label="View project on GitHub"
-            color="inherit"
-            href="https://github.com/jichu4n/qbjc"
-          >
-            <GitHubIcon />
-          </IconButton>
-        </Tooltip>
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar position="relative" color="default">
+        <Toolbar>
+          <Typography variant="h6" style={{flexGrow: 1}}>
+            qbjc Playground
+          </Typography>
+          <Tooltip title="Settings">
+            <IconButton
+              aria-label="Edit settings"
+              color="inherit"
+              onClick={() => setIsSettingsDialogOpen(true)}
+            >
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="View project on GitHub">
+            <IconButton
+              aria-label="View project on GitHub"
+              color="inherit"
+              href="https://github.com/jichu4n/qbjc"
+            >
+              <GitHubIcon />
+            </IconButton>
+          </Tooltip>
+        </Toolbar>
+      </AppBar>
+      <SettingsDialog
+        isOpen={isSettingsDialogOpen}
+        onClose={() => setIsSettingsDialogOpen(false)}
+      />
+    </>
   );
 }
 
@@ -113,7 +138,6 @@ const App = observer(() => {
             />
             <MessagesView
               messages={qbjcManager.messages}
-              theme={darkTheme}
               onLocClick={useCallback(
                 (loc) => qbjcManager.goToMessageLocInEditor(loc),
                 [qbjcManager]
