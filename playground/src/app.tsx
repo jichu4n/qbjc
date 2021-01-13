@@ -18,6 +18,7 @@ import MessagesView from './messages-view';
 import QbjcManager from './qbjc-manager';
 import Screen from './screen';
 import SettingsDialog from './settings-dialog';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import blue from '@material-ui/core/colors/blue';
 
 const darkTheme = createMuiTheme({
@@ -99,6 +100,7 @@ const App = observer(() => {
 
   return (
     <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
       <div
         style={{
           display: 'flex',

@@ -22,7 +22,7 @@ import configManager, {
   EDITOR_THEME_GROUPS,
 } from './config-manager';
 
-const SETTING_EDITOR_INPUT_WIDTH = 300;
+const SETTING_EDITOR_INPUT_WIDTH = 400;
 
 function TextSettingEditorDialog({
   configKey,
@@ -46,7 +46,7 @@ function TextSettingEditorDialog({
           fullWidth={true}
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          style={{width: SETTING_EDITOR_INPUT_WIDTH}}
+          style={{width: SETTING_EDITOR_INPUT_WIDTH, maxWidth: '100%'}}
           InputProps={{style: {fontSize: '0.9rem'}}}
         />
       </DialogContent>
@@ -99,7 +99,11 @@ function SliderSettingEditorDialog({
           step={step}
           marks={true}
           valueLabelDisplay="on"
-          style={{width: SETTING_EDITOR_INPUT_WIDTH, marginTop: 40}}
+          style={{
+            width: SETTING_EDITOR_INPUT_WIDTH,
+            maxWidth: '100%',
+            marginTop: 40,
+          }}
         />
       </DialogContent>
       <DialogActions>
@@ -174,6 +178,7 @@ function SingleChoiceSettingEditorDialog({
         subheader={<li />}
         style={{
           overflowY: 'auto',
+          overflowX: 'hidden',
           maxHeight: 400,
           backgroundColor: theme.palette.background.paper,
         }}
@@ -285,7 +290,7 @@ const SettingsDialog = observer(
             subheader={<li />}
             style={{
               overflowY: 'auto',
-              maxHeight: 400,
+              maxHeight: 600,
               backgroundColor: theme.palette.background.paper,
             }}
           >
@@ -357,7 +362,9 @@ const SettingsDialog = observer(
                 >
                   <ListItemText
                     primary="Letter spacing"
-                    secondary={configManager.getKey(ConfigKey.SCREEN_LETTER_SPACING)}
+                    secondary={configManager.getKey(
+                      ConfigKey.SCREEN_LETTER_SPACING
+                    )}
                   />
                 </ListItem>
               </ul>

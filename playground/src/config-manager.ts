@@ -28,7 +28,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.SOURCE_FILES]: [{name: 'default', content: ''}],
   [ConfigKey.CURRENT_SOURCE_FILE_NAME]: 'default',
   [ConfigKey.EDITOR_FONT_FAMILY]: 'Cascadia Mono',
-  [ConfigKey.EDITOR_FONT_SIZE]: 13,
+  [ConfigKey.EDITOR_FONT_SIZE]: 14,
   [ConfigKey.EDITOR_THEME]: 'nord_dark',
   [ConfigKey.SCREEN_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
