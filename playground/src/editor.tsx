@@ -1,6 +1,7 @@
 import ace, {Ace} from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import React, {useCallback, useRef} from 'react';
+import configManager from './config-manager';
 
 function Editor({
   onReady = () => {},
@@ -20,6 +21,11 @@ function Editor({
       });
       editor.setShowPrintMargin(false);
       editor.session.setMode('ace/mode/vbscript');
+
+      editor.setValue(configManager.currentSourceFile.content || '');
+      editor.on('change', () =>
+        configManager.updateCurrentSourceFileContent(editor.getValue())
+      );
       editorRef.current = editor;
       onReady(editor);
     },

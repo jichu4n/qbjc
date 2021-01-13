@@ -49,19 +49,19 @@ class QbjcManager {
       console.error(`Compile error: ${e.message ?? JSON.stringify(e)}`);
       runInAction(() => {
         this.isRunning = false;
-        if (e.message) {
-          this.messages.push({
-            loc: e.loc,
-            type: QbjcMessageType.ERROR,
-            message: e.message,
-            iconType: QbjcMessageIconType.ERROR,
-          });
-        }
       });
+      if (e.message) {
+        this.pushMessage({
+          loc: e.loc,
+          type: QbjcMessageType.ERROR,
+          message: e.message,
+          iconType: QbjcMessageIconType.ERROR,
+        });
+      }
       return;
     }
 
-    this.messages.push({
+    this.pushMessage({
       type: QbjcMessageType.INFO,
       message: 'Running...',
       iconType: QbjcMessageIconType.PLAY_CIRCLE,
@@ -75,12 +75,12 @@ class QbjcManager {
       const endTs = new Date();
       runInAction(() => {
         this.isRunning = false;
-        this.messages.push({
-          type: QbjcMessageType.INFO,
-          message:
-            'Exited in ' +
-            `${((endTs.getTime() - startTs.getTime()) / 1000).toFixed(3)}s`,
-        });
+      });
+      this.pushMessage({
+        type: QbjcMessageType.INFO,
+        message:
+          'Exited in ' +
+          `${((endTs.getTime() - startTs.getTime()) / 1000).toFixed(3)}s`,
       });
       this.executor = null;
       this.editor.focus();
@@ -103,11 +103,16 @@ class QbjcManager {
     this.editor.selection.selectWordRight();
   }
 
+  pushMessage(message: QbjcMessage) {
+    this.messages.push(message);
+  }
+
   constructor() {
     makeObservable(this, {
       isRunning: observable,
       messages: observable,
       run: action,
+      pushMessage: action,
     });
   }
 
