@@ -1,16 +1,23 @@
 import {autorun} from 'mobx';
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
 import * as xtermWebfont from 'xterm-webfont';
 import 'xterm/css/xterm.css';
 import configManager, {ConfigKey} from './config-manager';
+import PaneHeader from './pane-header';
 
-function Screen({
+function OutputScreenPane({
   onReady = () => {},
   style = {},
-}: {onReady?: (terminal: Terminal) => void; style?: React.CSSProperties} = {}) {
+  dimensions = null,
+}: {
+  onReady?: (terminal: Terminal) => void;
+  style?: React.CSSProperties;
+  dimensions?: any;
+} = {}) {
   const terminalRef = useRef<Terminal | null>(null);
+  const fitAddOnRef = useRef<FitAddon | null>(null);
   const init = useCallback(
     async (node: HTMLDivElement | null) => {
       if (!node || terminalRef.current) {
@@ -45,12 +52,32 @@ function Screen({
         fitAddon.fit();
       });
       terminalRef.current = terminal;
+      fitAddOnRef.current = fitAddon;
       onReady(terminal);
     },
     [onReady]
   );
+  const prevDimensionsJson = useRef('');
+  const dimensionsJson = JSON.stringify(dimensions);
+  useEffect(() => {
+    if (
+      prevDimensionsJson.current === dimensionsJson ||
+      !terminalRef.current ||
+      !fitAddOnRef.current
+    ) {
+      return;
+    }
+    console.log('FIT');
+    fitAddOnRef.current.fit();
+    prevDimensionsJson.current = dimensionsJson;
+  }, [dimensionsJson]);
 
-  return <div ref={init} style={style}></div>;
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', ...style}}>
+      <PaneHeader title="Output"></PaneHeader>
+      <div ref={init} style={{flex: 1}}></div>
+    </div>
+  );
 }
 
-export default Screen;
+export default OutputScreenPane;

@@ -1,5 +1,7 @@
 import '@fontsource/cascadia-mono';
 import AppBar from '@material-ui/core/AppBar';
+import blue from '@material-ui/core/colors/blue';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import Fab from '@material-ui/core/Fab';
 import IconButton from '@material-ui/core/IconButton';
 import {createMuiTheme, ThemeProvider} from '@material-ui/core/styles';
@@ -12,14 +14,14 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import StopIcon from '@material-ui/icons/Stop';
 import {observer} from 'mobx-react';
 import React, {useCallback, useRef, useState} from 'react';
+import Split from 'react-split';
 import './app.css';
 import Editor from './editor';
-import MessagesView from './messages-view';
+import MessagesPane from './messages-pane';
+import OutputScreenPane from './output-screen-pane';
 import QbjcManager from './qbjc-manager';
-import Screen from './screen';
 import SettingsDialog from './settings-dialog';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import blue from '@material-ui/core/colors/blue';
+import './split.css';
 
 const darkTheme = createMuiTheme({
   palette: {
@@ -97,6 +99,10 @@ const RunFab = observer(({qbjcManager}: {qbjcManager: QbjcManager}) => {
 const App = observer(() => {
   const qbjcManagerRef = useRef<QbjcManager>(new QbjcManager());
   const qbjcManager = qbjcManagerRef.current;
+  const [dimensions, setDimensions] = useState<{
+    horizontalSplit?: Array<number>;
+    rightVerticalSplit?: Array<number>;
+  } | null>({});
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -111,43 +117,65 @@ const App = observer(() => {
         }}
       >
         <Header />
-        <div
+        <Split
+          minSize={300}
+          sizes={[50, 50]}
+          gutterSize={6}
+          onDragEnd={(sizes: Array<number>) => {
+            setDimensions({
+              ...dimensions,
+              horizontalSplit: sizes,
+            });
+          }}
           style={{
             display: 'flex',
             flexDirection: 'row',
             flexGrow: 1,
-            marginTop: 2,
+            marginTop: 5,
           }}
         >
-          <div style={{position: 'relative', width: '50%', height: '100%'}}>
+          <div style={{position: 'relative'}}>
             <Editor
               onReady={(editor) => (qbjcManager.editor = editor)}
-              style={{width: '100%', height: '100%'}}
+              style={{
+                width: '100%',
+                height: '100%',
+                // @ts-ignore
+                overflow: 'overlay',
+              }}
             />
             <RunFab qbjcManager={qbjcManager} />
           </div>
-          <div
+          <Split
+            direction="vertical"
+            sizes={[80, 20]}
+            minSize={100}
+            expandToMin={true}
+            onDragEnd={(sizes: Array<number>) => {
+              setDimensions({
+                ...dimensions,
+                rightVerticalSplit: sizes,
+              });
+            }}
             style={{
               display: 'flex',
               flexDirection: 'column',
-              width: '50%',
-              height: '100%',
             }}
           >
-            <Screen
+            <OutputScreenPane
               onReady={(terminal) => (qbjcManager.terminal = terminal)}
-              style={{width: '100%', flexGrow: 1}}
+              style={{width: '100%'}}
+              dimensions={dimensions}
             />
-            <MessagesView
+            <MessagesPane
               messages={qbjcManager.messages}
               onLocClick={useCallback(
                 (loc) => qbjcManager.goToMessageLocInEditor(loc),
                 [qbjcManager]
               )}
-              style={{height: '10rem'}}
             />
-          </div>
-        </div>
+          </Split>
+        </Split>
       </div>
     </ThemeProvider>
   );

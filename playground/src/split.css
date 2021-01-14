@@ -1,0 +1,33 @@
+/** Styles for react-split. */
+
+.gutter {
+  background-color: #303030;
+  background-repeat: no-repeat;
+  background-position: 50%;
+  opacity: 0.4;
+}
+
+.gutter:hover {
+  background-color: #616161;
+  opacity: 1;
+}
+
+.gutter.gutter-horizontal {
+  border-left: 1px solid #212121;
+  border-right: 1px solid #212121;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  cursor: col-resize;
+}
+.gutter.gutter.gutter-horizontal:hover {
+  border: none;
+}
+
+.gutter.gutter-vertical {
+  border-top: 1px solid #212121;
+  border-bottom: 1px solid #212121;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+  cursor: row-resize;
+}
+.gutter.gutter-vertical:hover {
+  border: none;
+}

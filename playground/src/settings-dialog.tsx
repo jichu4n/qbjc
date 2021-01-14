@@ -177,12 +177,13 @@ function SingleChoiceSettingEditorDialog({
       <List
         subheader={<li />}
         style={{
-          overflowY: 'auto',
+          // @ts-ignore
+          overflowY: 'overlay',
           overflowX: 'hidden',
           maxHeight: 400,
           backgroundColor: theme.palette.background.paper,
         }}
-        ref={(node) => {
+        ref={(node: HTMLUListElement | null) => {
           listRef.current = node;
           scrollToSelectedListItem();
         }}
@@ -289,7 +290,8 @@ const SettingsDialog = observer(
           <List
             subheader={<li />}
             style={{
-              overflowY: 'auto',
+              // @ts-ignore
+              overflowY: 'overlay',
               maxHeight: 600,
               backgroundColor: theme.palette.background.paper,
             }}
