@@ -54,6 +54,10 @@ function OutputScreenPane({
           'letterSpacing',
           configManager.getKey(ConfigKey.SCREEN_LETTER_SPACING)
         );
+        terminal.setOption(
+          'lineHeight',
+          configManager.getKey(ConfigKey.SCREEN_LINE_HEIGHT)
+        );
         fitAddon.fit();
       });
       window.addEventListener(
@@ -84,7 +88,13 @@ function OutputScreenPane({
   }, [dimensionsJson]);
 
   return (
-    <div style={{display: 'flex', flexDirection: 'column', ...style}}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        ...style,
+      }}
+    >
       <PaneHeader title="Output">
         {!isRunning && (
           <Tooltip title="Clear output">
@@ -99,7 +109,18 @@ function OutputScreenPane({
           </Tooltip>
         )}
       </PaneHeader>
-      <div ref={init} style={{flex: 1, overflow: 'hidden'}}></div>
+      <div
+        ref={init}
+        style={{
+          // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the full
+          // height in the parent but prevents it from growing beyond the parent size when changing
+          // lineHeight. ¯\_(ツ)_/¯
+          flexGrow: 1,
+          height: 0,
+          // @ts-ignore
+          overflowY: 'overlay',
+        }}
+      ></div>
     </div>
   );
 }

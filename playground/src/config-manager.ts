@@ -22,6 +22,7 @@ export enum ConfigKey {
   SCREEN_FONT_FAMILY = 'v1/outputScreenFontFamily',
   SCREEN_FONT_SIZE = 'v1/outputScreenFontSize',
   SCREEN_LETTER_SPACING = 'v1/outputScreenLetterSpacing',
+  SCREEN_LINE_HEIGHT = 'v1/outputScreenLineHeight',
 }
 
 const DEFAULT_CONFIG = {
@@ -33,6 +34,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.SCREEN_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
   [ConfigKey.SCREEN_LETTER_SPACING]: 0,
+  [ConfigKey.SCREEN_LINE_HEIGHT]: 1.0,
 };
 
 export const EDITOR_THEME_GROUPS = [

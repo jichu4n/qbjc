@@ -275,6 +275,10 @@ const SettingsDialog = observer(
       isScreenLetterSpacingDialogOpen,
       setIsScreenLetterSpacingDialogOpen,
     ] = useState(false);
+    const [
+      isScreenLineHeightDialogOpen,
+      setIsScreenLineHeightDialogOpen,
+    ] = useState(false);
 
     return (
       <>
@@ -369,6 +373,17 @@ const SettingsDialog = observer(
                     )}
                   />
                 </ListItem>
+                <ListItem
+                  button={true}
+                  onClick={() => setIsScreenLineHeightDialogOpen(true)}
+                >
+                  <ListItemText
+                    primary="Line height"
+                    secondary={configManager.getKey(
+                      ConfigKey.SCREEN_LINE_HEIGHT
+                    )}
+                  />
+                </ListItem>
               </ul>
             </li>
           </List>
@@ -426,6 +441,15 @@ const SettingsDialog = observer(
           min={0}
           max={8}
           step={1}
+        />
+        <SliderSettingEditorDialog
+          isOpen={isScreenLineHeightDialogOpen}
+          onClose={() => setIsScreenLineHeightDialogOpen(false)}
+          title="Output screen line height"
+          configKey={ConfigKey.SCREEN_LINE_HEIGHT}
+          min={1.0}
+          max={2.0}
+          step={0.05}
         />
       </>
     );
