@@ -1,21 +1,20 @@
 /** Styles for react-split. */
 
+:root {
+  --gutter-border-color: #2c2c2c;
+}
+
 .gutter {
   background-color: #303030;
-  background-repeat: no-repeat;
-  background-position: 50%;
-  opacity: 0.4;
 }
 
 .gutter:hover {
   background-color: #616161;
-  opacity: 1;
 }
 
 .gutter.gutter-horizontal {
-  border-left: 1px solid #212121;
-  border-right: 1px solid #212121;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+  border-left: 1px solid var(--gutter-border-color);
+  border-right: 1px solid var(--gutter-border-color);
   cursor: col-resize;
 }
 .gutter.gutter.gutter-horizontal:hover {
@@ -23,9 +22,8 @@
 }
 
 .gutter.gutter-vertical {
-  border-top: 1px solid #212121;
-  border-bottom: 1px solid #212121;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+  border-top: 1px solid var(--gutter-border-color);
+  border-bottom: 1px solid var(--gutter-border-color);
   cursor: row-resize;
 }
 .gutter.gutter-vertical:hover {

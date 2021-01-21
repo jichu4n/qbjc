@@ -40,6 +40,8 @@ const darkTheme = createMuiTheme({
   },
 });
 
+const SPLIT_GUTTER_SIZE = 6;
+
 function SplashScreen({isReady}: {isReady: boolean}) {
   enum Status {
     VISIBLE = 'visible',
@@ -181,7 +183,6 @@ const App = observer(() => {
         <Split
           minSize={300}
           sizes={[50, 50]}
-          gutterSize={6}
           onDragEnd={(sizes: Array<number>) => {
             setDimensions({
               ...dimensions,
@@ -194,6 +195,7 @@ const App = observer(() => {
             flexGrow: 1,
             marginTop: 5,
           }}
+          gutterSize={SPLIT_GUTTER_SIZE}
         >
           <div style={{position: 'relative'}}>
             <Editor
@@ -210,7 +212,6 @@ const App = observer(() => {
           <Split
             direction="vertical"
             sizes={[80, 20]}
-            gutterSize={6}
             minSize={100}
             expandToMin={true}
             onDragEnd={(sizes: Array<number>) => {
@@ -223,6 +224,7 @@ const App = observer(() => {
               display: 'flex',
               flexDirection: 'column',
             }}
+            gutterSize={SPLIT_GUTTER_SIZE}
           >
             <OutputScreenPane
               onReady={(terminal) => qbjcManager.init({terminal})}
