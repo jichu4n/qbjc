@@ -1,3 +1,8 @@
+import IconButton from '@material-ui/core/IconButton';
+import {useTheme} from '@material-ui/core/styles';
+import Tooltip from '@material-ui/core/Tooltip';
+import BlockIcon from '@material-ui/icons/Block';
+import _ from 'lodash';
 import {autorun} from 'mobx';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {Terminal} from 'xterm';
@@ -11,11 +16,14 @@ function OutputScreenPane({
   onReady = () => {},
   style = {},
   dimensions = null,
+  isRunning = false,
 }: {
   onReady?: (terminal: Terminal) => void;
   style?: React.CSSProperties;
   dimensions?: any;
+  isRunning?: boolean;
 } = {}) {
+  const theme = useTheme();
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddOnRef = useRef<FitAddon | null>(null);
   const init = useCallback(
@@ -31,7 +39,7 @@ function OutputScreenPane({
       const fitAddon = new FitAddon();
       terminal.loadAddon(fitAddon);
       terminal.loadAddon(new xtermWebfont());
-      // @ts-ignore method added by xterm-webfont addon
+      // @ts-ignore: method added by xterm-webfont addon
       await terminal.loadWebfontAndOpen(node);
       autorun(() => {
         terminal.setOption(
@@ -48,9 +56,13 @@ function OutputScreenPane({
         );
         fitAddon.fit();
       });
-      window.addEventListener('resize', () => {
-        fitAddon.fit();
-      });
+      window.addEventListener(
+        'resize',
+        _.debounce(() => fitAddon.fit(), 200)
+      );
+      terminal.onResize(({rows, cols}) =>
+        console.log(`Resized terminal to ${cols}x${rows}`)
+      );
       terminalRef.current = terminal;
       fitAddOnRef.current = fitAddon;
       onReady(terminal);
@@ -67,15 +79,27 @@ function OutputScreenPane({
     ) {
       return;
     }
-    console.log('FIT');
     fitAddOnRef.current.fit();
     prevDimensionsJson.current = dimensionsJson;
   }, [dimensionsJson]);
 
   return (
     <div style={{display: 'flex', flexDirection: 'column', ...style}}>
-      <PaneHeader title="Output"></PaneHeader>
-      <div ref={init} style={{flex: 1}}></div>
+      <PaneHeader title="Output">
+        {!isRunning && (
+          <Tooltip title="Clear output">
+            <IconButton onClick={() => terminalRef.current?.reset()}>
+              <BlockIcon
+                style={{
+                  fontSize: theme.typography.overline.fontSize,
+                  color: theme.palette.text.secondary,
+                }}
+              />
+            </IconButton>
+          </Tooltip>
+        )}
+      </PaneHeader>
+      <div ref={init} style={{flex: 1, overflow: 'hidden'}}></div>
     </div>
   );
 }

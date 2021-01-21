@@ -1,5 +1,5 @@
 import {Ace} from 'ace-builds';
-import {action, makeObservable, observable, runInAction} from 'mobx';
+import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
 import {Terminal} from 'xterm';
@@ -31,6 +31,21 @@ class QbjcManager {
 
   /** Compiler errors and status messages. */
   messages: Array<QbjcMessage> = [];
+
+  /** Connects this QbjcManager to the provided editor and terminal. */
+  init({editor, terminal}: {editor?: Ace.Editor; terminal?: Terminal}) {
+    if (editor) {
+      this.editor = editor;
+    }
+    if (terminal) {
+      this.terminal = terminal;
+    }
+  }
+
+  /** Whether the required components (editor and terminal) are connected. */
+  get isReady() {
+    return !!this.editor && !!this.terminal;
+  }
 
   async run() {
     if (!this.editor || !this.terminal || this.isRunning) {
@@ -107,12 +122,21 @@ class QbjcManager {
     this.messages.push(message);
   }
 
+  clearMessages() {
+    this.messages.splice(0, this.messages.length);
+  }
+
   constructor() {
     makeObservable(this, {
+      init: action,
+      isReady: computed,
       isRunning: observable,
       messages: observable,
       run: action,
       pushMessage: action,
+      clearMessages: action,
+      editor: observable.ref,
+      terminal: observable.ref,
     });
   }
 

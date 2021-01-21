@@ -1,24 +1,21 @@
+import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import {useTheme} from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
+import Tooltip from '@material-ui/core/Tooltip';
+import BlockIcon from '@material-ui/icons/Block';
 import ErrorIcon from '@material-ui/icons/Error';
 import PlayCircleIcon from '@material-ui/icons/PlayCircleFilled';
-import BlockIcon from '@material-ui/icons/Block';
-import Paper from '@material-ui/core/Paper';
 import {observer} from 'mobx-react';
 import {Loc} from 'qbjc';
 import React, {useCallback, useEffect, useMemo, useRef} from 'react';
-import {
-  QbjcMessage,
+import PaneHeader from './pane-header';
+import QbjcManager, {
   QbjcMessageIconType,
   QbjcMessageType,
 } from './qbjc-manager';
-import Tooltip from '@material-ui/core/Tooltip';
-import IconButton from '@material-ui/core/IconButton';
-import PaneHeader from './pane-header';
 
 const QBJC_ICON_TYPE_MAP = {
   [QbjcMessageIconType.ERROR]: ErrorIcon,
@@ -27,11 +24,11 @@ const QBJC_ICON_TYPE_MAP = {
 
 const MessagesPane = observer(
   ({
-    messages,
+    qbjcManager,
     onLocClick,
     style = {},
   }: {
-    messages: Array<QbjcMessage>;
+    qbjcManager: QbjcManager;
     onLocClick: (loc: Loc) => void;
     style?: React.CSSProperties;
   }) => {
@@ -53,7 +50,7 @@ const MessagesPane = observer(
       const {current: listEl} = listRef;
       const {current: prevNumMessages} = prevNumMessagesRef;
       const {current: isScrolledToBottom} = isScrolledToBottomRef;
-      const numMessages = messages.length;
+      const numMessages = qbjcManager.messages.length;
       if (!listEl || numMessages === prevNumMessages) {
         return;
       }
@@ -66,10 +63,13 @@ const MessagesPane = observer(
     return (
       <div style={{display: 'flex', flexDirection: 'column'}}>
         <PaneHeader title="Messages">
-          <Tooltip title="Clear">
-            <IconButton>
+          <Tooltip title="Clear messages">
+            <IconButton onClick={() => qbjcManager.clearMessages()}>
               <BlockIcon
-                style={{fontSize: theme.typography.overline.fontSize}}
+                style={{
+                  fontSize: theme.typography.overline.fontSize,
+                  color: theme.palette.text.secondary,
+                }}
               />
             </IconButton>
           </Tooltip>
@@ -94,7 +94,7 @@ const MessagesPane = observer(
               listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight < 1;
           }, [])}
         >
-          {messages.map(({loc, message, type, iconType}, idx) => {
+          {qbjcManager.messages.map(({loc, message, type, iconType}, idx) => {
             let iconElement: React.ReactNode = null;
             if (iconType) {
               const Icon = QBJC_ICON_TYPE_MAP[iconType];

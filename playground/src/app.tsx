@@ -1,10 +1,15 @@
 import '@fontsource/cascadia-mono';
 import AppBar from '@material-ui/core/AppBar';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import blue from '@material-ui/core/colors/blue';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Fab from '@material-ui/core/Fab';
 import IconButton from '@material-ui/core/IconButton';
-import {createMuiTheme, ThemeProvider} from '@material-ui/core/styles';
+import {
+  createMuiTheme,
+  ThemeProvider,
+  useTheme,
+} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
@@ -13,7 +18,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import SettingsIcon from '@material-ui/icons/Settings';
 import StopIcon from '@material-ui/icons/Stop';
 import {observer} from 'mobx-react';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Split from 'react-split';
 import './app.css';
 import Editor from './editor';
@@ -35,7 +40,60 @@ const darkTheme = createMuiTheme({
   },
 });
 
-function Header() {
+function SplashScreen({isReady}: {isReady: boolean}) {
+  enum Status {
+    VISIBLE = 'visible',
+    TRANSITIONING = 'transitioning',
+    HIDDEN = 'hidden',
+  }
+  const TRANSITION_DELAY_MS = 600;
+  const [status, setStatus] = useState<Status>(Status.VISIBLE);
+  const theme = useTheme();
+
+  useEffect(() => {
+    if (isReady && status === Status.VISIBLE) {
+      setStatus(Status.TRANSITIONING);
+      setTimeout(() => setStatus(Status.HIDDEN), TRANSITION_DELAY_MS);
+    }
+  }, [isReady, status, Status]);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 200,
+        backgroundColor: theme.palette.background.paper,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        transition: `opacity ${TRANSITION_DELAY_MS}ms`,
+        ...(status === Status.VISIBLE
+          ? {
+              opacity: 1,
+            }
+          : {}),
+        ...(status === Status.TRANSITIONING
+          ? {
+              opacity: 0,
+            }
+          : {}),
+        ...(status === Status.HIDDEN
+          ? {
+              display: 'none',
+            }
+          : {}),
+      }}
+    >
+      <CircularProgress />
+    </div>
+  );
+}
+
+function Header({isReady}: {isReady: boolean}) {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   return (
     <>
@@ -44,15 +102,17 @@ function Header() {
           <Typography variant="h6" style={{flexGrow: 1}}>
             qbjc Playground
           </Typography>
-          <Tooltip title="Settings">
-            <IconButton
-              aria-label="Edit settings"
-              color="inherit"
-              onClick={() => setIsSettingsDialogOpen(true)}
-            >
-              <SettingsIcon />
-            </IconButton>
-          </Tooltip>
+          {isReady && (
+            <Tooltip title="Settings">
+              <IconButton
+                aria-label="Edit settings"
+                color="inherit"
+                onClick={() => setIsSettingsDialogOpen(true)}
+              >
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="View project on GitHub">
             <IconButton
               aria-label="View project on GitHub"
@@ -107,6 +167,7 @@ const App = observer(() => {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
+      <SplashScreen isReady={qbjcManager.isReady} />
       <div
         style={{
           display: 'flex',
@@ -116,7 +177,7 @@ const App = observer(() => {
           backgroundColor: darkTheme.palette.background.default,
         }}
       >
-        <Header />
+        <Header isReady={qbjcManager.isReady} />
         <Split
           minSize={300}
           sizes={[50, 50]}
@@ -136,7 +197,7 @@ const App = observer(() => {
         >
           <div style={{position: 'relative'}}>
             <Editor
-              onReady={(editor) => (qbjcManager.editor = editor)}
+              onReady={(editor) => qbjcManager.init({editor})}
               style={{
                 width: '100%',
                 height: '100%',
@@ -149,6 +210,7 @@ const App = observer(() => {
           <Split
             direction="vertical"
             sizes={[80, 20]}
+            gutterSize={6}
             minSize={100}
             expandToMin={true}
             onDragEnd={(sizes: Array<number>) => {
@@ -163,12 +225,12 @@ const App = observer(() => {
             }}
           >
             <OutputScreenPane
-              onReady={(terminal) => (qbjcManager.terminal = terminal)}
-              style={{width: '100%'}}
+              onReady={(terminal) => qbjcManager.init({terminal})}
               dimensions={dimensions}
+              isRunning={qbjcManager.isRunning}
             />
             <MessagesPane
-              messages={qbjcManager.messages}
+              qbjcManager={qbjcManager}
               onLocClick={useCallback(
                 (loc) => qbjcManager.goToMessageLocInEditor(loc),
                 [qbjcManager]

@@ -28,6 +28,9 @@ function Editor({
       editor.session.setMode('ace/mode/vbscript');
 
       editor.setValue(configManager.currentSourceFile.content || '');
+      editor.clearSelection();
+      editor.moveCursorTo(0, 0);
+      editor.focus();
       editor.on('change', () =>
         configManager.setContent(
           configManager.currentSourceFile,
