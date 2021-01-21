@@ -42,26 +42,32 @@ const MessagesPane = observer(
       [theme]
     );
 
-    const listRef = useRef<HTMLUListElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
     const isScrolledToBottomRef = useRef<boolean>(true);
     const prevNumMessagesRef = useRef<number>(0);
 
     useEffect(() => {
-      const {current: listEl} = listRef;
+      const {current: scrollContainerEl} = scrollContainerRef;
       const {current: prevNumMessages} = prevNumMessagesRef;
       const {current: isScrolledToBottom} = isScrolledToBottomRef;
       const numMessages = qbjcManager.messages.length;
-      if (!listEl || numMessages === prevNumMessages) {
+      if (!scrollContainerEl || numMessages === prevNumMessages) {
         return;
       }
       if (isScrolledToBottom) {
-        listEl.scrollTop = listEl.scrollHeight;
+        scrollContainerEl.scrollTop = scrollContainerEl.scrollHeight;
       }
       prevNumMessagesRef.current = numMessages;
     });
 
     return (
-      <div style={{display: 'flex', flexDirection: 'column'}}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          ...style,
+        }}
+      >
         <PaneHeader title="Messages">
           <Tooltip title="Clear messages">
             <IconButton onClick={() => qbjcManager.clearMessages()}>
@@ -74,64 +80,69 @@ const MessagesPane = observer(
             </IconButton>
           </Tooltip>
         </PaneHeader>
-        <List
-          ref={listRef}
-          dense={true}
-          disablePadding={true}
+        <div
+          ref={scrollContainerRef}
           style={{
+            // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the
+            // full height in the parent but prevents it from growing to accomodate the list
+            // content. ¯\_(ツ)_/¯
             flexGrow: 1,
-            //backgroundColor: theme.palette.background.paper,
+            height: 0,
             // @ts-ignore
             overflowY: 'overlay',
-            ...style,
           }}
           onScroll={useCallback(() => {
-            const {current: listEl} = listRef;
-            if (!listEl) {
+            const {current: scrollContainerEl} = scrollContainerRef;
+            if (!scrollContainerEl) {
               return;
             }
             isScrolledToBottomRef.current =
-              listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight < 1;
+              scrollContainerEl.scrollHeight -
+                scrollContainerEl.scrollTop -
+                scrollContainerEl.clientHeight <
+              1;
           }, [])}
         >
-          {qbjcManager.messages.map(({loc, message, type, iconType}, idx) => {
-            let iconElement: React.ReactNode = null;
-            if (iconType) {
-              const Icon = QBJC_ICON_TYPE_MAP[iconType];
-              iconElement = (
-                <Icon
-                  htmlColor={QBJC_MESSAGE_TYPE_COLOR_MAP[type]}
-                  style={{fontSize: theme.typography.body2.fontSize}}
-                />
+          <List dense={true} disablePadding={true}>
+            {qbjcManager.messages.map(({loc, message, type, iconType}, idx) => {
+              let iconElement: React.ReactNode = null;
+              if (iconType) {
+                const Icon = QBJC_ICON_TYPE_MAP[iconType];
+                iconElement = (
+                  <Icon
+                    htmlColor={QBJC_MESSAGE_TYPE_COLOR_MAP[type]}
+                    style={{fontSize: theme.typography.body2.fontSize}}
+                  />
+                );
+              }
+              return (
+                <ListItem
+                  key={idx}
+                  button={true}
+                  divider={true}
+                  style={{paddingTop: 0, paddingBottom: 0}}
+                  onClick={() => (loc ? onLocClick(loc) : null)}
+                >
+                  {iconElement && <ListItemIcon>{iconElement}</ListItemIcon>}
+                  <ListItemText
+                    primary={message}
+                    primaryTypographyProps={{
+                      variant: 'caption',
+                      style: {fontSize: '0.7rem'},
+                    }}
+                    inset={!iconElement}
+                    style={{
+                      color: QBJC_MESSAGE_TYPE_COLOR_MAP[type],
+                      marginTop: 3,
+                      marginBottom: 3,
+                      marginLeft: -28,
+                    }}
+                  />
+                </ListItem>
               );
-            }
-            return (
-              <ListItem
-                key={idx}
-                button={true}
-                divider={true}
-                style={{paddingTop: 0, paddingBottom: 0}}
-                onClick={() => (loc ? onLocClick(loc) : null)}
-              >
-                {iconElement && <ListItemIcon>{iconElement}</ListItemIcon>}
-                <ListItemText
-                  primary={message}
-                  primaryTypographyProps={{
-                    variant: 'caption',
-                    style: {fontSize: '0.7rem'},
-                  }}
-                  inset={!iconElement}
-                  style={{
-                    color: QBJC_MESSAGE_TYPE_COLOR_MAP[type],
-                    marginTop: 3,
-                    marginBottom: 3,
-                    marginLeft: -28,
-                  }}
-                />
-              </ListItem>
-            );
-          })}
-        </List>
+            })}
+          </List>
+        </div>
       </div>
     );
   }
