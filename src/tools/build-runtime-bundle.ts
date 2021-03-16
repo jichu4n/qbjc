@@ -9,7 +9,8 @@ if (require.main === module) {
     program
       .arguments('<runtime.js> <output-runtime-bundle.js>')
       .option('--minify', 'Whether to minify the output bundle')
-      .parse(process.argv);
+      .parse();
+    const opts = program.opts();
     if (program.args.length !== 2) {
       console.error(program.usage());
       process.exit(1);
@@ -28,7 +29,7 @@ if (require.main === module) {
     }
 
     const {code} = await ncc(sourceFilePath, {
-      minify: program.minify,
+      minify: opts.minify,
       quiet: true,
     });
 

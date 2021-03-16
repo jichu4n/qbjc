@@ -51,7 +51,8 @@ if (require.main === module) {
       .requiredOption('--api-key <API key>', 'Airtable API key')
       .requiredOption('--base <Base ID>', 'Airtable base ID')
       .requiredOption('--table <Table ID>', 'Airtable table ID')
-      .parse(process.argv);
+      .parse();
+    const opts = program.opts();
 
     try {
       const lines = (await fs.readFile(REFERENCE_FILE_PATH, 'utf-8'))
@@ -125,8 +126,8 @@ if (require.main === module) {
         id: string;
         fields: {Description: string; Action: string; Syntax: string};
       }> = [];
-      const airtable = new Airtable({apiKey: program.apiKey});
-      const table = airtable.base(program.base)(program.table);
+      const airtable = new Airtable({apiKey: opts.apiKey});
+      const table = airtable.base(opts.base)(opts.table);
 
       const existingRecords = await table.select().all();
       for (const {name, action, syntax, desc} of records) {

@@ -84,7 +84,7 @@ if (require.main === module) {
         'enable generation of AST file for debugging compilation'
       )
       .option('--debug-trace', `enable stack trace for debugging compilation`)
-      .parse(process.argv);
+      .parse();
 
     if (program.args.length === 0) {
       console.error('Error: No input files specified.');
@@ -95,15 +95,17 @@ if (require.main === module) {
     }
     const sourceFilePath = program.args[0];
 
+    const opts = program.opts();
+
     const compileFileResult = await compileFile({
       sourceFilePath,
-      outputFilePath: program.output,
-      enableSourceMap: program.sourceMap,
-      enableBundling: program.bundle,
-      enableMinify: program.minify,
+      outputFilePath: opts.output,
+      enableSourceMap: opts.sourceMap,
+      enableBundling: opts.bundle,
+      enableMinify: opts.minify,
     });
 
-    if (program.debugAst) {
+    if (opts.debugAst) {
       await fs.writeJson(
         `${sourceFilePath}.ast.json`,
         compileFileResult.astModule,
@@ -113,13 +115,13 @@ if (require.main === module) {
       );
     }
 
-    if (program.run) {
+    if (opts.run) {
       const executor = new NodeExecutor();
       await executor.executeModule(compileFileResult.compiledModule);
     }
   })().catch((e) => {
     if ('message' in e) {
-      if (program.debugTrace) {
+      if (program.opts().debugTrace) {
         console.trace(e);
       } else {
         console.error(e.message);
