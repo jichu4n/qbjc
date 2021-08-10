@@ -1,14 +1,14 @@
-/dist/
-/playground/build/
+/qbjc/dist/
+/qbjc-playground/build/
 
 # Generated files.
-/node.js
-/node.d.ts
-/browser.js
-/browser.d.ts
+/qbjc/node.js
+/qbjc/node.d.ts
+/qbjc/browser.js
+/qbjc/browser.d.ts
 
 # Generated parser.
-/src/parser/grammar.ts
+/qbjc/src/parser/grammar.ts
 
 # Intermediate debugging output generated during testing.
 *.bas.js
