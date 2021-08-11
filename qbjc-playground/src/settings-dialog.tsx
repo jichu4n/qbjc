@@ -301,7 +301,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsEditorThemeDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Theme"
+                    primary="Editor theme"
                     secondary={
                       _.find(EDITOR_THEMES, [
                         'value',
@@ -315,7 +315,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsEditorFontDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Font"
+                    primary="Editor font"
                     secondary={configManager.getKey(
                       ConfigKey.EDITOR_FONT_FAMILY
                     )}
@@ -326,7 +326,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsEditorFontSizeDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Font size"
+                    primary="Editor font size"
                     secondary={configManager.getKey(ConfigKey.EDITOR_FONT_SIZE)}
                   />
                 </ListItem>
@@ -340,7 +340,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsScreenFontDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Font"
+                    primary="Output font"
                     secondary={configManager.getKey(
                       ConfigKey.SCREEN_FONT_FAMILY
                     )}
@@ -351,7 +351,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsScreenFontSizeDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Font size"
+                    primary="Output font size"
                     secondary={configManager.getKey(ConfigKey.SCREEN_FONT_SIZE)}
                   />
                 </ListItem>
@@ -360,7 +360,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsScreenLetterSpacingDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Letter spacing"
+                    primary="Output letter spacing"
                     secondary={configManager.getKey(
                       ConfigKey.SCREEN_LETTER_SPACING
                     )}
@@ -371,7 +371,7 @@ const SettingsDialog = observer(
                   onClick={() => setIsScreenLineHeightDialogOpen(true)}
                 >
                   <ListItemText
-                    primary="Line height"
+                    primary="Output line height"
                     secondary={configManager.getKey(
                       ConfigKey.SCREEN_LINE_HEIGHT
                     )}
