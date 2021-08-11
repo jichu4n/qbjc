@@ -9,11 +9,7 @@ import blue from '@material-ui/core/colors/blue';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Fab from '@material-ui/core/Fab';
 import IconButton from '@material-ui/core/IconButton';
-import {
-  createMuiTheme,
-  ThemeProvider,
-  useTheme,
-} from '@material-ui/core/styles';
+import {createTheme, ThemeProvider, useTheme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
@@ -32,7 +28,7 @@ import QbjcManager from './qbjc-manager';
 import SettingsDialog from './settings-dialog';
 import './split.css';
 
-const darkTheme = createMuiTheme({
+const darkTheme = createTheme({
   palette: {
     type: 'dark',
     primary: {
