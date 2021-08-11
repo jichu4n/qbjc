@@ -13,7 +13,9 @@ export class NodePlatform extends AnsiTerminalPlatform {
 
   async delay(delayInUs: number) {
     const t0 = performance.now();
-    while ((performance.now() - t0) * 1000 < delayInUs) {}
+    while ((performance.now() - t0) * 1000 < delayInUs) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
   }
 
   async print(s: string) {
