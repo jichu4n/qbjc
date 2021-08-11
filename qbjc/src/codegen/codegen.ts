@@ -387,9 +387,8 @@ export class CodeGenerator extends AstVisitor<SourceNode> {
 
     // Generate code for "if" and "elseif" branches.
     for (const ifBranch of node.ifBranches) {
-      const {node: nextBranchNode, label: nextBranchLabel} = branchLabels[
-        nextBranchLabelIdx
-      ];
+      const {node: nextBranchNode, label: nextBranchLabel} =
+        branchLabels[nextBranchLabelIdx];
       chunks.push(
         this.createStmtSourceNode(ifBranch, () =>
           _.flattenDeep([
@@ -572,9 +571,8 @@ export class CodeGenerator extends AstVisitor<SourceNode> {
       const nextCounterExprString = this.accept(
         node.counterExprs[i]
       ).toString();
-      const {forStmt} = this.openForStmtStates[
-        this.openForStmtStates.length - 1 - i
-      ];
+      const {forStmt} =
+        this.openForStmtStates[this.openForStmtStates.length - 1 - i];
       const forStmtCounterExprString = this.accept(
         forStmt.counterExpr
       ).toString();
@@ -589,13 +587,8 @@ export class CodeGenerator extends AstVisitor<SourceNode> {
     // Generate code.
     const chunks: SourceChunks = [];
     for (let i = 0; i < numForStmtStatesToClose; ++i) {
-      const {
-        forStmt,
-        startLabel,
-        endLabel,
-        stepValue,
-        endValue,
-      } = this.openForStmtStates.pop()!;
+      const {forStmt, startLabel, endLabel, stepValue, endValue} =
+        this.openForStmtStates.pop()!;
       chunks.push(
         this.createStmtSourceNode(node, () => [
           this.accept(forStmt.counterExpr),

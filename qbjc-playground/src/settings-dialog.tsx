@@ -15,7 +15,7 @@ import TextField from '@material-ui/core/TextField';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import _ from 'lodash';
 import {observer} from 'mobx-react';
-import React, {useCallback, useRef, useState, useEffect} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {
   ConfigKey,
   EDITOR_THEMES,
@@ -258,27 +258,20 @@ const SettingsDialog = observer(
     const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [isEditorFontDialogOpen, setIsEditorFontDialogOpen] = useState(false);
-    const [
-      isEditorFontSizeDialogOpen,
-      setIsEditorFontSizeDialogOpen,
-    ] = useState(false);
-    const [isEditorThemeDialogOpen, setIsEditorThemeDialogOpen] = useState(
-      false
-    );
+    const [isEditorFontSizeDialogOpen, setIsEditorFontSizeDialogOpen] =
+      useState(false);
+    const [isEditorThemeDialogOpen, setIsEditorThemeDialogOpen] =
+      useState(false);
 
     const [isScreenFontDialogOpen, setIsScreenFontDialogOpen] = useState(false);
-    const [
-      isScreenFontSizeDialogOpen,
-      setIsScreenFontSizeDialogOpen,
-    ] = useState(false);
+    const [isScreenFontSizeDialogOpen, setIsScreenFontSizeDialogOpen] =
+      useState(false);
     const [
       isScreenLetterSpacingDialogOpen,
       setIsScreenLetterSpacingDialogOpen,
     ] = useState(false);
-    const [
-      isScreenLineHeightDialogOpen,
-      setIsScreenLineHeightDialogOpen,
-    ] = useState(false);
+    const [isScreenLineHeightDialogOpen, setIsScreenLineHeightDialogOpen] =
+      useState(false);
 
     return (
       <>
