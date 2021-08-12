@@ -39,7 +39,7 @@
     "prettier": "^2.2.1",
     "strip-ansi": "^6.0.0",
     "typescript": "^4.2.3",
-    "xterm": "^4.9.0"
+    "xterm": "^4.13.0"
   },
   "dependencies": {
     "@types/setimmediate": "^1.0.2",

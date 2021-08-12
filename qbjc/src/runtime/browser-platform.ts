@@ -34,9 +34,7 @@ export class BrowserPlatform extends AnsiTerminalPlatform {
       );
     } else {
       const t0 = performance.now();
-      while ((performance.now() - t0) * 1000 < delayInUs) {
-        await new Promise<void>((resolve) => setImmediate(resolve));
-      }
+      while ((performance.now() - t0) * 1000 < delayInUs) {}
     }
   }
 

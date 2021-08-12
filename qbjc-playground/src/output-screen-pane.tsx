@@ -9,7 +9,7 @@ import {autorun} from 'mobx';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
-import * as xtermWebfont from 'xterm-webfont';
+import * as XtermWebfont from 'xterm-webfont';
 import 'xterm/css/xterm.css';
 import configManager, {ConfigKey} from './config-manager';
 import PaneHeader from './pane-header';
@@ -37,10 +37,14 @@ function OutputScreenPane({
         // Output from compiled program will only specify \n for new lines, which need to be
         // translated to \r\n.
         convertEol: true,
+        // Must set initial font family to allow xterm-webfont to wait for this
+        // font to load.
+        fontFamily: configManager.getKey(ConfigKey.SCREEN_FONT_FAMILY),
       });
+      terminalRef.current = terminal;
       const fitAddon = new FitAddon();
       terminal.loadAddon(fitAddon);
-      terminal.loadAddon(new xtermWebfont());
+      terminal.loadAddon(new XtermWebfont());
       // @ts-ignore: method added by xterm-webfont addon
       await terminal.loadWebfontAndOpen(node);
       autorun(() => {
@@ -69,7 +73,6 @@ function OutputScreenPane({
       terminal.onResize(({rows, cols}) =>
         console.log(`Resized terminal to ${cols}x${rows}`)
       );
-      terminalRef.current = terminal;
       fitAddOnRef.current = fitAddon;
       onReady(terminal);
     },
