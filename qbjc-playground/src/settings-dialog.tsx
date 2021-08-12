@@ -17,6 +17,7 @@ import TextField from '@material-ui/core/TextField';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import _ from 'lodash';
 import FileDocumentEditIcon from 'mdi-material-ui/FileDocumentEdit';
+import HammerWrenchIcon from 'mdi-material-ui/HammerWrench';
 import MonitorIcon from 'mdi-material-ui/Monitor';
 import {observer} from 'mobx-react';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
@@ -261,9 +262,9 @@ const SettingsDialog = observer(
     const theme = useTheme();
     const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const [activeTab, setActiveTab] = useState<'editor' | 'outputScreen'>(
-      'editor'
-    );
+    const [activeTab, setActiveTab] = useState<
+      'editor' | 'outputScreen' | 'execution'
+    >('editor');
 
     const [isEditorFontDialogOpen, setIsEditorFontDialogOpen] = useState(false);
     const [isEditorFontSizeDialogOpen, setIsEditorFontSizeDialogOpen] =
@@ -279,6 +280,9 @@ const SettingsDialog = observer(
       setIsScreenLetterSpacingDialogOpen,
     ] = useState(false);
     const [isScreenLineHeightDialogOpen, setIsScreenLineHeightDialogOpen] =
+      useState(false);
+
+    const [isExecutionDelayDialogOpen, setIsExecutionDelayDialogOpen] =
       useState(false);
 
     return (
@@ -317,6 +321,11 @@ const SettingsDialog = observer(
                 label="Output"
                 icon={<MonitorIcon />}
                 value={'outputScreen'}
+              />
+              <Tab
+                label="Execution"
+                icon={<HammerWrenchIcon />}
+                value={'execution'}
               />
             </Tabs>
             <div
@@ -418,9 +427,27 @@ const SettingsDialog = observer(
                     >
                       <ListItemText
                         primary="Output screen line height"
-                        secondary={configManager.getKey(
+                        secondary={`${configManager.getKey(
                           ConfigKey.SCREEN_LINE_HEIGHT
-                        )}
+                        )}x`}
+                      />
+                    </ListItem>
+                  </>
+                )}
+                {activeTab === 'execution' && (
+                  <>
+                    <ListSubheader disableSticky={true}>
+                      Execution settings
+                    </ListSubheader>
+                    <ListItem
+                      button={true}
+                      onClick={() => setIsExecutionDelayDialogOpen(true)}
+                    >
+                      <ListItemText
+                        primary="Statement execution delay"
+                        secondary={`${configManager.getKey(
+                          ConfigKey.EXECUTION_DELAY
+                        )} μs`}
                       />
                     </ListItem>
                   </>
@@ -491,6 +518,16 @@ const SettingsDialog = observer(
           min={1.0}
           max={2.0}
           step={0.05}
+        />
+
+        <SliderSettingEditorDialog
+          isOpen={isExecutionDelayDialogOpen}
+          onClose={() => setIsExecutionDelayDialogOpen(false)}
+          title="Statement execution delay"
+          configKey={ConfigKey.EXECUTION_DELAY}
+          min={0}
+          max={10}
+          step={1}
         />
       </>
     );

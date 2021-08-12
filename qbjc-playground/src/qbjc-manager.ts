@@ -2,6 +2,7 @@ import {Ace} from 'ace-builds';
 import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
+import configManager, {ConfigKey} from './config-manager';
 import {Terminal} from 'xterm';
 
 export enum QbjcMessageType {
@@ -89,7 +90,7 @@ class QbjcManager {
     const startTs = new Date();
     this.terminal.focus();
     this.executor = new BrowserExecutor(this.terminal, {
-      stmtExecutionDelayUs: 0,
+      stmtExecutionDelayUs: configManager.getKey(ConfigKey.EXECUTION_DELAY),
     });
     try {
       await this.executor.executeModule(compileResult.code);

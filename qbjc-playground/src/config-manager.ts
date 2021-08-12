@@ -23,6 +23,7 @@ export enum ConfigKey {
   SCREEN_FONT_SIZE = 'v1/outputScreenFontSize',
   SCREEN_LETTER_SPACING = 'v1/outputScreenLetterSpacing',
   SCREEN_LINE_HEIGHT = 'v1/outputScreenLineHeight',
+  EXECUTION_DELAY = 'v1/executionDelayUs',
 }
 
 const DEFAULT_CONFIG = {
@@ -35,6 +36,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
   [ConfigKey.SCREEN_LETTER_SPACING]: 0,
   [ConfigKey.SCREEN_LINE_HEIGHT]: 1.0,
+  [ConfigKey.EXECUTION_DELAY]: 0,
 };
 
 export const EDITOR_THEME_GROUPS = [
