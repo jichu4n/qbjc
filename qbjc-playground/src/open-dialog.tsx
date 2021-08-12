@@ -6,10 +6,10 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
-import ListSubheader from '@material-ui/core/ListSubheader';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import {useTheme} from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -80,7 +80,9 @@ function ExamplesTab({
 
   return (
     <List subheader={<li />}>
-      <ListSubheader>Original QBasic / QuickBASIC examples</ListSubheader>
+      <ListSubheader disableSticky={true}>
+        Classic example programs
+      </ListSubheader>
       {EXAMPLES.map(({fileName, title, description}, idx) => (
         <ListItem
           key={fileName}

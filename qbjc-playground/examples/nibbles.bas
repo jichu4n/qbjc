@@ -1,4 +1,4 @@
-' Example from original QBasic distribution
+' Sample program from original QBasic distribution
 ' Source: https://archive.org/details/NibblesQbasic
 
 '

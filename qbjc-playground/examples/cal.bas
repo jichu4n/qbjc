@@ -1,4 +1,5 @@
-' Example from QuickBASIC EXAMPLES folder.
+' Example from "Microsoft QuickBASIC: Programming in BASIC"
+' Source: https://www.pcjs.org/documents/books/mspl13/basic/qbprog/
 
 DEFINT A-Z               ' Default variable type is integer
 

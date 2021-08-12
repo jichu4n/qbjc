@@ -11,6 +11,7 @@ PRINT 1; "+"; 2;
 PRINT USING "[###]"; 3.5
 PRINT USING "[###.##]"; 0.789
 PRINT USING "& ### &"; "foo"; 1000; "bar"
+PRINT USING "$$###.##";456.78
 
 ' Disambiguating without separators
 PRINT 3 ("hello") f1 ("hello") f1("hello") f2 ("hello", 3)
@@ -38,6 +39,7 @@ END FUNCTION
 '     {"output": "[  4]\n"},
 '     {"output": "[  0.79]\n"},
 '     {"output": "foo 1000 bar\n"},
+'     {"output": " $456.78\n"},
 '
 '     {"output": " 3 hello 5  5  15 \n"}
 '   ]

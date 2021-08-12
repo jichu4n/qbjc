@@ -208,6 +208,18 @@ export default class Runtime {
           pieces.push(nextArg.value);
           ++argIdx;
           break;
+        case 'DOLLAR_SIGNS': {
+          let value: string;
+          if (token.value.length <= 1) {
+            value = token.value;
+          } else if (token.value.length === 2) {
+            value = ' $';
+          } else {
+            value = '%$';
+          }
+          pieces.push(value);
+          break;
+        }
         case 'LITERAL':
           pieces.push(token.value);
           break;
@@ -221,8 +233,9 @@ export default class Runtime {
   private readonly printFormatStringLexer = moo.compile({
     NUMBER: /(?:[#,])*\.#+|[#,]+/,
     STRING: '&',
+    DOLLAR_SIGNS: /\$+/,
     LITERAL: {
-      match: /[^.#&]+/,
+      match: /[^.#&\$]+/,
       lineBreaks: true,
     },
   });
