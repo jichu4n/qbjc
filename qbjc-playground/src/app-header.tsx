@@ -1,5 +1,6 @@
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
+import {useTheme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
@@ -30,6 +31,8 @@ function AppHeader({
     });
     saveAs(blob, 'program.bas');
   }, [isReady, editor]);
+
+  const theme = useTheme();
 
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
@@ -74,8 +77,20 @@ function AppHeader({
           )}
           <Tooltip
             title={
-              <div>
-                View on GitHub <LaunchIcon fontSize="small" />
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                View on GitHub
+                <LaunchIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    marginLeft: '0.1rem',
+                  }}
+                />
               </div>
             }
           >
@@ -83,6 +98,7 @@ function AppHeader({
               aria-label="View on GitHub"
               color="inherit"
               href="https://github.com/jichu4n/qbjc"
+              target="_blank"
             >
               <GitHubIcon />
             </IconButton>

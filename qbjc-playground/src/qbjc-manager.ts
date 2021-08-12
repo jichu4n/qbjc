@@ -2,8 +2,8 @@ import {Ace} from 'ace-builds';
 import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
-import configManager, {ConfigKey} from './config-manager';
 import {Terminal} from 'xterm';
+import configManager, {ConfigKey} from './config-manager';
 
 export enum QbjcMessageType {
   ERROR = 'error',
