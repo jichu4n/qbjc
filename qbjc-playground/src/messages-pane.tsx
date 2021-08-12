@@ -8,11 +8,11 @@ import Tooltip from '@material-ui/core/Tooltip';
 import BlockIcon from '@material-ui/icons/Block';
 import ErrorIcon from '@material-ui/icons/Error';
 import PlayCircleIcon from '@material-ui/icons/PlayCircleFilled';
+import MessageTextIcon from 'mdi-material-ui/MessageText';
 import {observer} from 'mobx-react';
 import {Loc} from 'qbjc';
 import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 import PaneHeader from './pane-header';
-import MessageTextIcon from 'mdi-material-ui/MessageText';
 import QbjcManager, {
   QbjcMessageIconType,
   QbjcMessageType,

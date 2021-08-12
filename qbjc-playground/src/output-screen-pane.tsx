@@ -1,3 +1,4 @@
+import CircularProgress from '@material-ui/core/CircularProgress';
 import IconButton from '@material-ui/core/IconButton';
 import {useTheme} from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -106,16 +107,28 @@ function OutputScreenPane({
           />
         }
       >
-        {!isRunning && (
-          <Tooltip title="Clear output">
-            <IconButton onClick={() => terminalRef.current?.reset()}>
-              <BlockIcon
-                style={{
-                  fontSize: theme.typography.overline.fontSize,
-                  color: theme.palette.text.secondary,
-                }}
-              />
-            </IconButton>
+        <Tooltip title="Clear output">
+          <IconButton
+            onClick={() => terminalRef.current?.reset()}
+            disabled={isRunning}
+            style={isRunning ? {opacity: 0} : {}}
+          >
+            <BlockIcon
+              style={{
+                fontSize: theme.typography.overline.fontSize,
+                color: theme.palette.text.secondary,
+              }}
+            />
+          </IconButton>
+        </Tooltip>
+
+        {isRunning && (
+          <Tooltip title="Running program...">
+            <CircularProgress
+              color="inherit"
+              size={theme.typography.overline.fontSize}
+              style={{marginRight: 12}}
+            />
           </Tooltip>
         )}
       </PaneHeader>

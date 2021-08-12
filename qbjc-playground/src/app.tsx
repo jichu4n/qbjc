@@ -16,6 +16,7 @@ import Editor from './editor';
 import MessagesPane from './messages-pane';
 import OutputScreenPane from './output-screen-pane';
 import QbjcManager from './qbjc-manager';
+import {Helmet} from 'react-helmet';
 import RunFab from './run-fab';
 import './split.css';
 
@@ -36,6 +37,7 @@ const SPLIT_GUTTER_SIZE = 6;
 const App = observer(() => {
   const qbjcManagerRef = useRef<QbjcManager>(new QbjcManager());
   const qbjcManager = qbjcManagerRef.current;
+
   const [dimensions, setDimensions] = useState<{
     horizontalSplit?: Array<number>;
     rightVerticalSplit?: Array<number>;
@@ -45,6 +47,11 @@ const App = observer(() => {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <AppSplashScreen isReady={qbjcManager.isReady} />
+      <Helmet>
+        <title>
+          qbjc Playground{qbjcManager.isRunning ? ' - Running...' : ''}
+        </title>
+      </Helmet>
       <div
         style={{
           display: 'flex',
