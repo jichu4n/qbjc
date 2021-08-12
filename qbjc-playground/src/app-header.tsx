@@ -6,9 +6,11 @@ import Typography from '@material-ui/core/Typography';
 import FolderIcon from '@material-ui/icons/Folder';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import LaunchIcon from '@material-ui/icons/Launch';
+import SaveIcon from '@material-ui/icons/Save';
 import SettingsIcon from '@material-ui/icons/Settings';
 import {Ace} from 'ace-builds';
-import React, {useState} from 'react';
+import {saveAs} from 'file-saver';
+import React, {useCallback, useState} from 'react';
 import OpenDialog from './open-dialog';
 import SettingsDialog from './settings-dialog';
 
@@ -19,6 +21,16 @@ function AppHeader({
   isReady: boolean;
   editor: Ace.Editor | null;
 }) {
+  const onSaveClick = useCallback(() => {
+    if (!isReady || !editor) {
+      return;
+    }
+    const blob = new Blob([editor.getValue()], {
+      type: 'text/plain;charset=utf-8',
+    });
+    saveAs(blob, 'program.bas');
+  }, [isReady, editor]);
+
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
 
@@ -38,6 +50,15 @@ function AppHeader({
                   onClick={() => setIsOpenDialogOpen(true)}
                 >
                   <FolderIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Save program">
+                <IconButton
+                  aria-label="Save program"
+                  color="inherit"
+                  onClick={onSaveClick}
+                >
+                  <SaveIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Settings">

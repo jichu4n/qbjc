@@ -62,7 +62,7 @@ class QbjcManager {
     try {
       compileResult = await compile({
         source,
-        sourceFileName: 'source',
+        sourceFileName: 'program.bas',
       });
       console.log(compileResult.code);
     } catch (e) {
