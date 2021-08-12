@@ -1,6 +1,8 @@
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -12,11 +14,47 @@ import Tabs from '@material-ui/core/Tabs';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import DescriptionIcon from '@material-ui/icons/Description';
 import {Ace} from 'ace-builds';
+import _ from 'lodash';
 import {observer} from 'mobx-react';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import EXAMPLES from './examples';
-// @ts-ignore
-window.EXAMPLES = EXAMPLES;
+
+function ConfirmationDialog({
+  isOpen,
+  onClose,
+  title,
+  content,
+  onConfirm,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  content: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={isOpen} onClose={onClose}>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <DialogContentText>{content}</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button
+          onClick={useCallback(() => {
+            onClose();
+            onConfirm();
+          }, [onClose, onConfirm])}
+          color="primary"
+        >
+          OK
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
 
 const OpenDialog = observer(
   ({
@@ -31,16 +69,43 @@ const OpenDialog = observer(
     const theme = useTheme();
     const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const selectedFileSpec = useRef<{
+      title: string;
+      content: string;
+    } | null>(null);
+
+    const [
+      isOverwriteConfirmationDialogOpen,
+      setIsOverwriteConfirmationDialogOpen,
+    ] = useState(false);
+
+    const onConfirmOpen = useCallback(() => {
+      if (!editor || !selectedFileSpec.current) {
+        return;
+      }
+      editor.setValue(selectedFileSpec.current.content);
+      selectedFileSpec.current = null;
+      onClose();
+    }, [editor, selectedFileSpec, onClose]);
+
     const onExampleClick = useCallback(
       (exampleIdx: number) => {
         if (!editor) {
           return;
         }
-        const {content} = EXAMPLES[exampleIdx];
-        editor.setValue(content);
-        onClose();
+        const trimmedSource = editor.getValue().trim();
+        const shouldConfirm =
+          !!trimmedSource &&
+          !_.some(EXAMPLES, ({content}) => trimmedSource === content.trim());
+
+        selectedFileSpec.current = EXAMPLES[exampleIdx];
+        if (shouldConfirm) {
+          setIsOverwriteConfirmationDialogOpen(true);
+        } else {
+          onConfirmOpen();
+        }
       },
-      [editor, onClose]
+      [editor, onConfirmOpen]
     );
 
     const [activeTab, setActiveTab] = useState<'examples'>('examples');
@@ -109,6 +174,14 @@ const OpenDialog = observer(
             </Button>
           </DialogActions>
         </Dialog>
+
+        <ConfirmationDialog
+          isOpen={isOverwriteConfirmationDialogOpen}
+          onClose={() => setIsOverwriteConfirmationDialogOpen(false)}
+          onConfirm={onConfirmOpen}
+          title="Open program"
+          content="This will overwrite the current editor contents. Are you sure?"
+        />
       </>
     );
   }
