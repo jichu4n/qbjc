@@ -42,7 +42,6 @@
     "xterm": "^4.13.0"
   },
   "dependencies": {
-    "@types/setimmediate": "^1.0.2",
     "@vercel/ncc": "^0.28.5",
     "ansi-escapes": "^4.3.1",
     "ansi-styles": "^5.1.0",
@@ -52,7 +51,6 @@
     "moo": "^0.5.1",
     "nearley": "^2.20.1",
     "require-from-string": "^2.0.2",
-    "setimmediate": "^1.0.5",
     "singlebyte": "^1.0.13",
     "source-map": "^0.7.3",
     "terser": "^5.6.0"

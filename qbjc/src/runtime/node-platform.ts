@@ -7,6 +7,11 @@ import Executor, {ExecutionOpts} from './executor';
 
 /** RuntimePlatform for Node.JS on TTY. */
 export class NodePlatform extends AnsiTerminalPlatform {
+  // When running in Node, delay is implemented using setImmediate and won't
+  // block other functionality. So we can safely set a higher delay value for
+  // better compatibility.
+  defaultStmtExecutionDelayUs = 5;
+
   async loadCompiledModule(code: string) {
     return requireFromString(code) as CompiledModule;
   }

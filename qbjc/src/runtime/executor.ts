@@ -17,15 +17,9 @@ import Runtime, {RuntimePlatform} from './runtime';
 
 /** Options for compiled program execution. */
 export interface ExecutionOpts {
-  /** Delay before executing each statement, in microseconds.
-   *
-   * The default value is DEFAULT_STMT_EXECUTION_DELAY_US.
-   */
+  /** Delay before executing each statement, in microseconds. */
   stmtExecutionDelayUs?: number;
 }
-
-/** Default statement execution delay in microseconds. */
-const DEFAULT_STMT_EXECUTION_DELAY_US = 5;
 
 /** Map from label name to statement array index. */
 type LabelIndexMap = {[key: string]: number};
@@ -63,9 +57,10 @@ class EndDirective extends Error {
 export default class Executor {
   constructor(
     private readonly platform: RuntimePlatform,
-    {stmtExecutionDelayUs = DEFAULT_STMT_EXECUTION_DELAY_US}: ExecutionOpts = {}
+    {stmtExecutionDelayUs}: ExecutionOpts = {}
   ) {
-    this.stmtExecutionDelayUs = stmtExecutionDelayUs;
+    this.stmtExecutionDelayUs =
+      stmtExecutionDelayUs ?? platform.defaultStmtExecutionDelayUs;
   }
 
   /** Executes a compiled module. */

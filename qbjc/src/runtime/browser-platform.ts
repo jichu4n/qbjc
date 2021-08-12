@@ -1,5 +1,4 @@
 import ansiEscapes from 'ansi-escapes';
-import 'setimmediate';
 import {Terminal} from 'xterm';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
 import {CompiledModule} from './compiled-code';
@@ -10,6 +9,10 @@ export class BrowserPlatform extends AnsiTerminalPlatform {
   constructor(private readonly terminal: Terminal) {
     super();
   }
+
+  // When running in the browser, delay is implemented as a busy loop as
+  // setImmediate will block input processing. So disabling delay by default.
+  defaultStmtExecutionDelayUs = 0;
 
   async loadCompiledModule(code: string) {
     // Drop "#!/usr/bin/env node" shebang line.

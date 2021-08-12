@@ -88,7 +88,9 @@ class QbjcManager {
     });
     const startTs = new Date();
     this.terminal.focus();
-    this.executor = new BrowserExecutor(this.terminal);
+    this.executor = new BrowserExecutor(this.terminal, {
+      stmtExecutionDelayUs: 0,
+    });
     try {
       await this.executor.executeModule(compileResult.code);
     } finally {

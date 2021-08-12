@@ -13,6 +13,9 @@ import roundHalfToEven from '../lib/round-half-to-even';
 
 /** Interface for platform-specific runtime functionality. */
 export abstract class RuntimePlatform {
+  /** Default statement execution delay in microseconds for this platform. */
+  abstract defaultStmtExecutionDelayUs: number;
+
   /** Load a compiled module from output code.
    *
    * Warning: This will execute any module-level code with side effects in the string, so should NOT
