@@ -3,6 +3,7 @@ import {useTheme} from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import BlockIcon from '@material-ui/icons/Block';
 import _ from 'lodash';
+import MonitorIcon from 'mdi-material-ui/Monitor';
 import {autorun} from 'mobx';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {Terminal} from 'xterm';
@@ -95,7 +96,16 @@ function OutputScreenPane({
         ...style,
       }}
     >
-      <PaneHeader title="Output">
+      <PaneHeader
+        title="Output"
+        icon={
+          <MonitorIcon
+            style={{
+              fontSize: theme.typography.overline.fontSize,
+            }}
+          />
+        }
+      >
         {!isRunning && (
           <Tooltip title="Clear output">
             <IconButton onClick={() => terminalRef.current?.reset()}>

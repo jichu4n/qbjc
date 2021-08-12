@@ -16,6 +16,8 @@ import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import _ from 'lodash';
+import FileDocumentEditIcon from 'mdi-material-ui/FileDocumentEdit';
+import MonitorIcon from 'mdi-material-ui/Monitor';
 import {observer} from 'mobx-react';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {
@@ -306,8 +308,16 @@ const SettingsDialog = observer(
               indicatorColor="primary"
               textColor="primary"
             >
-              <Tab label="Editor" value={'editor'} />
-              <Tab label="Output screen" value={'outputScreen'} />
+              <Tab
+                label="Editor"
+                icon={<FileDocumentEditIcon />}
+                value={'editor'}
+              />
+              <Tab
+                label="Output"
+                icon={<MonitorIcon />}
+                value={'outputScreen'}
+              />
             </Tabs>
             <div
               style={{
@@ -316,11 +326,16 @@ const SettingsDialog = observer(
                 overflowY: 'overlay',
                 flex: 1,
                 height: 300,
+                paddingLeft: 20,
+                paddingRight: 20,
               }}
             >
               <List subheader={<li />}>
                 {activeTab === 'editor' && (
                   <>
+                    <ListSubheader disableSticky={true}>
+                      Editor settings
+                    </ListSubheader>
                     <ListItem
                       button={true}
                       onClick={() => setIsEditorThemeDialogOpen(true)}
@@ -361,6 +376,9 @@ const SettingsDialog = observer(
                 )}
                 {activeTab === 'outputScreen' && (
                   <>
+                    <ListSubheader disableSticky={true}>
+                      Output screen settings
+                    </ListSubheader>
                     <ListItem
                       button={true}
                       onClick={() => setIsScreenFontDialogOpen(true)}

@@ -1,3 +1,4 @@
+import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -5,17 +6,20 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
 import {useTheme} from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
-import DescriptionIcon from '@material-ui/icons/Description';
 import {Ace} from 'ace-builds';
 import _ from 'lodash';
 import {DropzoneArea} from 'material-ui-dropzone';
+import BookshelfIcon from 'mdi-material-ui/Bookshelf';
+import FileCodeIcon from 'mdi-material-ui/FileCode';
+import LaptopIcon from 'mdi-material-ui/Laptop';
 import {observer} from 'mobx-react';
 import React, {useCallback, useRef, useState} from 'react';
 import EXAMPLES from './examples';
@@ -76,15 +80,18 @@ function ExamplesTab({
 
   return (
     <List subheader={<li />}>
+      <ListSubheader>Original QBasic / QuickBASIC examples</ListSubheader>
       {EXAMPLES.map(({fileName, title, description}, idx) => (
         <ListItem
           key={fileName}
           button={true}
           onClick={() => onExampleClick(idx)}
         >
-          <ListItemIcon>
-            <DescriptionIcon />
-          </ListItemIcon>
+          <ListItemAvatar>
+            <Avatar>
+              <FileCodeIcon color="action" />
+            </Avatar>
+          </ListItemAvatar>
           <ListItemText primary={title} secondary={description} />
         </ListItem>
       ))}
@@ -111,7 +118,15 @@ function UploadTab({
   );
 
   return (
-    <div style={{padding: 20}}>
+    <div
+      style={{
+        display: 'flex',
+        flex: 1,
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <DropzoneArea
         acceptedFiles={['.bas']}
         filesLimit={1}
@@ -203,8 +218,12 @@ const OpenDialog = observer(
               indicatorColor="primary"
               textColor="primary"
             >
-              <Tab label="Examples" value={'examples'} />
-              <Tab label="Local file" value={'upload'} />
+              <Tab
+                label="Examples"
+                icon={<BookshelfIcon />}
+                value={'examples'}
+              />
+              <Tab label="Computer" icon={<LaptopIcon />} value={'upload'} />
             </Tabs>
             <div
               style={{
@@ -213,6 +232,8 @@ const OpenDialog = observer(
                 overflowY: 'overlay',
                 flex: 1,
                 height: 300,
+                paddingLeft: 20,
+                paddingRight: 20,
               }}
             >
               {activeTab === 'examples' && <ExamplesTab onSelect={onSelect} />}

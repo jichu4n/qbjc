@@ -12,6 +12,7 @@ import {observer} from 'mobx-react';
 import {Loc} from 'qbjc';
 import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 import PaneHeader from './pane-header';
+import MessageTextIcon from 'mdi-material-ui/MessageText';
 import QbjcManager, {
   QbjcMessageIconType,
   QbjcMessageType,
@@ -68,7 +69,16 @@ const MessagesPane = observer(
           ...style,
         }}
       >
-        <PaneHeader title="Messages">
+        <PaneHeader
+          title="Messages"
+          icon={
+            <MessageTextIcon
+              style={{
+                fontSize: theme.typography.overline.fontSize,
+              }}
+            />
+          }
+        >
           <Tooltip title="Clear messages">
             <IconButton onClick={() => qbjcManager.clearMessages()}>
               <BlockIcon
