@@ -3,14 +3,25 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
+import FolderIcon from '@material-ui/icons/Folder';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import LaunchIcon from '@material-ui/icons/Launch';
 import SettingsIcon from '@material-ui/icons/Settings';
+import {Ace} from 'ace-builds';
 import React, {useState} from 'react';
+import OpenDialog from './open-dialog';
 import SettingsDialog from './settings-dialog';
 
-function AppHeader({isReady}: {isReady: boolean}) {
+function AppHeader({
+  isReady,
+  editor,
+}: {
+  isReady: boolean;
+  editor: Ace.Editor | null;
+}) {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false);
+
   return (
     <>
       <AppBar position="relative" color="default">
@@ -20,6 +31,15 @@ function AppHeader({isReady}: {isReady: boolean}) {
           </Typography>
           {isReady && (
             <>
+              <Tooltip title="Open program">
+                <IconButton
+                  aria-label="Open program"
+                  color="inherit"
+                  onClick={() => setIsOpenDialogOpen(true)}
+                >
+                  <FolderIcon />
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Settings">
                 <IconButton
                   aria-label="Edit settings"
@@ -48,6 +68,12 @@ function AppHeader({isReady}: {isReady: boolean}) {
           </Tooltip>
         </Toolbar>
       </AppBar>
+
+      <OpenDialog
+        isOpen={isOpenDialogOpen}
+        onClose={() => setIsOpenDialogOpen(false)}
+        editor={editor}
+      />
       <SettingsDialog
         isOpen={isSettingsDialogOpen}
         onClose={() => setIsSettingsDialogOpen(false)}

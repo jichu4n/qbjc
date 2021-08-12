@@ -51,12 +51,17 @@ class QbjcManager {
     if (!this.editor || !this.terminal || this.isRunning) {
       return;
     }
+    const source = this.editor.getValue();
+    if (!source.trim()) {
+      return;
+    }
+
     this.isRunning = true;
 
     let compileResult: CompileResult;
     try {
       compileResult = await compile({
-        source: this.editor.getValue(),
+        source,
         sourceFileName: 'source',
       });
       console.log(compileResult.code);

@@ -35,11 +35,11 @@ What works:
   - Note that the current implementation requires a VT100-compatible terminal emulator. On Windows,
     this means using WSL or something like PuTTY.
 
-It's just enough to run the original [`NIBBLES.BAS` game](./examples/nibbles.bas) that shipped with QBasic:
+It's just enough to run the original [`NIBBLES.BAS` game](./qbjc-playground/examples/nibbles.bas) that shipped with QBasic:
 
 ![Compiling and running NIBBLES.BAS](./docs/assets/nibbles.gif)
 
-See [examples](./examples) and [tests](./src/tests/testdata/compile-and-run) for an idea of what is
+See [examples](./qbjc-playground/examples) and [tests](./src/tests/testdata/compile-and-run) for an idea of what is
 currently possible.
 
 What doesn't work (yet):

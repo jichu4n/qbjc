@@ -54,7 +54,7 @@ const App = observer(() => {
           backgroundColor: darkTheme.palette.background.default,
         }}
       >
-        <AppHeader isReady={qbjcManager.isReady} />
+        <AppHeader isReady={qbjcManager.isReady} editor={qbjcManager.editor} />
         <Split
           minSize={300}
           sizes={[50, 50]}
