@@ -18,6 +18,7 @@
     "@types/react-dom": "^17.0.5",
     "ace-builds": "^1.4.12",
     "lodash": "^4.17.20",
+    "material-ui-dropzone": "^3.5.0",
     "mobx": "^6.3.0",
     "mobx-react": "^7.1.0",
     "prettier": "^2.3.2",

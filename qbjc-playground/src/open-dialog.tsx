@@ -15,9 +15,15 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import DescriptionIcon from '@material-ui/icons/Description';
 import {Ace} from 'ace-builds';
 import _ from 'lodash';
+import {DropzoneArea} from 'material-ui-dropzone';
 import {observer} from 'mobx-react';
 import React, {useCallback, useRef, useState} from 'react';
 import EXAMPLES from './examples';
+
+interface SelectedFileSpec {
+  title: string;
+  content: string;
+}
 
 function ConfirmationDialog({
   isOpen,
@@ -56,6 +62,67 @@ function ConfirmationDialog({
   );
 }
 
+function ExamplesTab({
+  onSelect,
+}: {
+  onSelect: (fileSpec: SelectedFileSpec) => void;
+}) {
+  const onExampleClick = useCallback(
+    (exampleIdx: number) => {
+      onSelect(EXAMPLES[exampleIdx]);
+    },
+    [onSelect]
+  );
+
+  return (
+    <List subheader={<li />}>
+      {EXAMPLES.map(({fileName, title, description}, idx) => (
+        <ListItem
+          key={fileName}
+          button={true}
+          onClick={() => onExampleClick(idx)}
+        >
+          <ListItemIcon>
+            <DescriptionIcon />
+          </ListItemIcon>
+          <ListItemText primary={title} secondary={description} />
+        </ListItem>
+      ))}
+    </List>
+  );
+}
+
+function UploadTab({
+  onSelect,
+}: {
+  onSelect: (fileSpec: SelectedFileSpec) => void;
+}) {
+  const onChange = useCallback(
+    async (selectedFiles: Array<File>) => {
+      if (selectedFiles.length > 0) {
+        const selectedFile = selectedFiles[0];
+        onSelect({
+          title: selectedFile.name,
+          content: await selectedFile.text(),
+        });
+      }
+    },
+    [onSelect]
+  );
+
+  return (
+    <div style={{padding: 20}}>
+      <DropzoneArea
+        acceptedFiles={['.bas']}
+        filesLimit={1}
+        showPreviews={false}
+        showPreviewsInDropzone={false}
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
 const OpenDialog = observer(
   ({
     isOpen,
@@ -69,27 +136,24 @@ const OpenDialog = observer(
     const theme = useTheme();
     const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const selectedFileSpec = useRef<{
-      title: string;
-      content: string;
-    } | null>(null);
+    const selectedFileSpec = useRef<SelectedFileSpec | null>(null);
 
     const [
       isOverwriteConfirmationDialogOpen,
       setIsOverwriteConfirmationDialogOpen,
     ] = useState(false);
 
-    const onConfirmOpen = useCallback(() => {
+    const openSelectedFile = useCallback(() => {
       if (!editor || !selectedFileSpec.current) {
         return;
       }
       editor.setValue(selectedFileSpec.current.content);
       selectedFileSpec.current = null;
       onClose();
-    }, [editor, selectedFileSpec, onClose]);
+    }, [editor, onClose]);
 
-    const onExampleClick = useCallback(
-      (exampleIdx: number) => {
+    const onSelect = useCallback(
+      (fileSpec: SelectedFileSpec) => {
         if (!editor) {
           return;
         }
@@ -98,17 +162,19 @@ const OpenDialog = observer(
           !!trimmedSource &&
           !_.some(EXAMPLES, ({content}) => trimmedSource === content.trim());
 
-        selectedFileSpec.current = EXAMPLES[exampleIdx];
+        selectedFileSpec.current = fileSpec;
         if (shouldConfirm) {
           setIsOverwriteConfirmationDialogOpen(true);
         } else {
-          onConfirmOpen();
+          openSelectedFile();
         }
       },
-      [editor, onConfirmOpen]
+      [editor, openSelectedFile]
     );
 
-    const [activeTab, setActiveTab] = useState<'examples'>('examples');
+    const [activeTab, setActiveTab] = useState<'examples' | 'upload'>(
+      'examples'
+    );
 
     return (
       <>
@@ -138,6 +204,7 @@ const OpenDialog = observer(
               textColor="primary"
             >
               <Tab label="Examples" value={'examples'} />
+              <Tab label="Local file" value={'upload'} />
             </Tabs>
             <div
               style={{
@@ -148,24 +215,8 @@ const OpenDialog = observer(
                 height: 300,
               }}
             >
-              <List subheader={<li />}>
-                {activeTab === 'examples' && (
-                  <>
-                    {EXAMPLES.map(({fileName, title, description}, idx) => (
-                      <ListItem
-                        key={fileName}
-                        button={true}
-                        onClick={() => onExampleClick(idx)}
-                      >
-                        <ListItemIcon>
-                          <DescriptionIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={title} secondary={description} />
-                      </ListItem>
-                    ))}
-                  </>
-                )}
-              </List>
+              {activeTab === 'examples' && <ExamplesTab onSelect={onSelect} />}
+              {activeTab === 'upload' && <UploadTab onSelect={onSelect} />}
             </div>
           </div>
           <DialogActions>
@@ -178,8 +229,8 @@ const OpenDialog = observer(
         <ConfirmationDialog
           isOpen={isOverwriteConfirmationDialogOpen}
           onClose={() => setIsOverwriteConfirmationDialogOpen(false)}
-          onConfirm={onConfirmOpen}
-          title="Open program"
+          onConfirm={openSelectedFile}
+          title={`Open ${selectedFileSpec.current?.title}`}
           content="This will overwrite the current editor contents. Are you sure?"
         />
       </>
