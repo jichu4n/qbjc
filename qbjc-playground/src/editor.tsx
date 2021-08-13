@@ -24,6 +24,10 @@ function Editor({
         editor.setTheme(
           `ace/theme/${configManager.getKey(ConfigKey.EDITOR_THEME)}`
         );
+        const keybindings = configManager.getKey(ConfigKey.EDITOR_KEYBINDINGS);
+        editor.setKeyboardHandler(
+          keybindings ? `ace/keyboard/${keybindings}` : ''
+        );
       });
       editor.setShowPrintMargin(false);
       editor.session.setMode('ace/mode/vbscript');

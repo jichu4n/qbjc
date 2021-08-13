@@ -19,6 +19,7 @@ export enum ConfigKey {
   EDITOR_FONT_FAMILY = 'v1/editorFontFamily',
   EDITOR_FONT_SIZE = 'v1/editorFontSize',
   EDITOR_THEME = 'v1/editorTheme',
+  EDITOR_KEYBINDINGS = 'v1/editorKeybindings',
   SCREEN_FONT_FAMILY = 'v1/outputScreenFontFamily',
   SCREEN_FONT_SIZE = 'v1/outputScreenFontSize',
   SCREEN_LETTER_SPACING = 'v1/outputScreenLetterSpacing',
@@ -32,6 +33,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.EDITOR_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.EDITOR_FONT_SIZE]: 14,
   [ConfigKey.EDITOR_THEME]: 'nord_dark',
+  [ConfigKey.EDITOR_KEYBINDINGS]: '',
   [ConfigKey.SCREEN_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
   [ConfigKey.SCREEN_LETTER_SPACING]: 0,
@@ -40,8 +42,8 @@ const DEFAULT_CONFIG = {
 };
 
 export const EDITOR_THEME_GROUPS = [
-  {label: 'Light', value: 'light'},
-  {label: 'Dark', value: 'dark'},
+  {label: 'Light themes', value: 'light'},
+  {label: 'Dark themes', value: 'dark'},
 ];
 
 export const EDITOR_THEMES = [
@@ -91,6 +93,14 @@ export const EDITOR_THEMES = [
   {label: 'Twilight', value: 'twilight', group: 'dark'},
   {label: 'Vibrant Ink', value: 'vibrant_ink', group: 'dark'},
   {label: 'Xcode', value: 'xcode', group: 'light'},
+];
+
+export const EDITOR_KEYBINDINGS = [
+  {label: 'Default', value: ''},
+  {label: 'Vim', value: 'vim'},
+  {label: 'Emacs', value: 'emacs'},
+  {label: 'Sublime Text', value: 'sublime'},
+  {label: 'Visual Studio Code', value: 'vscode'},
 ];
 
 class ConfigManager {

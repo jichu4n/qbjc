@@ -23,6 +23,7 @@ import {observer} from 'mobx-react';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {
   ConfigKey,
+  EDITOR_KEYBINDINGS,
   EDITOR_THEMES,
   EDITOR_THEME_GROUPS,
 } from './config-manager';
@@ -141,10 +142,9 @@ function SingleChoiceSettingEditorDialog({
   onClose: () => void;
   title: string;
   configKey: ConfigKey;
-  groups: Array<{label: string; value: string}>;
+  groups?: Array<{label: string; value: string}>;
   choices: Array<{label: string; value: string; group?: string}>;
 }) {
-  const theme = useTheme();
   const [value, setValue] = useState(configManager.getKey(configKey) as string);
   const listRef = useRef<HTMLUListElement | null>(null);
   const selectedListItemRef = useRef<HTMLDivElement | null>(null);
@@ -179,66 +179,64 @@ function SingleChoiceSettingEditorDialog({
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
-      <List
-        subheader={<li />}
-        style={{
-          // @ts-ignore
-          overflowY: 'overlay',
-          overflowX: 'hidden',
-          maxHeight: 400,
-          backgroundColor: theme.palette.background.paper,
-        }}
-        ref={(node: HTMLUListElement | null) => {
-          listRef.current = node;
-          scrollToSelectedListItem();
-        }}
-      >
-        {(groups || [null]).map((group) => (
-          <li key={group?.value} style={{backgroundColor: 'inherit'}}>
-            <ul style={{padding: 0, backgroundColor: 'inherit'}}>
-              {group && (
-                <ListSubheader color="primary">{group.label}</ListSubheader>
-              )}
-              {choices.map((choice) => {
-                if (group && group.value !== choice.group) {
-                  return null;
-                }
-                const isSelected = choice.value === value;
-                const onSelect = () => setValue(choice.value);
-                return (
-                  <ListItem
-                    key={choice.value}
-                    selected={isSelected}
-                    button={true}
-                    onClick={onSelect}
-                    style={{width: SETTING_EDITOR_INPUT_WIDTH}}
-                    ref={
-                      isSelected
-                        ? (node) => {
-                            selectedListItemRef.current = node;
-                            scrollToSelectedListItem();
-                          }
-                        : null
-                    }
-                  >
-                    <ListItemText
-                      primary={choice.label}
-                      primaryTypographyProps={{style: {fontSize: '0.9rem'}}}
-                    />
-                    <ListItemSecondaryAction>
-                      <Radio
-                        checked={isSelected}
-                        onSelect={onSelect}
-                        color="primary"
+      <DialogContent>
+        <List
+          subheader={<li />}
+          style={{
+            overflowX: 'hidden',
+          }}
+          ref={(node: HTMLUListElement | null) => {
+            listRef.current = node;
+            scrollToSelectedListItem();
+          }}
+        >
+          {(groups || [null]).map((group, idx) => (
+            <li key={group?.value ?? idx} style={{backgroundColor: 'inherit'}}>
+              <ul style={{padding: 0, backgroundColor: 'inherit'}}>
+                {group && (
+                  <ListSubheader color="primary">{group.label}</ListSubheader>
+                )}
+                {choices.map((choice) => {
+                  if (group && group.value !== choice.group) {
+                    return null;
+                  }
+                  const isSelected = choice.value === value;
+                  const onSelect = () => setValue(choice.value);
+                  return (
+                    <ListItem
+                      key={choice.value}
+                      selected={isSelected}
+                      button={true}
+                      onClick={onSelect}
+                      style={{width: SETTING_EDITOR_INPUT_WIDTH}}
+                      ref={
+                        isSelected
+                          ? (node) => {
+                              selectedListItemRef.current = node;
+                              scrollToSelectedListItem();
+                            }
+                          : null
+                      }
+                    >
+                      <ListItemText
+                        primary={choice.label}
+                        primaryTypographyProps={{style: {fontSize: '0.9rem'}}}
                       />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                );
-              })}
-            </ul>
-          </li>
-        ))}
-      </List>
+                      <ListItemSecondaryAction>
+                        <Radio
+                          checked={isSelected}
+                          onSelect={onSelect}
+                          color="primary"
+                        />
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  );
+                })}
+              </ul>
+            </li>
+          ))}
+        </List>
+      </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">
           Cancel
@@ -270,6 +268,8 @@ const SettingsDialog = observer(
     const [isEditorFontSizeDialogOpen, setIsEditorFontSizeDialogOpen] =
       useState(false);
     const [isEditorThemeDialogOpen, setIsEditorThemeDialogOpen] =
+      useState(false);
+    const [isEditorKeybindingsDialogOpen, setIsEditorKeybindingsDialogOpen] =
       useState(false);
 
     const [isScreenFontDialogOpen, setIsScreenFontDialogOpen] = useState(false);
@@ -342,9 +342,6 @@ const SettingsDialog = observer(
               <List subheader={<li />}>
                 {activeTab === 'editor' && (
                   <>
-                    <ListSubheader disableSticky={true}>
-                      Editor settings
-                    </ListSubheader>
                     <ListItem
                       button={true}
                       onClick={() => setIsEditorThemeDialogOpen(true)}
@@ -381,13 +378,24 @@ const SettingsDialog = observer(
                         )}
                       />{' '}
                     </ListItem>
+                    <ListItem
+                      button={true}
+                      onClick={() => setIsEditorKeybindingsDialogOpen(true)}
+                    >
+                      <ListItemText
+                        primary="Editor keybindings"
+                        secondary={
+                          _.find(EDITOR_KEYBINDINGS, [
+                            'value',
+                            configManager.getKey(ConfigKey.EDITOR_KEYBINDINGS),
+                          ])?.label
+                        }
+                      />
+                    </ListItem>
                   </>
                 )}
                 {activeTab === 'outputScreen' && (
                   <>
-                    <ListSubheader disableSticky={true}>
-                      Output screen settings
-                    </ListSubheader>
                     <ListItem
                       button={true}
                       onClick={() => setIsScreenFontDialogOpen(true)}
@@ -436,9 +444,6 @@ const SettingsDialog = observer(
                 )}
                 {activeTab === 'execution' && (
                   <>
-                    <ListSubheader disableSticky={true}>
-                      Execution settings
-                    </ListSubheader>
                     <ListItem
                       button={true}
                       onClick={() => setIsExecutionDelayDialogOpen(true)}
@@ -484,6 +489,13 @@ const SettingsDialog = observer(
           configKey={ConfigKey.EDITOR_THEME}
           groups={EDITOR_THEME_GROUPS}
           choices={EDITOR_THEMES}
+        />
+        <SingleChoiceSettingEditorDialog
+          isOpen={isEditorKeybindingsDialogOpen}
+          onClose={() => setIsEditorKeybindingsDialogOpen(false)}
+          title="Editor keybindings"
+          configKey={ConfigKey.EDITOR_KEYBINDINGS}
+          choices={EDITOR_KEYBINDINGS}
         />
 
         <TextSettingEditorDialog
