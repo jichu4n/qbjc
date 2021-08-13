@@ -80,9 +80,6 @@ function ExamplesTab({
 
   return (
     <List subheader={<li />}>
-      <ListSubheader disableSticky={true}>
-        Classic example programs
-      </ListSubheader>
       {EXAMPLES.map(({fileName, title, description}, idx) => (
         <ListItem
           key={fileName}

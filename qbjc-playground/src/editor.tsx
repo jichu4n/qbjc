@@ -3,6 +3,7 @@ import 'ace-builds/webpack-resolver';
 import {autorun} from 'mobx';
 import React, {useCallback, useRef} from 'react';
 import configManager, {ConfigKey} from './config-manager';
+import {DEFAULT_EXAMPLE} from './examples';
 
 function Editor({
   onReady = () => {},
@@ -27,7 +28,10 @@ function Editor({
       editor.setShowPrintMargin(false);
       editor.session.setMode('ace/mode/vbscript');
 
-      editor.setValue(configManager.currentSourceFile.content || '');
+      const initialContent = configManager.currentSourceFile.content.trim()
+        ? configManager.currentSourceFile.content
+        : DEFAULT_EXAMPLE.content;
+      editor.setValue(initialContent);
       editor.clearSelection();
       editor.moveCursorTo(0, 0);
       editor.focus();

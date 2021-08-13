@@ -7,6 +7,11 @@ export interface ExampleSpec {
 
 const EXAMPLE_SPECS: Array<ExampleSpec> = [
   {
+    fileName: 'guess.bas',
+    title: 'GUESS.BAS',
+    description: 'Simple number guessing game',
+  },
+  {
     fileName: 'nibbles.bas',
     title: 'NIBBLES.BAS',
     description: 'Classic snake game',
@@ -19,7 +24,7 @@ const EXAMPLE_SPECS: Array<ExampleSpec> = [
   {
     fileName: 'check.bas',
     title: 'CHECK.BAS',
-    description: 'Checkbook-balancing program',
+    description: 'Checkbook balancing program',
   },
   {
     fileName: 'strtonum.bas',
@@ -32,3 +37,5 @@ const EXAMPLE_SPECS: Array<ExampleSpec> = [
 }));
 
 export default EXAMPLE_SPECS;
+
+export const DEFAULT_EXAMPLE = EXAMPLE_SPECS[0];
