@@ -6,13 +6,12 @@ import {Terminal} from 'xterm';
 import configManager, {ConfigKey} from './config-manager';
 
 export enum QbjcMessageType {
+  /** General error message. */
   ERROR = 'error',
+  /** General informational message with no special formatting. */
   INFO = 'info',
-}
-
-export enum QbjcMessageIconType {
-  ERROR = 'error',
-  PLAY_CIRCLE = 'playCircle',
+  /** Specialized message representing program execution. */
+  EXECUTION = 'execution',
 }
 
 export interface QbjcMessage {
@@ -22,8 +21,8 @@ export interface QbjcMessage {
   type: QbjcMessageType;
   /** Message text. */
   message: string;
-  /** Message icon. */
-  iconType?: QbjcMessageIconType;
+  /** For EXECUTION messages - the compiled code. */
+  compileResult?: CompileResult;
 }
 
 class QbjcManager {
@@ -58,7 +57,6 @@ class QbjcManager {
     }
 
     this.isRunning = true;
-
     let compileResult: CompileResult;
     try {
       compileResult = await compile({
@@ -76,16 +74,15 @@ class QbjcManager {
           loc: e.loc,
           type: QbjcMessageType.ERROR,
           message: e.message,
-          iconType: QbjcMessageIconType.ERROR,
         });
       }
       return;
     }
 
     this.pushMessage({
-      type: QbjcMessageType.INFO,
+      type: QbjcMessageType.EXECUTION,
       message: 'Running...',
-      iconType: QbjcMessageIconType.PLAY_CIRCLE,
+      compileResult: compileResult,
     });
     const startTs = new Date();
     this.terminal.focus();

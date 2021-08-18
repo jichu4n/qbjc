@@ -7,16 +7,18 @@ import blue from '@material-ui/core/colors/blue';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {createTheme, ThemeProvider} from '@material-ui/core/styles';
 import {observer} from 'mobx-react';
+import {CompileResult} from 'qbjc';
 import React, {useCallback, useRef, useState} from 'react';
+import {Helmet} from 'react-helmet';
 import Split from 'react-split';
 import AppHeader from './app-header';
 import AppSplashScreen from './app-splash-screen';
 import './app.css';
+import CompileResultDialog from './compile-result-dialog';
 import Editor from './editor';
 import MessagesPane from './messages-pane';
 import OutputScreenPane from './output-screen-pane';
 import QbjcManager from './qbjc-manager';
-import {Helmet} from 'react-helmet';
 import RunFab from './run-fab';
 import './split.css';
 
@@ -43,6 +45,19 @@ const App = observer(() => {
     rightVerticalSplit?: Array<number>;
   } | null>({});
 
+  const [isCompileResultDialogOpen, setIsCompileResultPaneVisible] =
+    useState(false);
+  const [displayedCompileResult, setDisplayedCompileResult] =
+    useState<CompileResult | null>(null);
+  const showCompileResultPane = useCallback((compileResult: CompileResult) => {
+    setDisplayedCompileResult(compileResult);
+    setIsCompileResultPaneVisible(true);
+  }, []);
+  const hideCompileResultPane = useCallback(() => {
+    setIsCompileResultPaneVisible(false);
+    setDisplayedCompileResult(null);
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -52,6 +67,7 @@ const App = observer(() => {
           qbjc Playground{qbjcManager.isRunning ? ' - Running...' : ''}
         </title>
       </Helmet>
+
       <div
         style={{
           display: 'flex',
@@ -62,6 +78,7 @@ const App = observer(() => {
         }}
       >
         <AppHeader isReady={qbjcManager.isReady} editor={qbjcManager.editor} />
+
         <Split
           minSize={300}
           sizes={[50, 50]}
@@ -91,6 +108,7 @@ const App = observer(() => {
             />
             <RunFab qbjcManager={qbjcManager} />
           </div>
+
           <Split
             direction="vertical"
             sizes={[80, 20]}
@@ -114,15 +132,22 @@ const App = observer(() => {
               isRunning={qbjcManager.isRunning}
             />
             <MessagesPane
-              qbjcManager={qbjcManager}
+              messages={qbjcManager.messages}
               onLocClick={useCallback(
                 (loc) => qbjcManager.goToMessageLocInEditor(loc),
                 [qbjcManager]
               )}
+              onShowCompileResultClick={showCompileResultPane}
             />
           </Split>
         </Split>
       </div>
+
+      <CompileResultDialog
+        compileResult={displayedCompileResult}
+        isOpen={isCompileResultDialogOpen}
+        onClose={hideCompileResultPane}
+      />
     </ThemeProvider>
   );
 });

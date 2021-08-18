@@ -45,7 +45,7 @@ function TextSettingEditorDialog({
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <TextField
           autoFocus={true}
           required={true}
@@ -96,7 +96,7 @@ function SliderSettingEditorDialog({
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <Slider
           value={value}
           onChange={(e, value) => setValue(value as number)}
@@ -179,7 +179,7 @@ function SingleChoiceSettingEditorDialog({
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <List
           subheader={<li />}
           style={{
@@ -296,170 +296,174 @@ const SettingsDialog = observer(
           scroll="paper"
         >
           <DialogTitle>Settings</DialogTitle>
-          <div
-            style={{
-              display: 'flex',
-            }}
-          >
-            <Tabs
-              orientation="vertical"
-              variant="scrollable"
-              value={activeTab}
-              onChange={(event, activeTab) => setActiveTab(activeTab)}
-              style={{
-                borderRight: `1px solid ${theme.palette.divider}`,
-              }}
-              indicatorColor="primary"
-              textColor="primary"
-            >
-              <Tab
-                label="Editor"
-                icon={<FileDocumentEditIcon />}
-                value={'editor'}
-              />
-              <Tab
-                label="Output"
-                icon={<MonitorIcon />}
-                value={'outputScreen'}
-              />
-              <Tab
-                label="Execution"
-                icon={<HammerWrenchIcon />}
-                value={'execution'}
-              />
-            </Tabs>
+          <DialogContent dividers={true}>
             <div
               style={{
-                backgroundColor: theme.palette.background.paper,
-                // @ts-ignore
-                overflowY: 'overlay',
-                flex: 1,
-                height: 300,
-                paddingLeft: 20,
-                paddingRight: 20,
+                display: 'flex',
               }}
             >
-              <List subheader={<li />}>
-                {activeTab === 'editor' && (
-                  <>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsEditorThemeDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Editor theme"
-                        secondary={
-                          _.find(EDITOR_THEMES, [
-                            'value',
-                            configManager.getKey(ConfigKey.EDITOR_THEME),
-                          ])?.label
-                        }
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsEditorFontDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Editor font"
-                        secondary={configManager.getKey(
-                          ConfigKey.EDITOR_FONT_FAMILY
-                        )}
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsEditorFontSizeDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Editor font size"
-                        secondary={configManager.getKey(
-                          ConfigKey.EDITOR_FONT_SIZE
-                        )}
-                      />{' '}
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsEditorKeybindingsDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Editor keybindings"
-                        secondary={
-                          _.find(EDITOR_KEYBINDINGS, [
-                            'value',
-                            configManager.getKey(ConfigKey.EDITOR_KEYBINDINGS),
-                          ])?.label
-                        }
-                      />
-                    </ListItem>
-                  </>
-                )}
-                {activeTab === 'outputScreen' && (
-                  <>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsScreenFontDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Output screen font"
-                        secondary={configManager.getKey(
-                          ConfigKey.SCREEN_FONT_FAMILY
-                        )}
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsScreenFontSizeDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Output screen font size"
-                        secondary={configManager.getKey(
-                          ConfigKey.SCREEN_FONT_SIZE
-                        )}
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsScreenLetterSpacingDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Output screen letter spacing"
-                        secondary={configManager.getKey(
-                          ConfigKey.SCREEN_LETTER_SPACING
-                        )}
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsScreenLineHeightDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Output screen line height"
-                        secondary={`${configManager.getKey(
-                          ConfigKey.SCREEN_LINE_HEIGHT
-                        )}x`}
-                      />
-                    </ListItem>
-                  </>
-                )}
-                {activeTab === 'execution' && (
-                  <>
-                    <ListItem
-                      button={true}
-                      onClick={() => setIsExecutionDelayDialogOpen(true)}
-                    >
-                      <ListItemText
-                        primary="Statement execution delay"
-                        secondary={`${configManager.getKey(
-                          ConfigKey.EXECUTION_DELAY
-                        )} μs`}
-                      />
-                    </ListItem>
-                  </>
-                )}
-              </List>
+              <Tabs
+                orientation="vertical"
+                variant="scrollable"
+                value={activeTab}
+                onChange={(event, activeTab) => setActiveTab(activeTab)}
+                style={{
+                  borderRight: `1px solid ${theme.palette.divider}`,
+                }}
+                indicatorColor="primary"
+                textColor="primary"
+              >
+                <Tab
+                  label="Editor"
+                  icon={<FileDocumentEditIcon />}
+                  value={'editor'}
+                />
+                <Tab
+                  label="Output"
+                  icon={<MonitorIcon />}
+                  value={'outputScreen'}
+                />
+                <Tab
+                  label="Execution"
+                  icon={<HammerWrenchIcon />}
+                  value={'execution'}
+                />
+              </Tabs>
+              <div
+                style={{
+                  backgroundColor: theme.palette.background.paper,
+                  // @ts-ignore
+                  overflowY: 'overlay',
+                  flex: 1,
+                  height: 300,
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                }}
+              >
+                <List subheader={<li />}>
+                  {activeTab === 'editor' && (
+                    <>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsEditorThemeDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Editor theme"
+                          secondary={
+                            _.find(EDITOR_THEMES, [
+                              'value',
+                              configManager.getKey(ConfigKey.EDITOR_THEME),
+                            ])?.label
+                          }
+                        />
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsEditorFontDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Editor font"
+                          secondary={configManager.getKey(
+                            ConfigKey.EDITOR_FONT_FAMILY
+                          )}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsEditorFontSizeDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Editor font size"
+                          secondary={configManager.getKey(
+                            ConfigKey.EDITOR_FONT_SIZE
+                          )}
+                        />{' '}
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsEditorKeybindingsDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Editor keybindings"
+                          secondary={
+                            _.find(EDITOR_KEYBINDINGS, [
+                              'value',
+                              configManager.getKey(
+                                ConfigKey.EDITOR_KEYBINDINGS
+                              ),
+                            ])?.label
+                          }
+                        />
+                      </ListItem>
+                    </>
+                  )}
+                  {activeTab === 'outputScreen' && (
+                    <>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsScreenFontDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Output screen font"
+                          secondary={configManager.getKey(
+                            ConfigKey.SCREEN_FONT_FAMILY
+                          )}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsScreenFontSizeDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Output screen font size"
+                          secondary={configManager.getKey(
+                            ConfigKey.SCREEN_FONT_SIZE
+                          )}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsScreenLetterSpacingDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Output screen letter spacing"
+                          secondary={configManager.getKey(
+                            ConfigKey.SCREEN_LETTER_SPACING
+                          )}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsScreenLineHeightDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Output screen line height"
+                          secondary={`${configManager.getKey(
+                            ConfigKey.SCREEN_LINE_HEIGHT
+                          )}x`}
+                        />
+                      </ListItem>
+                    </>
+                  )}
+                  {activeTab === 'execution' && (
+                    <>
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsExecutionDelayDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Statement execution delay"
+                          secondary={`${configManager.getKey(
+                            ConfigKey.EXECUTION_DELAY
+                          )} μs`}
+                        />
+                      </ListItem>
+                    </>
+                  )}
+                </List>
+              </div>
             </div>
-          </div>
+          </DialogContent>
           <DialogActions>
             <Button onClick={onClose} color="primary">
               Close
