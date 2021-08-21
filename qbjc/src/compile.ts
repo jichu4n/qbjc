@@ -15,9 +15,16 @@ export interface CompileArgs {
   /** Whether to minify the output. */
   enableMinify?: boolean;
 }
+
+/** Result of a successful compilation. */
 export interface CompileResult {
+  /** Original QBasic source code. */
+  source: string;
+  /** Compiled JavaScript code. */
   code: string;
+  /** Sourcemap for the compiled JavaScript code. */
   map: string;
+  /** Abstract syntax tree representing the compiled code. */
   astModule: Module;
 }
 
@@ -64,6 +71,7 @@ async function compile({
   }
 
   return {
+    source,
     code,
     map: sourceMapContent,
     astModule,
