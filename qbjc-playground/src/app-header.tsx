@@ -42,7 +42,7 @@ function AppHeader({
       <AppBar position="relative" color="default">
         <Toolbar>
           <Typography variant="h6" style={{flexGrow: 1}}>
-            qbjc Playground
+            qbjc playground
           </Typography>
           {isReady && (
             <>

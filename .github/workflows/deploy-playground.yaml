@@ -1,0 +1,19 @@
+name: Deploy qbjc playground
+on:
+  push:
+    branches: [master]
+jobs:
+  build-and-deploy-playground:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+      - run: npm install -g npm@7 # NPM v7+ required for workspace support
+      - run: npm install
+      - run: npm run --workspaces build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./qbjc-playground/build
