@@ -5,7 +5,7 @@
 '
 ' To get started:
 '
-' - Press the blue "Play" button below to run this program. The
+' - Press the blue "PLAY" button below to run this program. The
 '   result will be displayed in the "OUTPUT" window on the right.
 '
 ' - Feel free to modify and play around with this program. You can
