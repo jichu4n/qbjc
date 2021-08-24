@@ -45,16 +45,19 @@ const App = observer(() => {
     rightVerticalSplit?: Array<number>;
   } | null>({});
 
-  const [isCompileResultDialogOpen, setIsCompileResultPaneVisible] =
+  const [isCompileResultDialogOpen, setIsCompileResultDialogOpen] =
     useState(false);
   const [displayedCompileResult, setDisplayedCompileResult] =
     useState<CompileResult | null>(null);
-  const showCompileResultPane = useCallback((compileResult: CompileResult) => {
-    setDisplayedCompileResult(compileResult);
-    setIsCompileResultPaneVisible(true);
-  }, []);
-  const hideCompileResultPane = useCallback(() => {
-    setIsCompileResultPaneVisible(false);
+  const showCompileResultDialog = useCallback(
+    (compileResult: CompileResult) => {
+      setDisplayedCompileResult(compileResult);
+      setIsCompileResultDialogOpen(true);
+    },
+    []
+  );
+  const hideCompileResultDialog = useCallback(() => {
+    setIsCompileResultDialogOpen(false);
     setDisplayedCompileResult(null);
   }, []);
 
@@ -137,7 +140,7 @@ const App = observer(() => {
                 (loc) => qbjcManager.goToMessageLocInEditor(loc),
                 [qbjcManager]
               )}
-              onShowCompileResultClick={showCompileResultPane}
+              onShowCompileResultClick={showCompileResultDialog}
             />
           </Split>
         </Split>
@@ -146,7 +149,7 @@ const App = observer(() => {
       <CompileResultDialog
         compileResult={displayedCompileResult}
         isOpen={isCompileResultDialogOpen}
-        onClose={hideCompileResultPane}
+        onClose={hideCompileResultDialog}
       />
     </ThemeProvider>
   );

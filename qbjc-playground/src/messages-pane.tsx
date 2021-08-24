@@ -1,3 +1,4 @@
+import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -167,21 +168,27 @@ const MessagesPane = observer(
                   {compileResult && (
                     <ListItemSecondaryAction style={{marginRight: -6}}>
                       <Tooltip title="View compiled JavaScript code">
-                        <IconButton
+                        <Button
+                          startIcon={
+                            <CodeBracesBoxIcon
+                              style={{
+                                fontSize: theme.typography.overline.fontSize,
+                                color: theme.palette.text.secondary,
+                                marginRight: -2,
+                              }}
+                            />
+                          }
                           onClick={() =>
                             onShowCompileResultClick(compileResult)
                           }
                           style={{
-                            marginRight: -8,
+                            marginRight: -2,
+                            fontSize: '0.6rem',
+                            color,
                           }}
                         >
-                          <CodeBracesBoxIcon
-                            style={{
-                              fontSize: theme.typography.overline.fontSize,
-                              color: theme.palette.text.secondary,
-                            }}
-                          />
-                        </IconButton>
+                          Compiled code
+                        </Button>
                       </Tooltip>
                     </ListItemSecondaryAction>
                   )}

@@ -2,7 +2,6 @@ import {minify} from 'terser';
 import codegen from './codegen/codegen';
 import {Module} from './lib/ast';
 import parse from './parser/parser';
-import {CompiledModule} from './runtime/compiled-code';
 import runSemanticAnalysis from './semantic-analysis/semantic-analysis';
 
 export interface CompileArgs {

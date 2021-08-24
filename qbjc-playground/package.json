@@ -11,11 +11,13 @@
     "@testing-library/react": "^11.2.2",
     "@testing-library/user-event": "^13.1.9",
     "@types/ace": "0.0.45",
+    "@types/file-saver": "^2.0.3",
     "@types/jest": "^26.0.19",
     "@types/lodash": "^4.14.167",
     "@types/node": "^15.3.0",
     "@types/react": "^17.0.5",
     "@types/react-dom": "^17.0.5",
+    "@types/react-helmet": "^6.1.2",
     "ace-builds": "^1.4.12",
     "file-saver": "^2.0.5",
     "lodash": "^4.17.20",
@@ -61,9 +63,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/file-saver": "^2.0.3",
-    "@types/react-helmet": "^6.1.2"
   }
 }
