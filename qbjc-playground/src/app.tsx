@@ -67,7 +67,7 @@ const App = observer(() => {
       <AppSplashScreen isReady={qbjcManager.isReady} />
       <Helmet>
         <title>
-          qbjc Playground{qbjcManager.isRunning ? ' - Running...' : ''}
+          qbjc playground{qbjcManager.isRunning ? ' - Running...' : ''}
         </title>
       </Helmet>
 

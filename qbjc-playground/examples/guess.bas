@@ -1,16 +1,17 @@
 ' Welcome to qbjc playground!
 '
-' qbjc is a QBasic To JavaScript compiler. The qbjc playground
-' lets you edit and run QBasic programs directly in the browser.
+' qbjc is a QBasic to JavaScript compiler. The qbjc playground
+' lets you edit and run QBasic / QuickBASIC programs directly in
+' the browser.
 '
 ' To get started:
 '
 ' - Press the blue "PLAY" button below to run this program. The
 '   result will be displayed in the "OUTPUT" window on the right.
 '
-' - Feel free to modify and play around with this program. You can
-'   also check out some other example programs using the "Open"
-'   button at the top.
+' - Feel free to modify and play around with this program. You
+'   can also check out some other example programs using the
+'   "Open" button at the top.
 ' 
 
 CLS
@@ -18,6 +19,7 @@ PRINT "Hi! Welcome to qbjc playground!"
 PRINT
 
 INPUT "What's your name? ", name$
+PRINT
 PRINT "Hello, "; name$; "! Let's play a game! "
 
 DO
