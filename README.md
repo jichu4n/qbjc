@@ -5,7 +5,7 @@
 **qbjc** is a QBasic to JavaScript compiler. It can compile a QBasic /
 QuickBASIC program to:
 
-- A standalone Node.js script with no external dependencies; or
+- A standalone executable Node.js script, with zero external dependencies; or
 - An ES6 module that can be imported and executed in both Node.js and browser environments.
 
 Try it out in the qbjc playground:
