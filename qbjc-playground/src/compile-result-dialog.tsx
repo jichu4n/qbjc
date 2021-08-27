@@ -266,7 +266,7 @@ export default function CompileResultDialog({
             </IconButton>
           </Tooltip>
         ) : (
-          <Tooltip title="View as full screen">
+          <Tooltip title="Full screen">
             <IconButton onClick={enterFullScreen}>
               <FullscreenIcon />
             </IconButton>

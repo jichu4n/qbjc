@@ -3,11 +3,13 @@ import IconButton from '@material-ui/core/IconButton';
 import {useTheme} from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import BlockIcon from '@material-ui/icons/Block';
+import FullscreenIcon from '@material-ui/icons/Fullscreen';
+import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
 import _ from 'lodash';
 import MonitorIcon from 'mdi-material-ui/Monitor';
 import {autorun} from 'mobx';
 import {observer} from 'mobx-react';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Terminal} from 'xterm';
 import {FitAddon} from 'xterm-addon-fit';
 import * as XtermWebfont from 'xterm-webfont';
@@ -28,8 +30,53 @@ const OutputScreenPane = observer(
     dimensions?: any;
   }) => {
     const theme = useTheme();
+
+    const containerElRef = useRef<HTMLDivElement | null>(null);
     const terminalRef = useRef<Terminal | null>(null);
     const fitAddOnRef = useRef<FitAddon | null>(null);
+
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const containerHeightBeforeFullScreenRef = useRef<string | null>(null);
+    const enterFullScreen = useCallback(() => {
+      const containerEl = containerElRef.current;
+      const terminal = terminalRef.current;
+      const fitAddOn = fitAddOnRef.current;
+      if (!containerEl || !terminal || !fitAddOn) {
+        return;
+      }
+      containerHeightBeforeFullScreenRef.current = containerEl.style.height;
+      console.log(
+        `Saving height: ${containerHeightBeforeFullScreenRef.current}`
+      );
+      setIsFullScreen(true);
+      setTimeout(() => {
+        fitAddOn.fit();
+        terminal.focus();
+      }, 0);
+    }, []);
+    const exitFullScreen = useCallback(() => {
+      const containerEl = containerElRef.current;
+      const terminal = terminalRef.current;
+      const fitAddOn = fitAddOnRef.current;
+      if (!containerEl || !terminal || !fitAddOn) {
+        return;
+      }
+      setIsFullScreen(false);
+      setTimeout(() => {
+        const containerHeightBeforeFullScreen =
+          containerHeightBeforeFullScreenRef.current;
+        if (containerHeightBeforeFullScreen) {
+          console.log(
+            `Restoring height: ${containerHeightBeforeFullScreenRef.current}`
+          );
+          containerEl.style.height = containerHeightBeforeFullScreen;
+          containerHeightBeforeFullScreenRef.current = null;
+        }
+        fitAddOn.fit();
+        terminal.focus();
+      }, 0);
+    }, []);
+
     const init = useCallback(
       async (node: HTMLDivElement | null) => {
         if (!node || terminalRef.current) {
@@ -96,10 +143,26 @@ const OutputScreenPane = observer(
 
     return (
       <div
+        ref={containerElRef}
         style={{
           display: 'flex',
           flexDirection: 'column',
+          backgroundColor: theme.palette.background.paper,
           ...style,
+          ...(isFullScreen
+            ? {
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                // Must be greater than z-index of AppBar (1100) and less than
+                // z-index of tooltip (1500).
+                //
+                // See https://material-ui.com/customization/z-index/
+                zIndex: 1200,
+              }
+            : {}),
         }}
       >
         <PaneHeader
@@ -112,6 +175,29 @@ const OutputScreenPane = observer(
             />
           }
         >
+          {isFullScreen ? (
+            <Tooltip title="Exit full screen">
+              <IconButton onClick={exitFullScreen}>
+                <FullscreenExitIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Full screen">
+              <IconButton onClick={enterFullScreen}>
+                <FullscreenIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
           {isRunning ? (
             <div style={{marginRight: 12, paddingTop: 8, paddingBottom: 8}}>
               <Tooltip title="Running program...">
