@@ -8,7 +8,7 @@ function PaneHeader({
   icon,
   children,
 }: {
-  title: string;
+  title: ReactNode;
   icon?: ReactNode;
   children?: ReactNode;
 }) {
@@ -22,6 +22,7 @@ function PaneHeader({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: theme.palette.background.default,
+        cursor: 'pointer',
       }}
     >
       <div style={{display: 'flex', padding: '0 8px 0 12px'}}>{icon}</div>

@@ -18,9 +18,13 @@ import SettingsDialog from './settings-dialog';
 function AppHeader({
   isReady,
   editor,
+  sourceFileName,
+  onChangeSourceFileName,
 }: {
   isReady: boolean;
   editor: Ace.Editor | null;
+  sourceFileName: string;
+  onChangeSourceFileName: (sourceFileName: string) => void;
 }) {
   const onSaveClick = useCallback(() => {
     if (!isReady || !editor) {
@@ -29,8 +33,8 @@ function AppHeader({
     const blob = new Blob([editor.getValue()], {
       type: 'text/plain;charset=utf-8',
     });
-    saveAs(blob, 'program.bas');
-  }, [isReady, editor]);
+    saveAs(blob, sourceFileName);
+  }, [isReady, editor, sourceFileName]);
 
   const theme = useTheme();
 
@@ -110,6 +114,7 @@ function AppHeader({
         isOpen={isOpenDialogOpen}
         onClose={() => setIsOpenDialogOpen(false)}
         editor={editor}
+        onChangeSourceFileName={onChangeSourceFileName}
       />
       <SettingsDialog
         isOpen={isSettingsDialogOpen}

@@ -61,6 +61,12 @@ const App = observer(() => {
     setDisplayedCompileResult(null);
   }, []);
 
+  const onChangeSourceFileName = useCallback(
+    (sourceFileName: string) =>
+      qbjcManager.updateSourceFileName(sourceFileName),
+    [qbjcManager]
+  );
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -80,7 +86,12 @@ const App = observer(() => {
           backgroundColor: darkTheme.palette.background.default,
         }}
       >
-        <AppHeader isReady={qbjcManager.isReady} editor={qbjcManager.editor} />
+        <AppHeader
+          isReady={qbjcManager.isReady}
+          editor={qbjcManager.editor}
+          sourceFileName={qbjcManager.sourceFileName}
+          onChangeSourceFileName={onChangeSourceFileName}
+        />
 
         <Split
           minSize={300}
@@ -101,6 +112,8 @@ const App = observer(() => {
         >
           <div style={{position: 'relative'}}>
             <EditorPane
+              sourceFileName={qbjcManager.sourceFileName}
+              onChangeSourceFileName={onChangeSourceFileName}
               onReady={(editor) => qbjcManager.init({editor})}
               style={{
                 width: '100%',

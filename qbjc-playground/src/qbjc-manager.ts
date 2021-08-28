@@ -3,7 +3,10 @@ import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
 import {Terminal} from 'xterm';
-import configManager, {ConfigKey} from './config-manager';
+import configManager, {
+  ConfigKey,
+  DEFAULT_SOURCE_FILE_NAME,
+} from './config-manager';
 
 export enum QbjcMessageType {
   /** General error message. */
@@ -13,7 +16,6 @@ export enum QbjcMessageType {
   /** Specialized message representing program execution. */
   EXECUTION = 'execution',
 }
-
 export interface QbjcMessage {
   /** Parsed location in the source code. */
   loc?: Loc;
@@ -31,6 +33,20 @@ class QbjcManager {
 
   /** Compiler errors and status messages. */
   messages: Array<QbjcMessage> = [];
+
+  /** Ace editor. */
+  editor: Ace.Editor | null = null;
+
+  /** Current file name. */
+  sourceFileName: string = configManager.getKey(
+    ConfigKey.CURRENT_SOURCE_FILE_NAME
+  );
+
+  /** xterm.js terminal. */
+  terminal: Terminal | null = null;
+
+  /** Current executor. */
+  private executor: BrowserExecutor | null = null;
 
   /** Connects this QbjcManager to the provided editor and terminal. */
   init({editor, terminal}: {editor?: Ace.Editor; terminal?: Terminal}) {
@@ -61,7 +77,7 @@ class QbjcManager {
     try {
       compileResult = await compile({
         source,
-        sourceFileName: 'program.bas',
+        sourceFileName: this.sourceFileName,
       });
       console.log(compileResult.code);
     } catch (e) {
@@ -131,28 +147,33 @@ class QbjcManager {
     this.messages.splice(0, this.messages.length);
   }
 
+  updateSourceFileName(sourceFileName: string) {
+    this.sourceFileName = sourceFileName.trim() || DEFAULT_SOURCE_FILE_NAME;
+    configManager.setSourceFileName(
+      configManager.currentSourceFile,
+      this.sourceFileName
+    );
+    configManager.setKey(
+      ConfigKey.CURRENT_SOURCE_FILE_NAME,
+      this.sourceFileName
+    );
+  }
+
   constructor() {
     makeObservable(this, {
-      init: action,
-      isReady: computed,
       isRunning: observable,
       messages: observable,
+      editor: observable.ref,
+      sourceFileName: observable,
+      terminal: observable.ref,
+      isReady: computed,
+      init: action,
       run: action,
       pushMessage: action,
       clearMessages: action,
-      editor: observable.ref,
-      terminal: observable.ref,
+      updateSourceFileName: action,
     });
   }
-
-  /** Ace editor. */
-  editor: Ace.Editor | null = null;
-
-  /** xterm.js terminal. */
-  terminal: Terminal | null = null;
-
-  /** Current executor. */
-  private executor: BrowserExecutor | null = null;
 }
 
 export default QbjcManager;

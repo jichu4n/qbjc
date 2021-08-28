@@ -141,15 +141,17 @@ const OpenDialog = observer(
     isOpen,
     onClose,
     editor,
+    onChangeSourceFileName,
   }: {
     isOpen: boolean;
     onClose: () => void;
     editor: Ace.Editor | null;
+    onChangeSourceFileName: (sourceFileName: string) => void;
   }) => {
     const theme = useTheme();
     const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const selectedFileSpec = useRef<SelectedFileSpec | null>(null);
+    const selectedFileSpecRef = useRef<SelectedFileSpec | null>(null);
 
     const [
       isOverwriteConfirmationDialogOpen,
@@ -157,13 +159,15 @@ const OpenDialog = observer(
     ] = useState(false);
 
     const openSelectedFile = useCallback(() => {
-      if (!editor || !selectedFileSpec.current) {
+      const selectedFileSpec = selectedFileSpecRef.current;
+      if (!editor || !selectedFileSpec) {
         return;
       }
-      editor.setValue(selectedFileSpec.current.content);
-      selectedFileSpec.current = null;
+      editor.setValue(selectedFileSpec.content);
+      onChangeSourceFileName(selectedFileSpec.title);
+      selectedFileSpecRef.current = null;
       onClose();
-    }, [editor, onClose]);
+    }, [editor, onClose, onChangeSourceFileName]);
 
     const onSelect = useCallback(
       (fileSpec: SelectedFileSpec) => {
@@ -175,7 +179,7 @@ const OpenDialog = observer(
           !!trimmedSource &&
           !_.some(EXAMPLES, ({content}) => trimmedSource === content.trim());
 
-        selectedFileSpec.current = fileSpec;
+        selectedFileSpecRef.current = fileSpec;
         if (shouldConfirm) {
           setIsOverwriteConfirmationDialogOpen(true);
         } else {
@@ -249,7 +253,7 @@ const OpenDialog = observer(
           isOpen={isOverwriteConfirmationDialogOpen}
           onClose={() => setIsOverwriteConfirmationDialogOpen(false)}
           onConfirm={openSelectedFile}
-          title={`Open ${selectedFileSpec.current?.title}`}
+          title={`Open ${selectedFileSpecRef.current?.title}`}
           content="This will overwrite the current editor contents. Are you sure?"
         />
       </>

@@ -19,6 +19,8 @@ export interface CompileArgs {
 export interface CompileResult {
   /** Original QBasic source code. */
   source: string;
+  /** Original source file name. */
+  sourceFileName: string;
   /** Compiled JavaScript code. */
   code: string;
   /** Sourcemap for the compiled JavaScript code. */
@@ -71,6 +73,7 @@ async function compile({
 
   return {
     source,
+    sourceFileName,
     code,
     map: sourceMapContent,
     astModule,

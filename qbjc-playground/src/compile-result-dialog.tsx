@@ -154,7 +154,7 @@ export default function CompileResultDialog({
     ) {
       compile({
         source: moduleCompileResult.source,
-        sourceFileName: 'program.bas',
+        sourceFileName: moduleCompileResult.sourceFileName,
         enableBundling: true,
       }).then(setBundleCompileResult);
     }
@@ -228,8 +228,8 @@ export default function CompileResultDialog({
     const blob = new Blob([editor.getValue()], {
       type: 'text/plain;charset=utf-8',
     });
-    saveAs(blob, 'program.js');
-  }, []);
+    saveAs(blob, `${moduleCompileResult?.sourceFileName}.js`);
+  }, [moduleCompileResult?.sourceFileName]);
 
   return (
     <Dialog

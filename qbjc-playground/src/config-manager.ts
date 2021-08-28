@@ -27,9 +27,11 @@ export enum ConfigKey {
   EXECUTION_DELAY = 'v1/executionDelayUs',
 }
 
+export const DEFAULT_SOURCE_FILE_NAME = 'source.bas';
+
 const DEFAULT_CONFIG = {
-  [ConfigKey.SOURCE_FILES]: [{name: 'default', content: ''}],
-  [ConfigKey.CURRENT_SOURCE_FILE_NAME]: 'default',
+  [ConfigKey.SOURCE_FILES]: [{name: DEFAULT_SOURCE_FILE_NAME, content: ''}],
+  [ConfigKey.CURRENT_SOURCE_FILE_NAME]: DEFAULT_SOURCE_FILE_NAME,
   [ConfigKey.EDITOR_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.EDITOR_FONT_SIZE]: 14,
   [ConfigKey.EDITOR_THEME]: 'nord_dark',
@@ -113,7 +115,8 @@ class ConfigManager {
       load: action,
       sourceFiles: computed,
       currentSourceFile: computed,
-      setContent: action,
+      setSourceFileName: action,
+      setSourceFileContent: action,
     });
 
     this.load();
@@ -185,7 +188,11 @@ class ConfigManager {
     ])!;
   }
 
-  setContent(sourceFile: SourceFile, newContent: string) {
+  setSourceFileName(sourceFile: SourceFile, newSourceFileName: string) {
+    sourceFile.name = newSourceFileName;
+  }
+
+  setSourceFileContent(sourceFile: SourceFile, newContent: string) {
     sourceFile.content = newContent;
   }
 }

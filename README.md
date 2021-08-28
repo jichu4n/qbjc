@@ -52,8 +52,6 @@ import {compile} from 'qbjc';
 
 ...
 const {
-  // Original QBasic source code.
-  source,
   // Compiled JavaScript code.
   code,
   // Sourcemap for the compiled JavaScript code.
