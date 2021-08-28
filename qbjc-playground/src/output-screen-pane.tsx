@@ -31,10 +31,10 @@ const OutputScreenPane = observer(
   }) => {
     const theme = useTheme();
 
-    const containerElRef = useRef<HTMLDivElement | null>(null);
     const terminalRef = useRef<Terminal | null>(null);
     const fitAddOnRef = useRef<FitAddon | null>(null);
 
+    const containerElRef = useRef<HTMLDivElement | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const containerHeightBeforeFullScreenRef = useRef<string | null>(null);
     const enterFullScreen = useCallback(() => {
@@ -175,6 +175,24 @@ const OutputScreenPane = observer(
             />
           }
         >
+          {isRunning ? (
+            <div style={{marginRight: 12, paddingTop: 8, paddingBottom: 8}}>
+              <Tooltip title="Running program...">
+                <CircularProgress color="inherit" size={10} />
+              </Tooltip>
+            </div>
+          ) : (
+            <Tooltip title="Clear output">
+              <IconButton onClick={() => terminalRef.current?.reset()}>
+                <BlockIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
           {isFullScreen ? (
             <Tooltip title="Exit full screen">
               <IconButton onClick={exitFullScreen}>
@@ -190,24 +208,6 @@ const OutputScreenPane = observer(
             <Tooltip title="Full screen">
               <IconButton onClick={enterFullScreen}>
                 <FullscreenIcon
-                  style={{
-                    fontSize: theme.typography.overline.fontSize,
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          )}
-          {isRunning ? (
-            <div style={{marginRight: 12, paddingTop: 8, paddingBottom: 8}}>
-              <Tooltip title="Running program...">
-                <CircularProgress color="inherit" size={10} />
-              </Tooltip>
-            </div>
-          ) : (
-            <Tooltip title="Clear output">
-              <IconButton onClick={() => terminalRef.current?.reset()}>
-                <BlockIcon
                   style={{
                     fontSize: theme.typography.overline.fontSize,
                     color: theme.palette.text.secondary,

@@ -15,7 +15,7 @@ import AppHeader from './app-header';
 import AppSplashScreen from './app-splash-screen';
 import './app.css';
 import CompileResultDialog from './compile-result-dialog';
-import Editor from './editor';
+import EditorPane from './editor-pane';
 import MessagesPane from './messages-pane';
 import OutputScreenPane from './output-screen-pane';
 import QbjcManager from './qbjc-manager';
@@ -100,7 +100,7 @@ const App = observer(() => {
           gutterSize={SPLIT_GUTTER_SIZE}
         >
           <div style={{position: 'relative'}}>
-            <Editor
+            <EditorPane
               onReady={(editor) => qbjcManager.init({editor})}
               style={{
                 width: '100%',
