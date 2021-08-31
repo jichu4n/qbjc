@@ -72,9 +72,7 @@ const App = observer(() => {
       <CssBaseline />
       <AppSplashScreen isReady={qbjcManager.isReady} />
       <Helmet>
-        <title>
-          qbjc playground{qbjcManager.isRunning ? ' - Running...' : ''}
-        </title>
+        <title>qbjc{qbjcManager.isRunning ? ' - Running...' : ''}</title>
       </Helmet>
 
       <div

@@ -59,9 +59,13 @@ function AppHeader({
   return (
     <>
       <AppBar position="relative" color="default">
-        <Toolbar>
+        <Toolbar
+          style={{
+            paddingRight: theme.spacing(1),
+          }}
+        >
           <Typography variant="h6" style={{flexGrow: 1}}>
-            qbjc playground
+            qbjc
           </Typography>
           {isReady && (
             <>

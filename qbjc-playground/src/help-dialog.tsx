@@ -73,9 +73,9 @@ function AboutTab() {
           <b>qbjc</b> is a QBasic to JavaScript compiler.
         </p>
         <p>
-          The <b>qbjc playground</b> at{' '}
-          <Link href="https://qbjc.dev">qbjc.dev</Link> lets you edit and run
-          QBasic / QuickBASIC programs directly in the browser.
+          The qbjc playground at <Link href="https://qbjc.dev">qbjc.dev</Link>{' '}
+          lets you edit and run QBasic / QuickBASIC programs directly in the
+          browser.
         </p>
         <p>
           Visit the project homepage on GitHub to find out more:{' '}
