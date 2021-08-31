@@ -8,6 +8,7 @@ import {useTheme} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import DescriptionIcon from '@material-ui/icons/Description';
+import EditIcon from '@material-ui/icons/Edit';
 import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
 import ace, {Ace} from 'ace-builds';
@@ -184,6 +185,16 @@ const EditorPane = observer(
       () => setIsSourceFileNameEditorDialogOpen(false),
       []
     );
+    const [isHoveringOverSourceFileName, setIsHoveringOverSourceFileName] =
+      useState(false);
+    const onHoverOverSourceFileName = useCallback(
+      () => setIsHoveringOverSourceFileName(true),
+      []
+    );
+    const onLeaveSourceFileName = useCallback(
+      () => setIsHoveringOverSourceFileName(false),
+      []
+    );
 
     return (
       <>
@@ -211,17 +222,26 @@ const EditorPane = observer(
         >
           <PaneHeader
             title={
-              <Tooltip title="Click to rename">
-                <span
+              <Tooltip title="Click to rename" placement="right" arrow={true}>
+                <div
                   onClick={showSourceFileNameEditorDialog}
+                  onMouseOver={onHoverOverSourceFileName}
+                  onMouseOut={onLeaveSourceFileName}
                   style={{
-                    padding: 10,
-                    marginTop: -10,
-                    marginLeft: -10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
                   }}
                 >
                   {sourceFileName}
-                </span>
+                  <EditIcon
+                    style={{
+                      fontSize: theme.typography.overline.fontSize,
+                      verticalAlign: 'middle',
+                      marginLeft: '4px',
+                      opacity: isHoveringOverSourceFileName ? '100%' : '0',
+                    }}
+                  />
+                </div>
               </Tooltip>
             }
             icon={
