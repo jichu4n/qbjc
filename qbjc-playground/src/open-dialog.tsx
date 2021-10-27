@@ -13,7 +13,6 @@ import {useTheme} from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
-import {Ace} from 'ace-builds';
 import _ from 'lodash';
 import {DropzoneArea} from 'material-ui-dropzone';
 import BookshelfIcon from 'mdi-material-ui/Bookshelf';
@@ -21,6 +20,7 @@ import FileCodeIcon from 'mdi-material-ui/FileCode';
 import LaptopIcon from 'mdi-material-ui/Laptop';
 import {observer} from 'mobx-react';
 import React, {useCallback, useRef, useState} from 'react';
+import EditorController from './editor-controller';
 import EXAMPLES from './examples';
 
 interface SelectedFileSpec {
@@ -140,12 +140,12 @@ const OpenDialog = observer(
   ({
     isOpen,
     onClose,
-    editor,
+    editorController,
     onChangeSourceFileName,
   }: {
     isOpen: boolean;
     onClose: () => void;
-    editor: Ace.Editor | null;
+    editorController: EditorController | null;
     onChangeSourceFileName: (sourceFileName: string) => void;
   }) => {
     const theme = useTheme();
@@ -160,21 +160,21 @@ const OpenDialog = observer(
 
     const openSelectedFile = useCallback(() => {
       const selectedFileSpec = selectedFileSpecRef.current;
-      if (!editor || !selectedFileSpec) {
+      if (!editorController || !selectedFileSpec) {
         return;
       }
-      editor.setValue(selectedFileSpec.content);
+      editorController.setText(selectedFileSpec.content);
       onChangeSourceFileName(selectedFileSpec.title);
       selectedFileSpecRef.current = null;
       onClose();
-    }, [editor, onClose, onChangeSourceFileName]);
+    }, [editorController, onClose, onChangeSourceFileName]);
 
     const onSelect = useCallback(
       (fileSpec: SelectedFileSpec) => {
-        if (!editor) {
+        if (!editorController) {
           return;
         }
-        const trimmedSource = editor.getValue().trim();
+        const trimmedSource = editorController.getText().trim();
         const shouldConfirm =
           !!trimmedSource &&
           !_.some(EXAMPLES, ({content}) => trimmedSource === content.trim());
@@ -186,7 +186,7 @@ const OpenDialog = observer(
           openSelectedFile();
         }
       },
-      [editor, openSelectedFile]
+      [editorController, openSelectedFile]
     );
 
     const [activeTab, setActiveTab] = useState<'examples' | 'upload'>(

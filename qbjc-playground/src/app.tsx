@@ -86,7 +86,7 @@ const App = observer(() => {
       >
         <AppHeader
           isReady={qbjcManager.isReady}
-          editor={qbjcManager.editor}
+          editorController={qbjcManager.editorController}
           sourceFileName={qbjcManager.sourceFileName}
           onChangeSourceFileName={onChangeSourceFileName}
         />
@@ -112,7 +112,9 @@ const App = observer(() => {
             <EditorPane
               sourceFileName={qbjcManager.sourceFileName}
               onChangeSourceFileName={onChangeSourceFileName}
-              onReady={(editor) => qbjcManager.init({editor})}
+              onReady={(editorController) =>
+                qbjcManager.init({editorController})
+              }
               style={{
                 width: '100%',
                 height: '100%',
