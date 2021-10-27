@@ -25,6 +25,7 @@
     "mdi-material-ui": "^6.22.1",
     "mobx": "^6.3.0",
     "mobx-react": "^7.1.0",
+    "monaco-editor": "^0.29.1",
     "prettier": "^2.3.2",
     "qbjc": "0.0.3",
     "raw-loader": "^4.0.2",
@@ -40,9 +41,10 @@
     "xterm-webfont": "^2.0.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "copyAssets:monaco": "rsync -avh ../node_modules/monaco-editor/min/vs/base/worker/ ./public/monaco/",
+    "start": "npm run copyAssets:monaco && react-scripts start",
+    "build": "npm run copyAssets:monaco && react-scripts build",
+    "test": "npm run copyAssets:monaco && react-scripts test",
     "eject": "react-scripts eject",
     "lint": "prettier --check ."
   },

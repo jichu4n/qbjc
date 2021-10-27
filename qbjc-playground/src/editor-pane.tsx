@@ -11,16 +11,15 @@ import DescriptionIcon from '@material-ui/icons/Description';
 import EditIcon from '@material-ui/icons/Edit';
 import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
-import ace, {Ace} from 'ace-builds';
-import 'ace-builds/webpack-resolver';
 import {autorun} from 'mobx';
 import {observer} from 'mobx-react';
+import * as monaco from 'monaco-editor';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {ConfigKey} from './config-manager';
-import {DEFAULT_EXAMPLE} from './examples';
-import PaneHeader from './pane-header';
 import EditorController from './editor-controller';
-import AceEditorController from './ace-editor-controller';
+import {DEFAULT_EXAMPLE} from './examples';
+import MonacoEditorController from './monaco-editor-controller';
+import PaneHeader from './pane-header';
 
 const SETTING_EDITOR_INPUT_WIDTH = 400;
 
@@ -95,7 +94,7 @@ const EditorPane = observer(
   }) => {
     const theme = useTheme();
 
-    const editorRef = useRef<Ace.Editor | null>(null);
+    const editorRef = useRef<monaco.editor.ICodeEditor | null>(null);
 
     const containerElRef = useRef<HTMLDivElement | null>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -109,7 +108,6 @@ const EditorPane = observer(
       containerHeightBeforeFullScreenRef.current = containerEl.style.height;
       setIsFullScreen(true);
       setTimeout(() => {
-        editor.resize(true);
         editor.focus();
       }, 0);
     }, []);
@@ -127,7 +125,6 @@ const EditorPane = observer(
           containerEl.style.height = containerHeightBeforeFullScreen;
           containerHeightBeforeFullScreenRef.current = null;
         }
-        editor.resize(true);
         editor.focus();
       }, 0);
     }, []);
@@ -137,6 +134,7 @@ const EditorPane = observer(
         if (!node || editorRef.current) {
           return;
         }
+        /*
         const editor = ace.edit(node);
         autorun(() => {
           editor.setOptions({
@@ -155,10 +153,12 @@ const EditorPane = observer(
         });
         editor.setShowPrintMargin(false);
         editor.session.setMode('ace/mode/vbscript');
+        */
 
         const initialContent = configManager.currentSourceFile.content.trim()
           ? configManager.currentSourceFile.content
           : DEFAULT_EXAMPLE.content;
+        /*
         editor.setValue(initialContent);
         editor.clearSelection();
         editor.moveCursorTo(0, 0);
@@ -171,6 +171,29 @@ const EditorPane = observer(
         );
         editorRef.current = editor;
         onReady(new AceEditorController(editor));
+        */
+        const editor = monaco.editor.create(node, {
+          value: initialContent,
+          language: 'vb',
+          automaticLayout: true,
+          minimap: {enabled: false},
+          theme: 'vs-dark',
+        });
+        autorun(() => {
+          editor.updateOptions({
+            fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
+            fontSize: configManager.getKey(ConfigKey.EDITOR_FONT_SIZE),
+          });
+        });
+        editor.onDidChangeModelContent(() => {
+          configManager.setSourceFileContent(
+            configManager.currentSourceFile,
+            editor.getValue()
+          );
+        });
+        editor.focus();
+        editorRef.current = editor;
+        onReady(new MonacoEditorController(editor));
       },
       [onReady]
     );
