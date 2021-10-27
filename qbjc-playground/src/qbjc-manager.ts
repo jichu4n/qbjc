@@ -1,4 +1,3 @@
-import {Ace} from 'ace-builds';
 import {action, computed, makeObservable, observable, runInAction} from 'mobx';
 import {compile, CompileResult, Loc} from 'qbjc';
 import {BrowserExecutor} from 'qbjc/browser';
@@ -7,6 +6,7 @@ import configManager, {
   ConfigKey,
   DEFAULT_SOURCE_FILE_NAME,
 } from './config-manager';
+import EditorController from './editor-controller';
 
 export enum QbjcMessageType {
   /** General error message. */
@@ -34,8 +34,8 @@ class QbjcManager {
   /** Compiler errors and status messages. */
   messages: Array<QbjcMessage> = [];
 
-  /** Ace editor. */
-  editor: Ace.Editor | null = null;
+  /** Editor controller instance. */
+  editorController: EditorController | null = null;
 
   /** Current file name. */
   sourceFileName: string = configManager.getKey(
@@ -49,9 +49,15 @@ class QbjcManager {
   private executor: BrowserExecutor | null = null;
 
   /** Connects this QbjcManager to the provided editor and terminal. */
-  init({editor, terminal}: {editor?: Ace.Editor; terminal?: Terminal}) {
-    if (editor) {
-      this.editor = editor;
+  init({
+    editorController,
+    terminal,
+  }: {
+    editorController?: EditorController;
+    terminal?: Terminal;
+  }) {
+    if (editorController) {
+      this.editorController = editorController;
     }
     if (terminal) {
       this.terminal = terminal;
@@ -60,14 +66,14 @@ class QbjcManager {
 
   /** Whether the required components (editor and terminal) are connected. */
   get isReady() {
-    return !!this.editor && !!this.terminal;
+    return !!this.editorController && !!this.terminal;
   }
 
   async run() {
-    if (!this.editor || !this.terminal || this.isRunning) {
+    if (!this.editorController || !this.terminal || this.isRunning) {
       return;
     }
-    const source = this.editor.getValue();
+    const source = this.editorController.getText();
     if (!source.trim()) {
       return;
     }
@@ -119,7 +125,7 @@ class QbjcManager {
           `${((endTs.getTime() - startTs.getTime()) / 1000).toFixed(3)}s`,
       });
       this.executor = null;
-      this.editor.focus();
+      this.editorController.focus();
     }
   }
 
@@ -131,12 +137,12 @@ class QbjcManager {
   }
 
   goToMessageLocInEditor(loc: Loc) {
-    if (!this.editor || !loc) {
+    if (!this.editorController || !loc) {
       return;
     }
     const {line, col} = loc;
-    this.editor.moveCursorTo(line - 1, col - 1);
-    this.editor.selection.selectWordRight();
+    this.editorController.setCursor(line - 1, col - 1);
+    this.editorController.focus();
   }
 
   pushMessage(message: QbjcMessage) {
@@ -163,7 +169,7 @@ class QbjcManager {
     makeObservable(this, {
       isRunning: observable,
       messages: observable,
-      editor: observable.ref,
+      editorController: observable.ref,
       sourceFileName: observable,
       terminal: observable.ref,
       isReady: computed,

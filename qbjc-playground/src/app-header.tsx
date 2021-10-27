@@ -10,33 +10,33 @@ import HelpIcon from '@material-ui/icons/Help';
 import LaunchIcon from '@material-ui/icons/Launch';
 import SaveIcon from '@material-ui/icons/Save';
 import SettingsIcon from '@material-ui/icons/Settings';
-import {Ace} from 'ace-builds';
 import {saveAs} from 'file-saver';
 import React, {useCallback, useState} from 'react';
+import EditorController from './editor-controller';
 import HelpDialog from './help-dialog';
 import OpenDialog from './open-dialog';
 import SettingsDialog from './settings-dialog';
 
 function AppHeader({
   isReady,
-  editor,
+  editorController,
   sourceFileName,
   onChangeSourceFileName,
 }: {
   isReady: boolean;
-  editor: Ace.Editor | null;
+  editorController: EditorController | null;
   sourceFileName: string;
   onChangeSourceFileName: (sourceFileName: string) => void;
 }) {
   const onSaveClick = useCallback(() => {
-    if (!isReady || !editor) {
+    if (!isReady || !editorController) {
       return;
     }
-    const blob = new Blob([editor.getValue()], {
+    const blob = new Blob([editorController.getText()], {
       type: 'text/plain;charset=utf-8',
     });
     saveAs(blob, sourceFileName);
-  }, [isReady, editor, sourceFileName]);
+  }, [isReady, editorController, sourceFileName]);
 
   const theme = useTheme();
 
@@ -141,7 +141,7 @@ function AppHeader({
       <OpenDialog
         isOpen={isOpenDialogOpen}
         onClose={hideOpenDialog}
-        editor={editor}
+        editorController={editorController}
         onChangeSourceFileName={onChangeSourceFileName}
       />
       <SettingsDialog

@@ -19,6 +19,8 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {ConfigKey} from './config-manager';
 import {DEFAULT_EXAMPLE} from './examples';
 import PaneHeader from './pane-header';
+import EditorController from './editor-controller';
+import AceEditorController from './ace-editor-controller';
 
 const SETTING_EDITOR_INPUT_WIDTH = 400;
 
@@ -88,7 +90,7 @@ const EditorPane = observer(
   }: {
     sourceFileName: string;
     onChangeSourceFileName: (sourceFileName: string) => void;
-    onReady: (editor: Ace.Editor) => void;
+    onReady: (editorController: EditorController) => void;
     style?: React.CSSProperties;
   }) => {
     const theme = useTheme();
@@ -168,7 +170,7 @@ const EditorPane = observer(
           )
         );
         editorRef.current = editor;
-        onReady(editor);
+        onReady(new AceEditorController(editor));
       },
       [onReady]
     );
