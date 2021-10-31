@@ -11,6 +11,21 @@ QuickBASIC program to:
 Try it out in the qbjc playground:
 [👉 **qbjc.dev** 👈](https://qbjc.dev)
 
+## But why?
+
+QBasic was my first introduction to programming as a kid back in the 90s.
+Despite its many limitations, it really inspired my passion for building things
+with technology that continues to this day. The balance of simplicity and power
+made programming feel both approachable and incredibly fun [1].
+
+I wanted to see if I could recreate a little bit of that magic for the modern
+age, something easy to get started with in today's web-centric world. So this
+project was born - a QBasic compiler + runtime + basic web IDE that compiles
+your QBasic code to JavaScript!
+
+[1] See also: [30 years later, QBasic is still the
+best](http://www.nicolasbize.com/blog/30-years-later-qbasic-is-still-the-best/)
+
 ## Usage
 
 ### qbjc playground
