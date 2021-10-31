@@ -14,14 +14,13 @@ import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import SaveIcon from '@material-ui/icons/Save';
-import ace, {Ace} from 'ace-builds';
-import 'ace-builds/webpack-resolver';
 import {saveAs} from 'file-saver';
 import _ from 'lodash';
 import CodeBracesBoxIcon from 'mdi-material-ui/CodeBracesBox';
 import NodejsIcon from 'mdi-material-ui/Nodejs';
 import TextBoxOutline from 'mdi-material-ui/TextBoxOutline';
 import {autorun, IReactionDisposer} from 'mobx';
+import * as monaco from 'monaco-editor';
 import {compile, CompileResult} from 'qbjc';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {ConfigKey} from './config-manager';
@@ -124,16 +123,14 @@ export default function CompileResultDialog({
   const [bundleCompileResult, setBundleCompileResult] =
     useState<CompileResult | null>(null);
 
-  const editorRef = useRef<Ace.Editor | null>(null);
+  const editorRef = useRef<monaco.editor.ICodeEditor | null>(null);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
   const enterFullScreen = useCallback(() => {
     setIsFullScreen(true);
-    setTimeout(() => editorRef.current?.resize(), 0);
   }, []);
   const exitFullScreen = useCallback(() => {
     setIsFullScreen(false);
-    setTimeout(() => editorRef.current?.resize(), 0);
   }, []);
 
   const onCompileResultChange = useCallback(() => {
@@ -178,28 +175,19 @@ export default function CompileResultDialog({
       if (!node || editorRef.current || !isOpen) {
         return;
       }
-      const editor = ace.edit(node, {
-        useWorker: false, // Disable syntax warnings
+      const editor = monaco.editor.create(node, {
+        language: 'vb',
+        automaticLayout: true,
+        minimap: {enabled: false},
+        theme: 'vs-dark',
+        readOnly: true,
       });
       editorConfigChangeListenerDisposerRef.current = autorun(() => {
-        editor.setOptions({
+        editor.updateOptions({
           fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
-          fontSize: `${configManager.getKey(ConfigKey.EDITOR_FONT_SIZE)}px`,
+          fontSize: configManager.getKey(ConfigKey.EDITOR_FONT_SIZE),
         });
-        editor.setTheme(
-          `ace/theme/${configManager.getKey(ConfigKey.EDITOR_THEME)}`
-        );
-        const keybindings = configManager.getKey(ConfigKey.EDITOR_KEYBINDINGS);
-        editor.setKeyboardHandler(
-          keybindings ? `ace/keyboard/${keybindings}` : ''
-        );
       });
-      editor.setShowPrintMargin(false);
-      editor.session.setMode('ace/mode/javascript');
-      editor.setReadOnly(true);
-
-      editor.clearSelection();
-      editor.moveCursorTo(0, 0);
       editor.focus();
       editorRef.current = editor;
 
@@ -214,7 +202,7 @@ export default function CompileResultDialog({
       editorConfigChangeListenerDisposerRef.current = null;
     }
     if (editorRef.current) {
-      editorRef.current.destroy();
+      editorRef.current.dispose();
       editorRef.current = null;
     }
     _onClose();
