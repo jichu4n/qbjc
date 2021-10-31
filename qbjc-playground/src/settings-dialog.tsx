@@ -343,20 +343,23 @@ const SettingsDialog = observer(
                 <List subheader={<li />}>
                   {activeTab === 'editor' && (
                     <>
-                      <ListItem
-                        button={true}
-                        onClick={() => setIsEditorThemeDialogOpen(true)}
-                      >
-                        <ListItemText
-                          primary="Editor theme"
-                          secondary={
-                            _.find(EDITOR_THEMES, [
-                              'value',
-                              configManager.getKey(ConfigKey.EDITOR_THEME),
-                            ])?.label
-                          }
-                        />
-                      </ListItem>
+                      {/* Not yet implemented with Monaco. */}
+                      {false && (
+                        <ListItem
+                          button={true}
+                          onClick={() => setIsEditorThemeDialogOpen(true)}
+                        >
+                          <ListItemText
+                            primary="Editor theme"
+                            secondary={
+                              _.find(EDITOR_THEMES, [
+                                'value',
+                                configManager.getKey(ConfigKey.EDITOR_THEME),
+                              ])?.label
+                            }
+                          />
+                        </ListItem>
+                      )}
                       <ListItem
                         button={true}
                         onClick={() => setIsEditorFontDialogOpen(true)}
@@ -379,22 +382,25 @@ const SettingsDialog = observer(
                           )}
                         />{' '}
                       </ListItem>
-                      <ListItem
-                        button={true}
-                        onClick={() => setIsEditorKeybindingsDialogOpen(true)}
-                      >
-                        <ListItemText
-                          primary="Editor keybindings"
-                          secondary={
-                            _.find(EDITOR_KEYBINDINGS, [
-                              'value',
-                              configManager.getKey(
-                                ConfigKey.EDITOR_KEYBINDINGS
-                              ),
-                            ])?.label
-                          }
-                        />
-                      </ListItem>
+                      {/* Not yet implemented with Monaco. */}
+                      {false && (
+                        <ListItem
+                          button={true}
+                          onClick={() => setIsEditorKeybindingsDialogOpen(true)}
+                        >
+                          <ListItemText
+                            primary="Editor keybindings"
+                            secondary={
+                              _.find(EDITOR_KEYBINDINGS, [
+                                'value',
+                                configManager.getKey(
+                                  ConfigKey.EDITOR_KEYBINDINGS
+                                ),
+                              ])?.label
+                            }
+                          />
+                        </ListItem>
+                      )}
                     </>
                   )}
                   {activeTab === 'outputScreen' && (

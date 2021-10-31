@@ -134,44 +134,9 @@ const EditorPane = observer(
         if (!node || editorRef.current) {
           return;
         }
-        /*
-        const editor = ace.edit(node);
-        autorun(() => {
-          editor.setOptions({
-            fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
-            fontSize: `${configManager.getKey(ConfigKey.EDITOR_FONT_SIZE)}px`,
-          });
-          editor.setTheme(
-            `ace/theme/${configManager.getKey(ConfigKey.EDITOR_THEME)}`
-          );
-          const keybindings = configManager.getKey(
-            ConfigKey.EDITOR_KEYBINDINGS
-          );
-          editor.setKeyboardHandler(
-            keybindings ? `ace/keyboard/${keybindings}` : ''
-          );
-        });
-        editor.setShowPrintMargin(false);
-        editor.session.setMode('ace/mode/vbscript');
-        */
-
         const initialContent = configManager.currentSourceFile.content.trim()
           ? configManager.currentSourceFile.content
           : DEFAULT_EXAMPLE.content;
-        /*
-        editor.setValue(initialContent);
-        editor.clearSelection();
-        editor.moveCursorTo(0, 0);
-        editor.focus();
-        editor.on('change', () =>
-          configManager.setSourceFileContent(
-            configManager.currentSourceFile,
-            editor.getValue()
-          )
-        );
-        editorRef.current = editor;
-        onReady(new AceEditorController(editor));
-        */
         const editor = monaco.editor.create(node, {
           value: initialContent,
           language: 'vb',
