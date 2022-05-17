@@ -163,7 +163,7 @@ if (require.main === module) {
           await table.create(chunk);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(`Got error: ${e.message ?? JSON.stringify(e)}`);
     }
   })();

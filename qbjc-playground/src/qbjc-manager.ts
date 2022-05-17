@@ -86,7 +86,7 @@ class QbjcManager {
         sourceFileName: this.sourceFileName,
       });
       console.log(compileResult.code);
-    } catch (e) {
+    } catch (e: any) {
       console.error(`Compile error: ${e.message ?? JSON.stringify(e)}`);
       runInAction(() => {
         this.isRunning = false;

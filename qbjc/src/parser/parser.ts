@@ -18,7 +18,7 @@ export default function parse(
     parser.feed(input);
     // Add terminating line break (necessary due to lack of EOF terminal).
     parser.feed('\n');
-  } catch (e) {
+  } catch (e: any) {
     if ('token' in e) {
       throw new ErrorWithLoc(
         // Hack to reduce verbosity of nearley error messages...

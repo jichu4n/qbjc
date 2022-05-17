@@ -96,7 +96,7 @@ export default class Executor {
 
     try {
       await this.executeStmts(ctx, module.stmts, this.moduleLabelIndexMap);
-    } catch (e) {
+    } catch (e: any) {
       if (e.isEndDirective) {
         // Swallow error
       } else {
@@ -210,7 +210,7 @@ export default class Executor {
       if ('run' in stmt) {
         try {
           directive = await stmt.run(ctx);
-        } catch (e) {
+        } catch (e: any) {
           if (e.isEndDirective) {
             throw e;
           } else {
@@ -276,7 +276,7 @@ export default class Executor {
       }
       try {
         results.push(getDataItem(dataItem, resultTypes[i]));
-      } catch (e) {
+      } catch (e: any) {
         e.message = `Error reading item ${i + 1}: ${e.message}`;
         throw e;
       }
