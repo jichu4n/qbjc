@@ -6,13 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [16]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install -g npm@7 # NPM v7+ required for workspace support
       - run: npm install
       - run: npm run --workspaces lint
       - run: npm run --workspaces build
