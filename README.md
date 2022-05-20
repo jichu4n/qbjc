@@ -8,8 +8,7 @@ QuickBASIC program to:
 - A standalone executable Node.js script, with zero external dependencies; or
 - An ES6 module that can be imported and executed in both Node.js and browser environments.
 
-Try it out in the qbjc playground:
-[👉 **qbjc.dev** 👈](https://qbjc.dev)
+Try it out in the browser: [👉 **qbjc.dev** 👈](https://qbjc.dev)
 
 ## But why?
 
@@ -118,9 +117,6 @@ Executing the compiled code:
 
 ## Compatibility
 
-For detailed compatibility information on individual commands and functions, see
-[👉 Implementation Status](https://airtable.com/shrITVmjepv00kwpT).
-
 ### What works:
 
 - Core language features
@@ -151,6 +147,9 @@ For detailed compatibility information on individual commands and functions, see
 - Direct memory access - `PEEK`, `POKE` etc.
 - Less common syntax, inputs or options
 - ...and more - contributions are welcome!
+
+For detailed compatibility information on individual commands and functions, see
+[👉 Implementation Status](https://airtable.com/shrITVmjepv00kwpT).
 
 ## About
 
