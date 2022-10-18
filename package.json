@@ -5,5 +5,10 @@
   "workspaces": [
     "./qbjc",
     "./qbjc-playground"
-  ]
+  ],
+  "overrides": {
+    "ansi-escapes": {
+      "type-fest": "^3.0.0"
+    }
+  }
 }
