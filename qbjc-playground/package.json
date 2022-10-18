@@ -23,7 +23,7 @@
     "mdi-material-ui": "^6.23.0",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
-    "monaco-editor": "^0.34.1",
+    "monaco-editor": "^0.30.1",
     "prettier": "^2.7.1",
     "qbjc": "0.0.3",
     "raw-loader": "^4.0.2",
