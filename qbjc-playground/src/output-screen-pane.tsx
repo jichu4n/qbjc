@@ -1,10 +1,10 @@
-import CircularProgress from '@material-ui/core/CircularProgress';
-import IconButton from '@material-ui/core/IconButton';
-import {useTheme} from '@material-ui/core/styles';
-import Tooltip from '@material-ui/core/Tooltip';
-import BlockIcon from '@material-ui/icons/Block';
-import FullscreenIcon from '@material-ui/icons/Fullscreen';
-import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import {useTheme} from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import BlockIcon from '@mui/icons-material/Block';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import _ from 'lodash';
 import MonitorIcon from 'mdi-material-ui/Monitor';
 import {autorun} from 'mobx';
@@ -147,7 +147,7 @@ const OutputScreenPane = observer(
         style={{
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: theme.palette.common.black,
           ...style,
           ...(isFullScreen
             ? {
@@ -183,7 +183,10 @@ const OutputScreenPane = observer(
             </div>
           ) : (
             <Tooltip title="Clear output">
-              <IconButton onClick={() => terminalRef.current?.reset()}>
+              <IconButton
+                onClick={() => terminalRef.current?.reset()}
+                size="large"
+              >
                 <BlockIcon
                   style={{
                     fontSize: theme.typography.overline.fontSize,
@@ -195,7 +198,7 @@ const OutputScreenPane = observer(
           )}
           {isFullScreen ? (
             <Tooltip title="Exit full screen">
-              <IconButton onClick={exitFullScreen}>
+              <IconButton onClick={exitFullScreen} size="large">
                 <FullscreenExitIcon
                   style={{
                     fontSize: theme.typography.overline.fontSize,
@@ -206,7 +209,7 @@ const OutputScreenPane = observer(
             </Tooltip>
           ) : (
             <Tooltip title="Full screen">
-              <IconButton onClick={enterFullScreen}>
+              <IconButton onClick={enterFullScreen} size="large">
                 <FullscreenIcon
                   style={{
                     fontSize: theme.typography.overline.fontSize,

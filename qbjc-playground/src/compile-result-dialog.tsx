@@ -1,19 +1,19 @@
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import IconButton from '@material-ui/core/IconButton';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import {useTheme} from '@material-ui/core/styles';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
-import CloseIcon from '@material-ui/icons/Close';
-import FullscreenIcon from '@material-ui/icons/Fullscreen';
-import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import SaveIcon from '@material-ui/icons/Save';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import {useTheme} from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import CloseIcon from '@mui/icons-material/Close';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import SaveIcon from '@mui/icons-material/Save';
 import {saveAs} from 'file-saver';
 import _ from 'lodash';
 import CodeBracesBoxIcon from 'mdi-material-ui/CodeBracesBox';
@@ -227,10 +227,7 @@ export default function CompileResultDialog({
       fullScreen={isFullScreen}
       maxWidth="lg"
     >
-      <DialogTitle
-        disableTypography={true}
-        style={{display: 'flex', alignItems: 'center'}}
-      >
+      <DialogTitle style={{display: 'flex', alignItems: 'center'}}>
         <CodeBracesBoxIcon style={{marginRight: '0.4rem'}} />
         <Typography variant="h6" style={{flexGrow: 1}}>
           Compiled code
@@ -243,19 +240,19 @@ export default function CompileResultDialog({
           }}
         />
         <Tooltip title="Save compiled JavaScript program">
-          <IconButton onClick={onSaveClick}>
+          <IconButton onClick={onSaveClick} size="large">
             <SaveIcon />
           </IconButton>
         </Tooltip>
         {isFullScreen ? (
           <Tooltip title="Exit full screen">
-            <IconButton onClick={exitFullScreen}>
+            <IconButton onClick={exitFullScreen} size="large">
               <FullscreenExitIcon />
             </IconButton>
           </Tooltip>
         ) : (
           <Tooltip title="Full screen">
-            <IconButton onClick={enterFullScreen}>
+            <IconButton onClick={enterFullScreen} size="large">
               <FullscreenIcon />
             </IconButton>
           </Tooltip>
@@ -264,6 +261,7 @@ export default function CompileResultDialog({
           <IconButton
             onClick={onClose}
             style={{marginRight: -theme.spacing(2)}}
+            size="large"
           >
             <CloseIcon />
           </IconButton>

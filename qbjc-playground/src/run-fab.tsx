@@ -1,7 +1,7 @@
-import Fab from '@material-ui/core/Fab';
-import Tooltip from '@material-ui/core/Tooltip';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import StopIcon from '@material-ui/icons/Stop';
+import Fab from '@mui/material/Fab';
+import Tooltip from '@mui/material/Tooltip';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import {observer} from 'mobx-react';
 import React, {useCallback} from 'react';
 import QbjcManager from './qbjc-manager';

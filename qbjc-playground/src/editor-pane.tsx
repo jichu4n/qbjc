@@ -1,16 +1,16 @@
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import IconButton from '@material-ui/core/IconButton';
-import {useTheme} from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
-import DescriptionIcon from '@material-ui/icons/Description';
-import EditIcon from '@material-ui/icons/Edit';
-import FullscreenIcon from '@material-ui/icons/Fullscreen';
-import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import {useTheme} from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
+import DescriptionIcon from '@mui/icons-material/Description';
+import EditIcon from '@mui/icons-material/Edit';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import {autorun} from 'mobx';
 import {observer} from 'mobx-react';
 import * as monaco from 'monaco-editor';
@@ -244,7 +244,7 @@ const EditorPane = observer(
           >
             {isFullScreen ? (
               <Tooltip title="Exit full screen">
-                <IconButton onClick={exitFullScreen}>
+                <IconButton onClick={exitFullScreen} size="large">
                   <FullscreenExitIcon
                     style={{
                       fontSize: theme.typography.overline.fontSize,
@@ -255,7 +255,7 @@ const EditorPane = observer(
               </Tooltip>
             ) : (
               <Tooltip title="Full screen">
-                <IconButton onClick={enterFullScreen}>
+                <IconButton onClick={enterFullScreen} size="large">
                   <FullscreenIcon
                     style={{
                       fontSize: theme.typography.overline.fontSize,

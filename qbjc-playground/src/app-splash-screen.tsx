@@ -1,5 +1,5 @@
-import CircularProgress from '@material-ui/core/CircularProgress';
-import {useTheme} from '@material-ui/core/styles';
+import CircularProgress from '@mui/material/CircularProgress';
+import {useTheme} from '@mui/material/styles';
 import React, {useEffect, useState} from 'react';
 
 function AppSplashScreen({isReady}: {isReady: boolean}) {

@@ -1,6 +1,6 @@
-import Paper from '@material-ui/core/Paper';
-import {useTheme} from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
+import Paper from '@mui/material/Paper';
+import {useTheme} from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import React, {ReactNode} from 'react';
 
 function PaneHeader({

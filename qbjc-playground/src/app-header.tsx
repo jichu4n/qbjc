@@ -1,15 +1,15 @@
-import AppBar from '@material-ui/core/AppBar';
-import IconButton from '@material-ui/core/IconButton';
-import {useTheme} from '@material-ui/core/styles';
-import Toolbar from '@material-ui/core/Toolbar';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
-import FolderIcon from '@material-ui/icons/Folder';
-import GitHubIcon from '@material-ui/icons/GitHub';
-import HelpIcon from '@material-ui/icons/Help';
-import LaunchIcon from '@material-ui/icons/Launch';
-import SaveIcon from '@material-ui/icons/Save';
-import SettingsIcon from '@material-ui/icons/Settings';
+import AppBar from '@mui/material/AppBar';
+import IconButton from '@mui/material/IconButton';
+import {useTheme} from '@mui/material/styles';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import FolderIcon from '@mui/icons-material/Folder';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import HelpIcon from '@mui/icons-material/Help';
+import LaunchIcon from '@mui/icons-material/Launch';
+import SaveIcon from '@mui/icons-material/Save';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {saveAs} from 'file-saver';
 import React, {useCallback, useState} from 'react';
 import EditorController from './editor-controller';
@@ -74,6 +74,7 @@ function AppHeader({
                   aria-label="Open program"
                   color="inherit"
                   onClick={showOpenDialog}
+                  size="large"
                 >
                   <FolderIcon />
                 </IconButton>
@@ -83,6 +84,7 @@ function AppHeader({
                   aria-label="Save program"
                   color="inherit"
                   onClick={onSaveClick}
+                  size="large"
                 >
                   <SaveIcon />
                 </IconButton>
@@ -92,6 +94,7 @@ function AppHeader({
                   aria-label="Edit settings"
                   color="inherit"
                   onClick={showSettingsDialog}
+                  size="large"
                 >
                   <SettingsIcon />
                 </IconButton>
@@ -103,6 +106,7 @@ function AppHeader({
               aria-label="Help"
               color="inherit"
               onClick={showHelpDialog}
+              size="large"
             >
               <HelpIcon />
             </IconButton>
@@ -131,6 +135,7 @@ function AppHeader({
               color="inherit"
               href="https://github.com/jichu4n/qbjc"
               target="_blank"
+              size="large"
             >
               <GitHubIcon />
             </IconButton>
