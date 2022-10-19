@@ -9,10 +9,8 @@ import {
   adaptV4Theme,
   createTheme,
   StyledEngineProvider,
-  Theme,
   ThemeProvider,
 } from '@mui/material/styles';
-import '@mui/styles';
 import {observer} from 'mobx-react';
 import {CompileResult} from 'qbjc';
 import {useCallback, useRef, useState} from 'react';
@@ -28,11 +26,6 @@ import OutputScreenPane from './output-screen-pane';
 import QbjcManager from './qbjc-manager';
 import RunFab from './run-fab';
 import './split.css';
-
-declare module '@mui/styles/defaultTheme' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface DefaultTheme extends Theme {}
-}
 
 const darkTheme = createTheme(
   adaptV4Theme({
