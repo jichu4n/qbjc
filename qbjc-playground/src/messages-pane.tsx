@@ -184,11 +184,17 @@ const MessagesPane = observer(
                           }
                           style={{
                             marginRight: -2,
-                            fontSize: '0.6rem',
                             color,
                           }}
                         >
-                          Compiled code
+                          <span
+                            style={{
+                              fontSize: '0.6rem',
+                              marginTop: '0.2rem',
+                            }}
+                          >
+                            Compiled code
+                          </span>
                         </Button>
                       </Tooltip>
                     </ListItemSecondaryAction>

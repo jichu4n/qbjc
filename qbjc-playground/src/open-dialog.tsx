@@ -14,7 +14,7 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import _ from 'lodash';
-import {DropzoneArea} from 'material-ui-dropzone';
+import {DropzoneArea} from 'react-mui-dropzone';
 import BookshelfIcon from 'mdi-material-ui/Bookshelf';
 import FileCodeIcon from 'mdi-material-ui/FileCode';
 import LaptopIcon from 'mdi-material-ui/Laptop';
