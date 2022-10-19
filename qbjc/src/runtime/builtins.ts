@@ -1,4 +1,4 @@
-import singlebyte from 'singlebyte';
+import iconv from 'iconv-lite';
 import roundHalfToEven from '../lib/round-half-to-even';
 import {lookupSymbols} from '../lib/symbol-table';
 import {
@@ -64,9 +64,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
       if (s.length === 0) {
         throw new Error('Expected non-empty string in ASC()');
       }
-      // We could use iconv-lite here instead:
-      // return iconv.encode(s[0], 'cp437')[0];
-      return singlebyte.strToBuf(s[0], 'cp437')[0];
+      return iconv.encode(s[0], 'cp437')[0];
     },
   },
   {
@@ -82,9 +80,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec()],
     returnTypeSpec: stringSpec(),
     async run(n: number) {
-      // We could use iconv-lite here instead:
-      // return iconv.decode(Buffer.from([n]), 'cp437');
-      return singlebyte.bufToStr(Buffer.from([n]), 'cp437');
+      return iconv.decode(Buffer.from([n]), 'cp437');
     },
   },
   {
@@ -392,7 +388,7 @@ export const BUILTIN_FNS: Array<BuiltinFn> = [
     paramTypeSpecs: [longSpec(), longSpec()],
     returnTypeSpec: stringSpec(),
     async run(m: number, n: number) {
-      return singlebyte.bufToStr(Buffer.from([n]), 'cp437').repeat(m);
+      return iconv.decode(Buffer.from([n]), 'cp437').repeat(m);
     },
   },
   {

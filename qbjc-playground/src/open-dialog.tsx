@@ -1,18 +1,18 @@
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import ListItemText from '@material-ui/core/ListItemText';
-import {useTheme} from '@material-ui/core/styles';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import {useTheme} from '@mui/material/styles';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import _ from 'lodash';
 import {DropzoneArea} from 'material-ui-dropzone';
 import BookshelfIcon from 'mdi-material-ui/Bookshelf';
@@ -149,7 +149,7 @@ const OpenDialog = observer(
     onChangeSourceFileName: (sourceFileName: string) => void;
   }) => {
     const theme = useTheme();
-    const isFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const isFullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     const selectedFileSpecRef = useRef<SelectedFileSpec | null>(null);
 

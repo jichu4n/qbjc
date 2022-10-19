@@ -5,37 +5,10 @@ export interface ExampleSpec {
   content: string;
 }
 
-const EXAMPLE_SPECS: Array<ExampleSpec> = [
-  {
-    fileName: 'guess.bas',
-    title: 'GUESS.BAS',
-    description: 'Simple number guessing game',
-  },
-  {
-    fileName: 'nibbles.bas',
-    title: 'NIBBLES.BAS',
-    description: 'Classic snake game',
-  },
-  {
-    fileName: 'cal.bas',
-    title: 'CAL.BAS',
-    description: 'Perpetual calendar program',
-  },
-  {
-    fileName: 'check.bas',
-    title: 'CHECK.BAS',
-    description: 'Checkbook balancing program',
-  },
-  {
-    fileName: 'strtonum.bas',
-    title: 'STRTONUM.BAS',
-    description: 'Converts a string to a number',
-  },
-].map((spec) => ({
-  ...spec,
-  content: require(`!!raw-loader!../examples/${spec.fileName}`).default,
-}));
-
+// To update / add examples, update examples.json manually. The build process
+// runs tools/generate-examples.json to update the file contents based on the
+// files in the examples directory.
+const EXAMPLE_SPECS: Array<ExampleSpec> = require('./examples.json');
 export default EXAMPLE_SPECS;
 
 export const DEFAULT_EXAMPLE = EXAMPLE_SPECS[0];

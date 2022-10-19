@@ -1,16 +1,16 @@
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import IconButton from '@material-ui/core/IconButton';
-import {useTheme} from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
-import DescriptionIcon from '@material-ui/icons/Description';
-import EditIcon from '@material-ui/icons/Edit';
-import FullscreenIcon from '@material-ui/icons/Fullscreen';
-import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import {useTheme} from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
+import DescriptionIcon from '@mui/icons-material/Description';
+import EditIcon from '@mui/icons-material/Edit';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import {autorun} from 'mobx';
 import {observer} from 'mobx-react';
 import * as monaco from 'monaco-editor';
@@ -186,108 +186,106 @@ const EditorPane = observer(
       []
     );
 
-    return (
-      <>
-        <div
-          ref={containerElRef}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            ...style,
-            ...(isFullScreen
-              ? {
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  // Must be greater than z-index of AppBar (1100) and less than
-                  // z-index of tooltip (1500).
-                  //
-                  // See https://material-ui.com/customization/z-index/
-                  zIndex: 1200,
-                }
-              : {}),
-          }}
-        >
-          <PaneHeader
-            title={
-              <Tooltip title="Click to rename" placement="right" arrow={true}>
-                <div
-                  onClick={showSourceFileNameEditorDialog}
-                  onMouseOver={onHoverOverSourceFileName}
-                  onMouseOut={onLeaveSourceFileName}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  {sourceFileName}
-                  <EditIcon
-                    style={{
-                      fontSize: theme.typography.overline.fontSize,
-                      verticalAlign: 'middle',
-                      marginLeft: '4px',
-                      opacity: isHoveringOverSourceFileName ? '100%' : '0',
-                    }}
-                  />
-                </div>
-              </Tooltip>
-            }
-            icon={
-              <DescriptionIcon
+    return <>
+      <div
+        ref={containerElRef}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          ...style,
+          ...(isFullScreen
+            ? {
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                // Must be greater than z-index of AppBar (1100) and less than
+                // z-index of tooltip (1500).
+                //
+                // See https://material-ui.com/customization/z-index/
+                zIndex: 1200,
+              }
+            : {}),
+        }}
+      >
+        <PaneHeader
+          title={
+            <Tooltip title="Click to rename" placement="right" arrow={true}>
+              <div
+                onClick={showSourceFileNameEditorDialog}
+                onMouseOver={onHoverOverSourceFileName}
+                onMouseOut={onLeaveSourceFileName}
                 style={{
-                  fontSize: theme.typography.overline.fontSize,
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
-              />
-            }
-          >
-            {isFullScreen ? (
-              <Tooltip title="Exit full screen">
-                <IconButton onClick={exitFullScreen}>
-                  <FullscreenExitIcon
-                    style={{
-                      fontSize: theme.typography.overline.fontSize,
-                      color: theme.palette.text.secondary,
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Tooltip title="Full screen">
-                <IconButton onClick={enterFullScreen}>
-                  <FullscreenIcon
-                    style={{
-                      fontSize: theme.typography.overline.fontSize,
-                      color: theme.palette.text.secondary,
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
-            )}
-          </PaneHeader>
-          <div
-            ref={init}
-            style={{
-              // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the full
-              // height in the parent but prevents it from growing beyond the parent size.
-              flexGrow: 1,
-              height: 0,
-              // @ts-ignore
-              overflowY: 'overlay',
-            }}
-          ></div>
-        </div>
+              >
+                {sourceFileName}
+                <EditIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    verticalAlign: 'middle',
+                    marginLeft: '4px',
+                    opacity: isHoveringOverSourceFileName ? '100%' : '0',
+                  }}
+                />
+              </div>
+            </Tooltip>
+          }
+          icon={
+            <DescriptionIcon
+              style={{
+                fontSize: theme.typography.overline.fontSize,
+              }}
+            />
+          }
+        >
+          {isFullScreen ? (
+            <Tooltip title="Exit full screen">
+              <IconButton onClick={exitFullScreen} size="large">
+                <FullscreenExitIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Full screen">
+              <IconButton onClick={enterFullScreen} size="large">
+                <FullscreenIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    color: theme.palette.text.secondary,
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
+        </PaneHeader>
+        <div
+          ref={init}
+          style={{
+            // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the full
+            // height in the parent but prevents it from growing beyond the parent size.
+            flexGrow: 1,
+            height: 0,
+            // @ts-ignore
+            overflowY: 'overlay',
+          }}
+        ></div>
+      </div>
 
-        <TextFieldEditorDialog
-          title="Rename source file"
-          value={sourceFileName}
-          onChange={onChangeSourceFileName}
-          isOpen={isSourceFileNameEditorDialogOpen}
-          onClose={hideSourceFileNameEditorDialog}
-        />
-      </>
-    );
+      <TextFieldEditorDialog
+        title="Rename source file"
+        value={sourceFileName}
+        onChange={onChangeSourceFileName}
+        isOpen={isSourceFileNameEditorDialogOpen}
+        onClose={hideSourceFileNameEditorDialog}
+      />
+    </>;
   }
 );
 

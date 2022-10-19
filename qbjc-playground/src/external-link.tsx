@@ -1,5 +1,5 @@
-import Link from '@material-ui/core/Link';
-import LaunchIcon from '@material-ui/icons/Launch';
+import Link from '@mui/material/Link';
+import LaunchIcon from '@mui/icons-material/Launch';
 import React, {ReactNode} from 'react';
 
 function ExternalLink({href, children}: {href: string; children: ReactNode}) {

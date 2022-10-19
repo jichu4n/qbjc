@@ -1,15 +1,15 @@
-import AppBar from '@material-ui/core/AppBar';
-import IconButton from '@material-ui/core/IconButton';
-import {useTheme} from '@material-ui/core/styles';
-import Toolbar from '@material-ui/core/Toolbar';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
-import FolderIcon from '@material-ui/icons/Folder';
-import GitHubIcon from '@material-ui/icons/GitHub';
-import HelpIcon from '@material-ui/icons/Help';
-import LaunchIcon from '@material-ui/icons/Launch';
-import SaveIcon from '@material-ui/icons/Save';
-import SettingsIcon from '@material-ui/icons/Settings';
+import AppBar from '@mui/material/AppBar';
+import IconButton from '@mui/material/IconButton';
+import {useTheme} from '@mui/material/styles';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import FolderIcon from '@mui/icons-material/Folder';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import HelpIcon from '@mui/icons-material/Help';
+import LaunchIcon from '@mui/icons-material/Launch';
+import SaveIcon from '@mui/icons-material/Save';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {saveAs} from 'file-saver';
 import React, {useCallback, useState} from 'react';
 import EditorController from './editor-controller';
@@ -56,101 +56,95 @@ function AppHeader({
   const showHelpDialog = useCallback(() => setIsHelpDialogOpen(true), []);
   const hideHelpDialog = useCallback(() => setIsHelpDialogOpen(false), []);
 
-  return (
-    <>
-      <AppBar position="relative" color="default">
-        <Toolbar
-          style={{
-            paddingRight: theme.spacing(1),
-          }}
-        >
-          <Typography variant="h6" style={{flexGrow: 1}}>
-            qbjc
-          </Typography>
-          {isReady && (
-            <>
-              <Tooltip title="Open program">
-                <IconButton
-                  aria-label="Open program"
-                  color="inherit"
-                  onClick={showOpenDialog}
-                >
-                  <FolderIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Save program">
-                <IconButton
-                  aria-label="Save program"
-                  color="inherit"
-                  onClick={onSaveClick}
-                >
-                  <SaveIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Settings">
-                <IconButton
-                  aria-label="Edit settings"
-                  color="inherit"
-                  onClick={showSettingsDialog}
-                >
-                  <SettingsIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-          <Tooltip title="Help">
-            <IconButton
-              aria-label="Help"
-              color="inherit"
-              onClick={showHelpDialog}
+  return <>
+    <AppBar position="relative" color="default">
+      <Toolbar
+        style={{
+          paddingRight: theme.spacing(1),
+        }}
+      >
+        <Typography variant="h6" style={{flexGrow: 1}}>
+          qbjc
+        </Typography>
+        {isReady && (
+          <>
+            <Tooltip title="Open program">
+              <IconButton
+                aria-label="Open program"
+                color="inherit"
+                onClick={showOpenDialog}
+                size="large">
+                <FolderIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Save program">
+              <IconButton
+                aria-label="Save program"
+                color="inherit"
+                onClick={onSaveClick}
+                size="large">
+                <SaveIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Settings">
+              <IconButton
+                aria-label="Edit settings"
+                color="inherit"
+                onClick={showSettingsDialog}
+                size="large">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+        <Tooltip title="Help">
+          <IconButton aria-label="Help" color="inherit" onClick={showHelpDialog} size="large">
+            <HelpIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip
+          title={
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <HelpIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip
-            title={
-              <div
+              View on GitHub
+              <LaunchIcon
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  fontSize: theme.typography.overline.fontSize,
+                  marginLeft: '0.1rem',
                 }}
-              >
-                View on GitHub
-                <LaunchIcon
-                  style={{
-                    fontSize: theme.typography.overline.fontSize,
-                    marginLeft: '0.1rem',
-                  }}
-                />
-              </div>
-            }
-          >
-            <IconButton
-              aria-label="View on GitHub"
-              color="inherit"
-              href="https://github.com/jichu4n/qbjc"
-              target="_blank"
-            >
-              <GitHubIcon />
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      </AppBar>
+              />
+            </div>
+          }
+        >
+          <IconButton
+            aria-label="View on GitHub"
+            color="inherit"
+            href="https://github.com/jichu4n/qbjc"
+            target="_blank"
+            size="large">
+            <GitHubIcon />
+          </IconButton>
+        </Tooltip>
+      </Toolbar>
+    </AppBar>
 
-      <OpenDialog
-        isOpen={isOpenDialogOpen}
-        onClose={hideOpenDialog}
-        editorController={editorController}
-        onChangeSourceFileName={onChangeSourceFileName}
-      />
-      <SettingsDialog
-        isOpen={isSettingsDialogOpen}
-        onClose={hideSettingsDialog}
-      />
-      <HelpDialog isOpen={isHelpDialogOpen} onClose={hideHelpDialog} />
-    </>
-  );
+    <OpenDialog
+      isOpen={isOpenDialogOpen}
+      onClose={hideOpenDialog}
+      editorController={editorController}
+      onChangeSourceFileName={onChangeSourceFileName}
+    />
+    <SettingsDialog
+      isOpen={isSettingsDialogOpen}
+      onClose={hideSettingsDialog}
+    />
+    <HelpDialog isOpen={isHelpDialogOpen} onClose={hideHelpDialog} />
+  </>;
 }
 
 export default AppHeader;

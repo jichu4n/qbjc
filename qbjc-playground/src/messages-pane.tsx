@@ -1,15 +1,15 @@
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import ListItemText from '@material-ui/core/ListItemText';
-import {Theme, useTheme} from '@material-ui/core/styles';
-import Tooltip from '@material-ui/core/Tooltip';
-import BlockIcon from '@material-ui/icons/Block';
-import ErrorIcon from '@material-ui/icons/Error';
-import PlayCircleIcon from '@material-ui/icons/PlayCircleFilled';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import ListItemText from '@mui/material/ListItemText';
+import {Theme, useTheme} from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import BlockIcon from '@mui/icons-material/Block';
+import ErrorIcon from '@mui/icons-material/Error';
+import PlayCircleIcon from '@mui/icons-material/PlayCircleFilled';
 import CodeBracesBoxIcon from 'mdi-material-ui/CodeBracesBox';
 import MessageTextIcon from 'mdi-material-ui/MessageText';
 import {runInAction} from 'mobx';
@@ -27,11 +27,11 @@ function getMessageDisplayProps(theme: Theme, messageType: QbjcMessageType) {
     },
     [QbjcMessageType.INFO]: {
       iconClass: null,
-      color: theme.palette.text.hint,
+      color: theme.palette.text.secondary,
     },
     [QbjcMessageType.EXECUTION]: {
       iconClass: PlayCircleIcon,
-      color: theme.palette.text.hint,
+      color: theme.palette.text.secondary,
     },
   };
   return MESSAGE_DISPLAY_PROPS[messageType];
@@ -94,6 +94,7 @@ const MessagesPane = observer(
                   messages.length = 0;
                 })
               }
+              size="large"
             >
               <BlockIcon
                 style={{
