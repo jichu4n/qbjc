@@ -183,7 +183,10 @@ const OutputScreenPane = observer(
             </div>
           ) : (
             <Tooltip title="Clear output">
-              <IconButton onClick={() => terminalRef.current?.reset()} size="large">
+              <IconButton
+                onClick={() => terminalRef.current?.reset()}
+                size="large"
+              >
                 <BlockIcon
                   style={{
                     fontSize: theme.typography.overline.fontSize,

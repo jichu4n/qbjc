@@ -56,95 +56,106 @@ function AppHeader({
   const showHelpDialog = useCallback(() => setIsHelpDialogOpen(true), []);
   const hideHelpDialog = useCallback(() => setIsHelpDialogOpen(false), []);
 
-  return <>
-    <AppBar position="relative" color="default">
-      <Toolbar
-        style={{
-          paddingRight: theme.spacing(1),
-        }}
-      >
-        <Typography variant="h6" style={{flexGrow: 1}}>
-          qbjc
-        </Typography>
-        {isReady && (
-          <>
-            <Tooltip title="Open program">
-              <IconButton
-                aria-label="Open program"
-                color="inherit"
-                onClick={showOpenDialog}
-                size="large">
-                <FolderIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Save program">
-              <IconButton
-                aria-label="Save program"
-                color="inherit"
-                onClick={onSaveClick}
-                size="large">
-                <SaveIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Settings">
-              <IconButton
-                aria-label="Edit settings"
-                color="inherit"
-                onClick={showSettingsDialog}
-                size="large">
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-        <Tooltip title="Help">
-          <IconButton aria-label="Help" color="inherit" onClick={showHelpDialog} size="large">
-            <HelpIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip
-          title={
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              View on GitHub
-              <LaunchIcon
-                style={{
-                  fontSize: theme.typography.overline.fontSize,
-                  marginLeft: '0.1rem',
-                }}
-              />
-            </div>
-          }
+  return (
+    <>
+      <AppBar position="relative" color="default">
+        <Toolbar
+          style={{
+            paddingRight: theme.spacing(1),
+          }}
         >
-          <IconButton
-            aria-label="View on GitHub"
-            color="inherit"
-            href="https://github.com/jichu4n/qbjc"
-            target="_blank"
-            size="large">
-            <GitHubIcon />
-          </IconButton>
-        </Tooltip>
-      </Toolbar>
-    </AppBar>
+          <Typography variant="h6" style={{flexGrow: 1}}>
+            qbjc
+          </Typography>
+          {isReady && (
+            <>
+              <Tooltip title="Open program">
+                <IconButton
+                  aria-label="Open program"
+                  color="inherit"
+                  onClick={showOpenDialog}
+                  size="large"
+                >
+                  <FolderIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Save program">
+                <IconButton
+                  aria-label="Save program"
+                  color="inherit"
+                  onClick={onSaveClick}
+                  size="large"
+                >
+                  <SaveIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Settings">
+                <IconButton
+                  aria-label="Edit settings"
+                  color="inherit"
+                  onClick={showSettingsDialog}
+                  size="large"
+                >
+                  <SettingsIcon />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+          <Tooltip title="Help">
+            <IconButton
+              aria-label="Help"
+              color="inherit"
+              onClick={showHelpDialog}
+              size="large"
+            >
+              <HelpIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip
+            title={
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                View on GitHub
+                <LaunchIcon
+                  style={{
+                    fontSize: theme.typography.overline.fontSize,
+                    marginLeft: '0.1rem',
+                  }}
+                />
+              </div>
+            }
+          >
+            <IconButton
+              aria-label="View on GitHub"
+              color="inherit"
+              href="https://github.com/jichu4n/qbjc"
+              target="_blank"
+              size="large"
+            >
+              <GitHubIcon />
+            </IconButton>
+          </Tooltip>
+        </Toolbar>
+      </AppBar>
 
-    <OpenDialog
-      isOpen={isOpenDialogOpen}
-      onClose={hideOpenDialog}
-      editorController={editorController}
-      onChangeSourceFileName={onChangeSourceFileName}
-    />
-    <SettingsDialog
-      isOpen={isSettingsDialogOpen}
-      onClose={hideSettingsDialog}
-    />
-    <HelpDialog isOpen={isHelpDialogOpen} onClose={hideHelpDialog} />
-  </>;
+      <OpenDialog
+        isOpen={isOpenDialogOpen}
+        onClose={hideOpenDialog}
+        editorController={editorController}
+        onChangeSourceFileName={onChangeSourceFileName}
+      />
+      <SettingsDialog
+        isOpen={isSettingsDialogOpen}
+        onClose={hideSettingsDialog}
+      />
+      <HelpDialog isOpen={isHelpDialogOpen} onClose={hideHelpDialog} />
+    </>
+  );
 }
 
 export default AppHeader;

@@ -258,7 +258,11 @@ export default function CompileResultDialog({
           </Tooltip>
         )}
         <Tooltip title="Close">
-          <IconButton onClick={onClose} style={{marginRight: -theme.spacing(2)}} size="large">
+          <IconButton
+            onClick={onClose}
+            style={{marginRight: -theme.spacing(2)}}
+            size="large"
+          >
             <CloseIcon />
           </IconButton>
         </Tooltip>

@@ -186,106 +186,108 @@ const EditorPane = observer(
       []
     );
 
-    return <>
-      <div
-        ref={containerElRef}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          ...style,
-          ...(isFullScreen
-            ? {
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                // Must be greater than z-index of AppBar (1100) and less than
-                // z-index of tooltip (1500).
-                //
-                // See https://material-ui.com/customization/z-index/
-                zIndex: 1200,
-              }
-            : {}),
-        }}
-      >
-        <PaneHeader
-          title={
-            <Tooltip title="Click to rename" placement="right" arrow={true}>
-              <div
-                onClick={showSourceFileNameEditorDialog}
-                onMouseOver={onHoverOverSourceFileName}
-                onMouseOut={onLeaveSourceFileName}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
-              >
-                {sourceFileName}
-                <EditIcon
-                  style={{
-                    fontSize: theme.typography.overline.fontSize,
-                    verticalAlign: 'middle',
-                    marginLeft: '4px',
-                    opacity: isHoveringOverSourceFileName ? '100%' : '0',
-                  }}
-                />
-              </div>
-            </Tooltip>
-          }
-          icon={
-            <DescriptionIcon
-              style={{
-                fontSize: theme.typography.overline.fontSize,
-              }}
-            />
-          }
-        >
-          {isFullScreen ? (
-            <Tooltip title="Exit full screen">
-              <IconButton onClick={exitFullScreen} size="large">
-                <FullscreenExitIcon
-                  style={{
-                    fontSize: theme.typography.overline.fontSize,
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Tooltip title="Full screen">
-              <IconButton onClick={enterFullScreen} size="large">
-                <FullscreenIcon
-                  style={{
-                    fontSize: theme.typography.overline.fontSize,
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          )}
-        </PaneHeader>
+    return (
+      <>
         <div
-          ref={init}
+          ref={containerElRef}
           style={{
-            // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the full
-            // height in the parent but prevents it from growing beyond the parent size.
-            flexGrow: 1,
-            height: 0,
-            // @ts-ignore
-            overflowY: 'overlay',
+            display: 'flex',
+            flexDirection: 'column',
+            ...style,
+            ...(isFullScreen
+              ? {
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  // Must be greater than z-index of AppBar (1100) and less than
+                  // z-index of tooltip (1500).
+                  //
+                  // See https://material-ui.com/customization/z-index/
+                  zIndex: 1200,
+                }
+              : {}),
           }}
-        ></div>
-      </div>
+        >
+          <PaneHeader
+            title={
+              <Tooltip title="Click to rename" placement="right" arrow={true}>
+                <div
+                  onClick={showSourceFileNameEditorDialog}
+                  onMouseOver={onHoverOverSourceFileName}
+                  onMouseOut={onLeaveSourceFileName}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  {sourceFileName}
+                  <EditIcon
+                    style={{
+                      fontSize: theme.typography.overline.fontSize,
+                      verticalAlign: 'middle',
+                      marginLeft: '4px',
+                      opacity: isHoveringOverSourceFileName ? '100%' : '0',
+                    }}
+                  />
+                </div>
+              </Tooltip>
+            }
+            icon={
+              <DescriptionIcon
+                style={{
+                  fontSize: theme.typography.overline.fontSize,
+                }}
+              />
+            }
+          >
+            {isFullScreen ? (
+              <Tooltip title="Exit full screen">
+                <IconButton onClick={exitFullScreen} size="large">
+                  <FullscreenExitIcon
+                    style={{
+                      fontSize: theme.typography.overline.fontSize,
+                      color: theme.palette.text.secondary,
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Full screen">
+                <IconButton onClick={enterFullScreen} size="large">
+                  <FullscreenIcon
+                    style={{
+                      fontSize: theme.typography.overline.fontSize,
+                      color: theme.palette.text.secondary,
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+            )}
+          </PaneHeader>
+          <div
+            ref={init}
+            style={{
+              // This magic combo of flexGrow, height: 0, and overflowY makes this div take up the full
+              // height in the parent but prevents it from growing beyond the parent size.
+              flexGrow: 1,
+              height: 0,
+              // @ts-ignore
+              overflowY: 'overlay',
+            }}
+          ></div>
+        </div>
 
-      <TextFieldEditorDialog
-        title="Rename source file"
-        value={sourceFileName}
-        onChange={onChangeSourceFileName}
-        isOpen={isSourceFileNameEditorDialogOpen}
-        onClose={hideSourceFileNameEditorDialog}
-      />
-    </>;
+        <TextFieldEditorDialog
+          title="Rename source file"
+          value={sourceFileName}
+          onChange={onChangeSourceFileName}
+          isOpen={isSourceFileNameEditorDialogOpen}
+          onClose={hideSourceFileNameEditorDialog}
+        />
+      </>
+    );
   }
 );
 
