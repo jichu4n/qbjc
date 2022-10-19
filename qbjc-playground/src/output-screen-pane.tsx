@@ -147,7 +147,7 @@ const OutputScreenPane = observer(
         style={{
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: theme.palette.common.black,
           ...style,
           ...(isFullScreen
             ? {

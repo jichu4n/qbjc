@@ -331,7 +331,6 @@ const SettingsDialog = observer(
               </Tabs>
               <div
                 style={{
-                  backgroundColor: theme.palette.background.paper,
                   // @ts-ignore
                   overflowY: 'overlay',
                   flex: 1,
