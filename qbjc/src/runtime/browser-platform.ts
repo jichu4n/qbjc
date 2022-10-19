@@ -1,3 +1,7 @@
+// Must polyfill process before importing ansi-escapes.
+// @ts-ignore
+window.process = window.process || require('process');
+
 import ansiEscapes from 'ansi-escapes';
 import {Terminal} from 'xterm';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
