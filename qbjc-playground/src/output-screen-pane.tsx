@@ -176,7 +176,7 @@ const OutputScreenPane = observer(
           }
         >
           {isRunning ? (
-            <div style={{marginRight: 12, paddingTop: 8, paddingBottom: 8}}>
+            <div style={{marginRight: 12, paddingTop: 6, paddingBottom: 6}}>
               <Tooltip title="Running program...">
                 <CircularProgress color="inherit" size={10} />
               </Tooltip>
