@@ -3,10 +3,9 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import {blue} from '@mui/material/colors';
+import {blue, red} from '@mui/material/colors';
 import CssBaseline from '@mui/material/CssBaseline';
 import {
-  adaptV4Theme,
   createTheme,
   StyledEngineProvider,
   ThemeProvider,
@@ -27,19 +26,22 @@ import QbjcManager from './qbjc-manager';
 import RunFab from './run-fab';
 import './split.css';
 
-const darkTheme = createTheme(
-  adaptV4Theme({
-    palette: {
-      mode: 'dark',
-      primary: {
-        light: blue[300],
-        main: blue[400],
-        dark: blue[700],
-        contrastText: 'white',
-      },
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      light: blue[300],
+      main: blue[400],
+      dark: blue[700],
+      contrastText: 'white',
     },
-  })
-);
+    secondary: {
+      light: red[300],
+      main: red[400],
+      dark: red[700],
+    },
+  },
+});
 
 const SPLIT_GUTTER_SIZE = 6;
 

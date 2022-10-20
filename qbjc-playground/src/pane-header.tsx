@@ -29,7 +29,7 @@ function PaneHeader({
       <Typography
         variant="overline"
         color="textSecondary"
-        style={{flexGrow: 1, paddingRight: '12px'}}
+        style={{flexGrow: 1, paddingRight: '12px', marginTop: '0.2rem'}}
       >
         {title}
       </Typography>
