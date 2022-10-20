@@ -4,7 +4,7 @@
   "private": true,
   "workspaces": [
     "./qbjc",
-    "./qbjc-playground"
+    "./playground"
   ],
   "overrides": {
     "ansi-escapes": {

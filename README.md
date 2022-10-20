@@ -136,7 +136,7 @@ Executing the compiled code:
     - On Windows, this means using WSL or something like PuTTY.
     - In the browser, the implementation uses [xterm.js](https://xtermjs.org/).
 
-- It's just enough to run the original [`NIBBLES.BAS` game](./qbjc-playground/examples/nibbles.bas) that shipped with QBasic:
+- It's just enough to run the original [`NIBBLES.BAS` game](./playground/examples/nibbles.bas) that shipped with QBasic:
   ![Compiling and running NIBBLES.BAS](./docs/assets/nibbles.gif)
 
 ### What doesn't work (yet):
