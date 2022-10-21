@@ -1,12 +1,12 @@
-// Must polyfill process before importing ansi-escapes.
-// @ts-ignore
-window.process = window.process || require('process');
-
+// Must polyfill global 'process' variable before importing ansi-escapes.
+self.process = self.process ?? require('process');
 import ansiEscapes from 'ansi-escapes';
 import {Terminal} from 'xterm';
 import AnsiTerminalPlatform from './ansi-terminal-platform';
 import {CompiledModule} from './compiled-code';
 import Executor, {ExecutionOpts} from './executor';
+// Polyfill Buffer for iconv-lite.
+self.Buffer = self.Buffer ?? require('buffer').Buffer;
 
 /** RuntimePlatform for the browser environment based on xterm.js. */
 export class BrowserPlatform extends AnsiTerminalPlatform {

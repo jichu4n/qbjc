@@ -39,11 +39,16 @@ interface DataCursor {
 export class ExecutionError extends ErrorWithLoc {
   constructor(
     message: string,
-    {module, stmt}: {module?: CompiledModule | null; stmt?: CompiledStmt} = {}
+    {
+      module,
+      stmt,
+      cause,
+    }: {module?: CompiledModule | null; stmt?: CompiledStmt; cause?: Error} = {}
   ) {
     super(message, {
       sourceFileName: module?.sourceFileName,
       loc: stmt?.loc ? {line: stmt.loc[0], col: stmt.loc[1]} : undefined,
+      cause,
     });
   }
 }
@@ -214,7 +219,7 @@ export default class Executor {
           if (e.isEndDirective) {
             throw e;
           } else {
-            throw new ExecutionError(e.message, errorArgs);
+            throw new ExecutionError(e.message, {...errorArgs, cause: e});
           }
         }
       }

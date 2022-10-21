@@ -11,9 +11,15 @@ export default class ErrorWithLoc extends Error {
     {
       sourceFileName,
       loc,
-    }: {sourceFileName?: string; loc?: {line: number; col: number}} = {}
+      cause,
+    }: {
+      sourceFileName?: string;
+      loc?: {line: number; col: number};
+      cause?: Error;
+    } = {}
   ) {
-    super(message);
+    // @ts-ignore
+    super(message, {cause});
     if (loc) {
       const sourceFileNamePrefix = sourceFileName ? `${sourceFileName}:` : '';
       const locPrefix = `${loc.line}:${loc.col}`;
