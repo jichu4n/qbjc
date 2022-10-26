@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use(express.static(path.join(packageRootPath, 'src', 'demo')));
+app.use(express.static(packageRootPath));
 
 const server = app.listen(process.env.PORT ?? 3000);
 const address = server.address() as AddressInfo;

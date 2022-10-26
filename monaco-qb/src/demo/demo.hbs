@@ -2,24 +2,30 @@
   <head>
     <meta charset='utf-8' />
     <title>monaco-qb demo</title>
+    <script
+      src='https://unpkg.com/monaco-editor@{{monacoVersion}}/min/vs/loader.js'
+    ></script>
     <link
       rel='stylesheet'
       data-name='vs/editor/editor.main'
-      href='https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/{{monacoVersion}}/min/vs/editor/editor.main.min.css'
+      href='https://unpkg.com/monaco-editor@{{monacoVersion}}/min/vs/editor/editor.main.css'
     />
-    <script
-      src='https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/{{monacoVersion}}/min/vs/loader.min.js'
-    ></script>
   </head>
-  <body style='padding: 0; margin: 0;'>
+  <body style='padding: 0; margin: 0; background-color: black;'>
     <div
       id='container'
-      style='position: fixed; height:100%; width: 100%;'
+      style='position: fixed; left: 0; top: 0; height:100%; width: 100%;'
     ></div>
+    <div style='position: fixed; right: 20; top: 5; visibility: hidden;'>
+      <select id='themeSelect'>
+        <option value='vs'>vs</option>
+        <option value='vs-dark'>vs-dark</option>
+      </select>
+    </div>
     <script>
-      const monacoRootUrl =
-      'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/{{monacoVersion}}/min/vs';
+      const monacoRootUrl = 'https://unpkg.com/monaco-editor@{{monacoVersion}}/min/vs';
+      const monacoThemesRootUrl = 'https://unpkg.com/monaco-themes@^0.4.2';
     </script>
-    <script src='/demo.js'></script>
+    <script src='/src/demo/demo.js'></script>
   </body>
 </html>
