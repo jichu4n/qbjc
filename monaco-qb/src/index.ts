@@ -1,1 +1,5 @@
-export default 1;
+import {setupLanguage} from './qb';
+
+export * from './qb';
+
+setupLanguage();

@@ -1,4 +1,5 @@
 import * as monaco from 'monaco-editor';
+import '../index';
 import './styles.css';
 
 enum LocalStorageKeys {
@@ -51,7 +52,7 @@ async function loadInitialContent() {
 async function setupEditor() {
   const editor = monaco.editor.create(document.getElementById('editor')!, {
     value: await loadInitialContent(),
-    language: 'vb',
+    language: 'qb',
     minimap: {enabled: false},
     scrollBeyondLastLine: false,
   });
