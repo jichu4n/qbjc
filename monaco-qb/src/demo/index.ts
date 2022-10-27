@@ -1,5 +1,5 @@
 import * as monaco from 'monaco-editor';
-import '../index';
+import '..';
 import './styles.css';
 
 enum LocalStorageKeys {
