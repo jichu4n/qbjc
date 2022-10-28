@@ -70,9 +70,9 @@ export const language: languages.IMonarchLanguage = {
         {token: 'keyword.tag-$1'},
       ],
 
-      // identifiers, tagwords, and keywords
+      // Identifiers, tagwords, and keywords
       [
-        /[a-zA-Z_]\w*/,
+        /[a-zA-Z_][a-zA-Z0-9_]*[\$%#&!]?/,
         {
           cases: {
             '@tagwords': {token: 'keyword.tag-$0'},
@@ -81,6 +81,10 @@ export const language: languages.IMonarchLanguage = {
           },
         },
       ],
+
+      // Symbols
+      [/[()\[\]]/, '@brackets'],
+      [/[=><!;\.,:&|+\-*\/\^%\\]+/, 'delimiter'],
     ],
 
     whitespace: [

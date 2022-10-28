@@ -3,6 +3,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
+  name: 'demo',
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
