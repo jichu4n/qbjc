@@ -29,7 +29,7 @@
     "monaco-editor": "^0.34.1",
     "prettier": "^2.7.1",
     "process": "^0.11.10",
-    "qbjc": "0.0.3",
+    "qbjc": "^0.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
