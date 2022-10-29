@@ -83,10 +83,11 @@ export const language: languages.IMonarchLanguage = {
       ],
 
       // Numeric constants
-      [/\d+e([-+]?\d+)?[#!]?/, 'number.float'],
-      [/\d*\.\d+(e[-+]?\d+)?[#!]?/, 'number.float'],
+      [/\d+[de]([-+]?\d+)?[#!]?/, 'number.float'],
+      [/\d*\.\d+([de][-+]?\d+)?[#!]?/, 'number.float'],
+      [/\d+[#!]/, 'number.float'],
       [/&h[0-9a-f]+&?/, 'number.hex'],
-      [/&o?[0-7]+&?/, 'number.octal'],
+      [/&o?[0-7]+&?/, 'number.oct'],
       [/\d+&?/, 'number'],
 
       // Symbols

@@ -37,7 +37,7 @@ beforeAll(() => {
 
 describe('monaco-qb', function () {
   // Test cases from monaco's built-in Visual Basic syntax.
-  describe('vb test cases', function () {
+  describe('Test cases from vb language', function () {
     testTokenization([
       // Comments - single line
       {
@@ -161,6 +161,97 @@ describe('monaco-qb', function () {
           {startIndex: 3, type: ''},
           {startIndex: 4, type: 'number.qb'},
         ],
+      },
+    ]);
+  });
+
+  // Test cases from Microsoft QuickBASIC BASIC: Language Reference
+  describe('Test cases from language reference', function () {
+    testTokenization([
+      {
+        line: '68',
+        tokens: [{startIndex: 0, type: 'number.qb'}],
+      },
+      {
+        line: '+407',
+        tokens: [
+          {startIndex: 0, type: 'delimiter.qb'},
+          {startIndex: 1, type: 'number.qb'},
+        ],
+      },
+      {
+        line: '-1',
+        tokens: [
+          {startIndex: 0, type: 'delimiter.qb'},
+          {startIndex: 1, type: 'number.qb'},
+        ],
+      },
+      {
+        line: '&H76',
+        tokens: [{startIndex: 0, type: 'number.hex.qb'}],
+      },
+      {
+        line: '&H32F',
+        tokens: [{startIndex: 0, type: 'number.hex.qb'}],
+      },
+      {
+        line: '&o347',
+        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+      },
+      {
+        line: '&1234',
+        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+      },
+      {
+        line: '95000000',
+        tokens: [{startIndex: 0, type: 'number.qb'}],
+      },
+      {
+        line: '-400141',
+        tokens: [
+          {startIndex: 0, type: 'delimiter.qb'},
+          {startIndex: 1, type: 'number.qb'},
+        ],
+      },
+      {
+        line: '&H0&',
+        tokens: [{startIndex: 0, type: 'number.hex.qb'}],
+      },
+      {
+        line: '&H1AAAAA&',
+        tokens: [{startIndex: 0, type: 'number.hex.qb'}],
+      },
+      {
+        line: '&o347&',
+        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+      },
+      {
+        line: '&555577733&',
+        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+      },
+      {
+        line: '9.0846',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
+      },
+      {
+        line: '2235.988E-7',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
+      },
+      {
+        line: '2359E6',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
+      },
+      {
+        line: '4.35D-10',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
+      },
+      {
+        line: '3489.0#',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
+      },
+      {
+        line: '22!',
+        tokens: [{startIndex: 0, type: 'number.float.qb'}],
       },
     ]);
   });
