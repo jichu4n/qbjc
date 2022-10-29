@@ -4,6 +4,7 @@ document.queryCommandSupported = () => false;
 window.matchMedia = () => ({matches: false, addEventListener() {}});
 import * as monaco from 'monaco-editor';
 import '../index';
+import {Keywords} from 'qbjc/dist/parser/lexer';
 
 // Based on monaco-editor/src/basic-languages/test/testRunner.ts
 interface IRelaxedToken {
@@ -266,5 +267,21 @@ describe('monaco-qb', function () {
         tokens: [{startIndex: 0, type: 'number.float.qb'}],
       },
     ]);
+  });
+
+  // All keywords recognized by qbjc should be parsed as keywords by monaco-qb.
+  describe('qbjc keywords', function () {
+    for (const keyword of Object.values(Keywords)) {
+      if (keyword.toLowerCase() === 'rem') {
+        continue;
+      }
+      test(`Tokenze \` ${keyword} \``, function () {
+        const actualTokens = monaco.editor.tokenize(keyword, 'qb');
+        expect(actualTokens).toHaveLength(1);
+        expect(actualTokens[0]).toHaveLength(1);
+        expect(actualTokens[0][0].offset).toStrictEqual(0);
+        expect(actualTokens[0][0].type).toMatch(/keyword\..+\.qb/);
+      });
+    }
   });
 });
