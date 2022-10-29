@@ -87,17 +87,25 @@ export const language: languages.IMonarchLanguage = {
       [/\d*\.\d+([de][-+]?\d+)?[#!]?/, 'number.float'],
       [/\d+[#!]/, 'number.float'],
       [/&h[0-9a-f]+&?/, 'number.hex'],
-      [/&o?[0-7]+&?/, 'number.oct'],
+      [/&o?[0-7]+&?/, 'number.octal'],
       [/\d+&?/, 'number'],
 
       // Symbols
       [/[()\[\]]/, '@brackets'],
       [/[=><!;\.,:&|+\-*\/\^%\\]+/, 'delimiter'],
+
+      // Strings
+      [/"/, {token: 'string.quote', next: '@string'}],
     ],
 
     whitespace: [
       [/[ \t\r\n]+/, ''],
       [/(\'|REM(?!\w)).*$/, 'comment'],
+    ],
+
+    string: [
+      [/[^"]+/, 'string'],
+      [/"/, {token: 'string.quote', next: '@pop'}],
     ],
   },
 };

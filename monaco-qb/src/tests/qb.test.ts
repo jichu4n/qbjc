@@ -162,6 +162,18 @@ describe('monaco-qb', function () {
           {startIndex: 4, type: 'number.qb'},
         ],
       },
+
+      // Strings
+      {
+        line: '"a""b"',
+        tokens: [
+          {startIndex: 0, type: 'string.quote.qb'},
+          {startIndex: 1, type: 'string.qb'},
+          {startIndex: 2, type: 'string.quote.qb'},
+          {startIndex: 4, type: 'string.qb'},
+          {startIndex: 5, type: 'string.quote.qb'},
+        ],
+      },
     ]);
   });
 
@@ -196,11 +208,11 @@ describe('monaco-qb', function () {
       },
       {
         line: '&o347',
-        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+        tokens: [{startIndex: 0, type: 'number.octal.qb'}],
       },
       {
         line: '&1234',
-        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+        tokens: [{startIndex: 0, type: 'number.octal.qb'}],
       },
       {
         line: '95000000',
@@ -223,11 +235,11 @@ describe('monaco-qb', function () {
       },
       {
         line: '&o347&',
-        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+        tokens: [{startIndex: 0, type: 'number.octal.qb'}],
       },
       {
         line: '&555577733&',
-        tokens: [{startIndex: 0, type: 'number.oct.qb'}],
+        tokens: [{startIndex: 0, type: 'number.octal.qb'}],
       },
       {
         line: '9.0846',
