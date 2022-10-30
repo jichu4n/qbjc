@@ -2,6 +2,13 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+const monacoEditorPath = path.join(
+  path.dirname(require.resolve('monaco-editor/esm/vs/editor/editor.main.js')),
+  '..',
+  '..',
+  '..'
+);
+
 module.exports = {
   name: 'demo',
   mode: 'development',
@@ -44,6 +51,21 @@ module.exports = {
             'themes'
           ),
           to: 'themes',
+        },
+        {
+          from: path.join(monacoEditorPath, 'min', 'vs', 'base', 'worker'),
+          to: path.join('monaco', 'vs', 'base', 'worker'),
+        },
+        {
+          from: path.join(
+            monacoEditorPath,
+            'min',
+            'vs',
+            'base',
+            'common',
+            'worker'
+          ),
+          to: path.join('monaco', 'vs', 'base', 'common', 'worker'),
         },
       ],
     }),

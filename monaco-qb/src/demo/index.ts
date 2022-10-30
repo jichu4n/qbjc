@@ -50,6 +50,13 @@ async function loadInitialContent() {
 }
 
 async function setupEditor() {
+  // @ts-ignore
+  window.MonacoEnvironment = window.MonacoEnvironment || {
+    getWorkerUrl() {
+      return './monaco/vs/base/worker/workerMain.js';
+    },
+  };
+
   const editor = monaco.editor.create(document.getElementById('editor')!, {
     value: await loadInitialContent(),
     language: 'qb',
