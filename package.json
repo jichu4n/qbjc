@@ -4,8 +4,8 @@
   "private": true,
   "workspaces": [
     "./qbjc",
-    "./playground",
-    "./monaco-qb"
+    "./monaco-qb",
+    "./playground"
   ],
   "overrides": {
     "ansi-escapes": {
