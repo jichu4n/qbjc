@@ -35,7 +35,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.CURRENT_SOURCE_FILE_NAME]: DEFAULT_SOURCE_FILE_NAME,
   [ConfigKey.EDITOR_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.EDITOR_FONT_SIZE]: 14,
-  [ConfigKey.EDITOR_THEME]: 'vs-dark',
+  [ConfigKey.EDITOR_THEME]: 'nord',
   [ConfigKey.EDITOR_KEYBINDINGS]: '',
   [ConfigKey.SCREEN_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
@@ -44,14 +44,17 @@ const DEFAULT_CONFIG = {
   [ConfigKey.EXECUTION_DELAY]: 0,
 };
 
-export const EDITOR_THEMES = [
-  {label: 'Visual Studio', value: 'vs'},
-  {label: 'Visual Studio Dark', value: 'vs-dark'},
-  ...Object.entries(MONACO_THEMES).map(([themeKey, themeNameAndData]) => ({
-    label: themeNameAndData.name,
-    value: themeKey,
-  })),
-];
+export const EDITOR_THEMES = _.sortBy(
+  [
+    {label: 'Visual Studio', value: 'vs'},
+    {label: 'Visual Studio Dark', value: 'vs-dark'},
+    ...Object.entries(MONACO_THEMES).map(([themeKey, themeNameAndData]) => ({
+      label: themeNameAndData.name,
+      value: themeKey,
+    })),
+  ],
+  ({label}) => label.toLowerCase()
+);
 
 export const EDITOR_KEYBINDINGS = [
   {label: 'Default', value: ''},

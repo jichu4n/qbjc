@@ -179,7 +179,6 @@ export default function CompileResultDialog({
         language: 'javascript',
         automaticLayout: true,
         minimap: {enabled: false},
-        theme: 'vs-dark',
         readOnly: true,
       });
       editorConfigChangeListenerDisposerRef.current = autorun(() => {
