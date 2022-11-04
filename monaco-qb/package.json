@@ -1,7 +1,7 @@
 {
   "name": "monaco-qb",
   "version": "0.0.1",
-  "description": "Monaco editor plugin for QBasic",
+  "description": "QBasic / QuickBASIC syntax highlighting for Monaco editor",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jichu4n/qbjc.git"
@@ -19,7 +19,8 @@
     "build:demo": "webpack",
     "start:demo": "webpack serve",
     "lint": "prettier --check .",
-    "test": "jest"
+    "test": "jest",
+    "prepack": "npm run lint && npm run build && npm test && rm -rf ./dist/tests ./dist/demo"
   },
   "devDependencies": {
     "@types/jest": "^29.2.0",
@@ -40,5 +41,8 @@
   },
   "peerDependencies": {
     "monaco-editor": ">=0.29.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
