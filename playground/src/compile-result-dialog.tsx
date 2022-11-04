@@ -186,6 +186,7 @@ export default function CompileResultDialog({
         editor.updateOptions({
           fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
           fontSize: configManager.getKey(ConfigKey.EDITOR_FONT_SIZE),
+          theme: configManager.getKey(ConfigKey.EDITOR_THEME),
         });
       });
       editor.focus();

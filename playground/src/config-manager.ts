@@ -7,6 +7,7 @@ import {
   reaction,
   toJS,
 } from 'mobx';
+import {MONACO_THEMES} from './monaco-editor-interface';
 
 export interface SourceFile {
   name: string;
@@ -34,7 +35,7 @@ const DEFAULT_CONFIG = {
   [ConfigKey.CURRENT_SOURCE_FILE_NAME]: DEFAULT_SOURCE_FILE_NAME,
   [ConfigKey.EDITOR_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.EDITOR_FONT_SIZE]: 14,
-  [ConfigKey.EDITOR_THEME]: 'nord_dark',
+  [ConfigKey.EDITOR_THEME]: 'vs-dark',
   [ConfigKey.EDITOR_KEYBINDINGS]: '',
   [ConfigKey.SCREEN_FONT_FAMILY]: 'Cascadia Mono',
   [ConfigKey.SCREEN_FONT_SIZE]: 14,
@@ -43,58 +44,13 @@ const DEFAULT_CONFIG = {
   [ConfigKey.EXECUTION_DELAY]: 0,
 };
 
-export const EDITOR_THEME_GROUPS = [
-  {label: 'Light themes', value: 'light'},
-  {label: 'Dark themes', value: 'dark'},
-];
-
 export const EDITOR_THEMES = [
-  {label: 'Ambiance', value: 'ambiance', group: 'dark'},
-  {label: 'Chaos', value: 'chaos', group: 'dark'},
-  {label: 'Chrome', value: 'chrome', group: 'light'},
-  {label: 'Clouds', value: 'clouds', group: 'light'},
-  {label: 'Clouds midnight', value: 'clouds_midnight', group: 'dark'},
-  {label: 'Cobalt', value: 'cobalt', group: 'dark'},
-  {label: 'Crimson Editor', value: 'crimson_editor', group: 'light'},
-  {label: 'Dawn', value: 'dawn', group: 'light'},
-  {label: 'Dracula', value: 'dracula', group: 'dark'},
-  {label: 'Dreamweaver', value: 'dreamweaver', group: 'light'},
-  {label: 'Eclipse', value: 'eclipse', group: 'light'},
-  {label: 'Github', value: 'github', group: 'light'},
-  {label: 'Gob', value: 'gob', group: 'dark'},
-  {label: 'Gruvbox', value: 'gruvbox', group: 'dark'},
-  {label: 'Idle Fingers', value: 'idle_fingers', group: 'dark'},
-  {label: 'Iplastic', value: 'iplastic', group: 'light'},
-  {label: 'Katzenmilch', value: 'katzenmilch', group: 'light'},
-  {label: 'KR Theme', value: 'kr_theme', group: 'dark'},
-  {label: 'Kuroir', value: 'kuroir', group: 'light'},
-  {label: 'Merbivore', value: 'merbivore', group: 'dark'},
-  {label: 'Merbivore Soft', value: 'merbivore_soft', group: 'dark'},
-  {label: 'Mono Industrial', value: 'mono_industrial', group: 'dark'},
-  {label: 'Monokai', value: 'monokai', group: 'dark'},
-  {label: 'Nord Dark', value: 'nord_dark', group: 'dark'},
-  {label: 'Pastel On Dark', value: 'pastel_on_dark', group: 'dark'},
-  {label: 'Solarized Dark', value: 'solarized_dark', group: 'dark'},
-  {label: 'Solarized Light', value: 'solarized_light', group: 'light'},
-  {label: 'SQL Server', value: 'sqlserver', group: 'light'},
-  {label: 'Terminal', value: 'terminal', group: 'dark'},
-  {label: 'Textmate', value: 'textmate', group: 'light'},
-  {label: 'Tomorrow', value: 'tomorrow', group: 'light'},
-  {label: 'Tomorrow Night Blue', value: 'tomorrow_night_blue', group: 'dark'},
-  {
-    label: 'Tomorrow Night Bright',
-    value: 'tomorrow_night_bright',
-    group: 'dark',
-  },
-  {
-    label: 'Tomorrow Night Eighties',
-    value: 'tomorrow_night_eighties',
-    group: 'dark',
-  },
-  {label: 'Tomorrow Night', value: 'tomorrow_night', group: 'dark'},
-  {label: 'Twilight', value: 'twilight', group: 'dark'},
-  {label: 'Vibrant Ink', value: 'vibrant_ink', group: 'dark'},
-  {label: 'Xcode', value: 'xcode', group: 'light'},
+  {label: 'Visual Studio', value: 'vs'},
+  {label: 'Visual Studio Dark', value: 'vs-dark'},
+  ...Object.entries(MONACO_THEMES).map(([themeKey, themeNameAndData]) => ({
+    label: themeNameAndData.name,
+    value: themeKey,
+  })),
 ];
 
 export const EDITOR_KEYBINDINGS = [
