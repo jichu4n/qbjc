@@ -25,7 +25,6 @@ import configManager, {
   ConfigKey,
   EDITOR_KEYBINDINGS,
   EDITOR_THEMES,
-  EDITOR_THEME_GROUPS,
 } from './config-manager';
 
 const SETTING_EDITOR_INPUT_WIDTH = 400;
@@ -342,23 +341,20 @@ const SettingsDialog = observer(
                 <List subheader={<li />}>
                   {activeTab === 'editor' && (
                     <>
-                      {/* Not yet implemented with Monaco. */}
-                      {false && (
-                        <ListItem
-                          button={true}
-                          onClick={() => setIsEditorThemeDialogOpen(true)}
-                        >
-                          <ListItemText
-                            primary="Editor theme"
-                            secondary={
-                              _.find(EDITOR_THEMES, [
-                                'value',
-                                configManager.getKey(ConfigKey.EDITOR_THEME),
-                              ])?.label
-                            }
-                          />
-                        </ListItem>
-                      )}
+                      <ListItem
+                        button={true}
+                        onClick={() => setIsEditorThemeDialogOpen(true)}
+                      >
+                        <ListItemText
+                          primary="Editor theme"
+                          secondary={
+                            _.find(EDITOR_THEMES, [
+                              'value',
+                              configManager.getKey(ConfigKey.EDITOR_THEME),
+                            ])?.label
+                          }
+                        />
+                      </ListItem>
                       <ListItem
                         button={true}
                         onClick={() => setIsEditorFontDialogOpen(true)}
@@ -496,7 +492,6 @@ const SettingsDialog = observer(
           onClose={() => setIsEditorThemeDialogOpen(false)}
           title="Editor theme"
           configKey={ConfigKey.EDITOR_THEME}
-          groups={EDITOR_THEME_GROUPS}
           choices={EDITOR_THEMES}
         />
         <SingleChoiceSettingEditorDialog

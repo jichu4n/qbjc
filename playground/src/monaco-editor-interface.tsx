@@ -1,5 +1,7 @@
-import {editor, IPosition} from 'monaco-editor';
+import * as monaco from 'monaco-editor';
 import EditorController from './editor-controller';
+
+// Register qb syntax with Monaco.
 import 'monaco-qb';
 
 // Initialize Monaco editor worker.
@@ -12,8 +14,8 @@ window.MonacoEnvironment = window.MonacoEnvironment || {
   },
 };
 
-class MonacoEditorController extends EditorController {
-  constructor(private readonly editor: editor.ICodeEditor) {
+export class MonacoEditorController extends EditorController {
+  constructor(private readonly editor: monaco.editor.ICodeEditor) {
     super();
   }
 
@@ -30,13 +32,25 @@ class MonacoEditorController extends EditorController {
   }
 
   setCursor(line: number, col: number) {
-    const pos: IPosition = {lineNumber: line + 1, column: col + 1};
+    const pos: monaco.IPosition = {lineNumber: line + 1, column: col + 1};
     this.editor.setPosition(pos);
     this.editor.revealPositionInCenterIfOutsideViewport(
       pos,
-      editor.ScrollType.Smooth
+      monaco.editor.ScrollType.Smooth
     );
   }
 }
 
-export default MonacoEditorController;
+export type MonacoThemeBundle = {
+  [key: string]: {
+    name: string;
+    data: monaco.editor.IStandaloneThemeData;
+  };
+};
+
+export const MONACO_THEMES: MonacoThemeBundle = require('./monaco-themes-bundle.json');
+
+// Register themes with Monaco.
+for (const [themeKey, themeNameAndData] of Object.entries(MONACO_THEMES)) {
+  monaco.editor.defineTheme(themeKey, themeNameAndData.data);
+}

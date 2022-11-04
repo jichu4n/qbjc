@@ -1,6 +1,10 @@
 # copied from node_modules during build
 /public/monaco
 
+# genenerated during build
+/src/examples-bundle.json
+/src/monaco-themes-bundle.json
+
 # dependencies
 /node_modules
 /.pnp

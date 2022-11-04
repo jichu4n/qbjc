@@ -18,7 +18,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {ConfigKey} from './config-manager';
 import EditorController from './editor-controller';
 import {DEFAULT_EXAMPLE} from './examples';
-import MonacoEditorController from './monaco-editor-controller';
+import {MonacoEditorController} from './monaco-editor-interface';
 import PaneHeader from './pane-header';
 
 const SETTING_EDITOR_INPUT_WIDTH = 400;
@@ -142,12 +142,12 @@ const EditorPane = observer(
           language: 'qb',
           automaticLayout: true,
           minimap: {enabled: false},
-          theme: 'vs-dark',
         });
         autorun(() => {
           editor.updateOptions({
             fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
             fontSize: configManager.getKey(ConfigKey.EDITOR_FONT_SIZE),
+            theme: configManager.getKey(ConfigKey.EDITOR_THEME),
           });
         });
         editor.onDidChangeModelContent(() => {

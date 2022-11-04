@@ -179,13 +179,13 @@ export default function CompileResultDialog({
         language: 'javascript',
         automaticLayout: true,
         minimap: {enabled: false},
-        theme: 'vs-dark',
         readOnly: true,
       });
       editorConfigChangeListenerDisposerRef.current = autorun(() => {
         editor.updateOptions({
           fontFamily: configManager.getKey(ConfigKey.EDITOR_FONT_FAMILY),
           fontSize: configManager.getKey(ConfigKey.EDITOR_FONT_SIZE),
+          theme: configManager.getKey(ConfigKey.EDITOR_THEME),
         });
       });
       editor.focus();
