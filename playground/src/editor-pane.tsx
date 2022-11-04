@@ -139,7 +139,7 @@ const EditorPane = observer(
           : DEFAULT_EXAMPLE.content;
         const editor = monaco.editor.create(node, {
           value: initialContent,
-          language: 'vb',
+          language: 'qb',
           automaticLayout: true,
           minimap: {enabled: false},
           theme: 'vs-dark',

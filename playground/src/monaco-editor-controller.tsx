@@ -1,5 +1,6 @@
 import {editor, IPosition} from 'monaco-editor';
 import EditorController from './editor-controller';
+import 'monaco-qb';
 
 // Initialize Monaco editor worker.
 // @ts-ignore

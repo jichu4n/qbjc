@@ -176,7 +176,7 @@ export default function CompileResultDialog({
         return;
       }
       const editor = monaco.editor.create(node, {
-        language: 'vb',
+        language: 'javascript',
         automaticLayout: true,
         minimap: {enabled: false},
         theme: 'vs-dark',

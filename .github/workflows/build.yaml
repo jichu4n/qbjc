@@ -16,3 +16,5 @@ jobs:
       - run: npm run --workspaces lint
       - run: npm run --workspaces build
       - run: npm run --workspace=qbjc test
+      - run: npm run --workspace=monaco-qb test
+      - run: npm run --workspace=monaco-qb build:demo
