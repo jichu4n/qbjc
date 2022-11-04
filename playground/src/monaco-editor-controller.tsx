@@ -8,7 +8,7 @@ window.MonacoEnvironment = window.MonacoEnvironment || {
   getWorkerUrl() {
     // Since we'll only be using the editor to edit BASIC, we won't be using the
     // other workers (HTML / CSS / JS etc).
-    return './monaco/workerMain.js';
+    return './monaco/vs/base/worker/workerMain.js';
   },
 };
 

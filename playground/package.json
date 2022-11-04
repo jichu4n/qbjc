@@ -44,7 +44,7 @@
     "xterm-webfont": "^2.0.0"
   },
   "scripts": {
-    "prebuild:copyMonacoAssets": "rsync -avh ../node_modules/monaco-editor/min/vs/base/worker/ ./public/monaco/",
+    "prebuild:copyMonacoAssets": "./src/tools/copy-monaco-assets.sh",
     "prebuild:generateExamplesJson": "node ./src/tools/generate-examples-json.js",
     "prebuild": "npm run prebuild:copyMonacoAssets && npm run prebuild:generateExamplesJson",
     "start": "npm run prebuild && react-scripts start",
