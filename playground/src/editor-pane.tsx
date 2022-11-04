@@ -18,7 +18,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import configManager, {ConfigKey} from './config-manager';
 import EditorController from './editor-controller';
 import {DEFAULT_EXAMPLE} from './examples';
-import MonacoEditorController from './monaco-editor-controller';
+import {MonacoEditorController} from './monaco-editor-interface';
 import PaneHeader from './pane-header';
 
 const SETTING_EDITOR_INPUT_WIDTH = 400;
