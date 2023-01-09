@@ -13,7 +13,7 @@ export interface FontInfo {
  * Each element [y][x] specifies whether the pixel at (x, y) should be set to0
  * background color (0) or foreground color (1).
  */
-export type Glyph = Array<Array<number>>;
+export type Glyph = Array<Array<0 | 1>>;
 
 /** Embedded font data.
  *

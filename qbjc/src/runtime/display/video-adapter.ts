@@ -1,3 +1,7 @@
+import {createImageData, createCanvas} from 'canvas';
+import {Font} from './font';
+import {FONT_DATA} from './font-data';
+
 /** Text format, in number of characters. */
 export interface TextFormat {
   cols: number;
@@ -13,17 +17,20 @@ export interface Size2D {
 /** Graphics resolution, in pixels. */
 export type Resolution = Size2D;
 
+/** RGB Color value. */
+export type RGB = [number, number, number];
+
 /** Color with optional attributes. */
-export type Color =
-  | string // Plain color (e.g. '#aaff00')
+export type RGBColor =
+  | RGB // Plain color (e.g. '#aaff00')
   | {
       // Color with attributes.
-      color: string;
+      rgb: RGB;
       blink?: boolean;
     };
 
 /** A color palette, represented as an array of CSS colors. */
-export type Palette = Array<Color>;
+export type Palette = Array<RGBColor>;
 
 /** Information about current screen mode. */
 export interface ModeInfo {
@@ -47,43 +54,43 @@ export interface ModeInfo {
 }
 
 /** 4-bit RGBI 16-color palette. */
-export const Cga16ColorPalette: Palette = [
-  '#000000',
-  '#0000aa',
-  '#00aa00',
-  '#00aaaa',
-  '#aa0000',
-  '#aa00aa',
-  '#aa5500',
-  '#aaaaaa',
-  '#555555',
-  '#5555ff',
-  '#55ff55',
-  '#55ffff',
-  '#ff5555',
-  '#ff55ff',
-  '#ffff55',
-  '#ffffff',
+export const TextMode16ColorPalette: Palette = [
+  [0x00, 0x00, 0x00],
+  [0x00, 0x00, 0xaa],
+  [0x00, 0xaa, 0x00],
+  [0x00, 0xaa, 0xaa],
+  [0xaa, 0x00, 0x00],
+  [0xaa, 0x00, 0xaa],
+  [0xaa, 0x55, 0x00],
+  [0xaa, 0xaa, 0xaa],
+  [0x55, 0x55, 0x55],
+  [0x55, 0x55, 0xff],
+  [0x55, 0xff, 0x55],
+  [0x55, 0xff, 0xff],
+  [0xff, 0x55, 0x55],
+  [0xff, 0x55, 0xff],
+  [0xff, 0xff, 0x55],
+  [0xff, 0xff, 0xff],
 ];
 
 /** 4-bit RGBI 8-color palette with blinking bit. */
 export const Cga8ColorPalette: Palette = [
-  '#000000',
-  '#0000aa',
-  '#00aa00',
-  '#00aaaa',
-  '#aa0000',
-  '#aa00aa',
-  '#aa5500',
-  '#aaaaaa',
-  {color: '#000000', blink: true},
-  {color: '#0000aa', blink: true},
-  {color: '#00aa00', blink: true},
-  {color: '#00aaaa', blink: true},
-  {color: '#aa0000', blink: true},
-  {color: '#aa00aa', blink: true},
-  {color: '#aa5500', blink: true},
-  {color: '#aaaaaa', blink: true},
+  [0x00, 0x00, 0x00],
+  [0x00, 0x00, 0xaa],
+  [0x00, 0xaa, 0x00],
+  [0x00, 0xaa, 0xaa],
+  [0xaa, 0x00, 0x00],
+  [0xaa, 0x00, 0xaa],
+  [0xaa, 0x55, 0x00],
+  [0xaa, 0xaa, 0xaa],
+  {rgb: [0x00, 0x00, 0x00], blink: true},
+  {rgb: [0x00, 0x00, 0xaa], blink: true},
+  {rgb: [0x00, 0xaa, 0x00], blink: true},
+  {rgb: [0x00, 0xaa, 0xaa], blink: true},
+  {rgb: [0xaa, 0x00, 0x00], blink: true},
+  {rgb: [0xaa, 0x00, 0xaa], blink: true},
+  {rgb: [0xaa, 0x55, 0x00], blink: true},
+  {rgb: [0xaa, 0xaa, 0xaa], blink: true},
 ];
 
 export const CgaModes: Array<ModeInfo> = [
@@ -162,30 +169,211 @@ export enum VideoModeType {
 }
 
 /** Base class for video mode implementations. */
-export abstract class VideoMode {
-  /** Type of this video mode. */
-  abstract readonly type: VideoModeType;
-  /** Text format. */
-  abstract readonly textFormat: TextFormat;
-  /** Graphics resolution. */
-  abstract readonly resolution: Resolution;
-  /** Number of screen pages. */
-  abstract readonly numPages: number;
+export abstract class VideoModeController {
+  constructor(
+    /** Type of this video mode. */
+    readonly type: VideoModeType,
+    /** Text format. */
+    readonly textFormat: TextFormat,
+    /** Graphics resolution. */
+    readonly resolution: Resolution,
+    /** Number of screen pages. */
+    readonly numPages: number,
+    /** Font. */
+    readonly font: Font
+  ) {}
+
+  /** Convert color value (number) to RGB. */
+  protected abstract toRgb(color: number): RGB;
 
   /** Draw a text character at (x, y). */
-  setChar(x: number, y: number, ch: string | number) {}
+  drawChar(x: number, y: number, charOrCharCode: string | number) {
+    if (
+      !(
+        x >= 0 &&
+        x < this.textFormat.cols &&
+        y >= 0 &&
+        y < this.textFormat.rows
+      )
+    ) {
+      return;
+    }
+    const charCode =
+      typeof charOrCharCode === 'string'
+        ? charOrCharCode.charCodeAt(0)
+        : charOrCharCode;
+    const glyph = this.font.glyphs[charCode];
+    if (!glyph) {
+      return;
+    }
+    this.activeTextBuffer[y][x] = charCode;
+    const xPos = this.font.width * x;
+    const yPos = this.font.height * y;
+    for (let y = 0; y < this.font.height; ++y) {
+      for (let x = 0; x < this.font.width; ++x) {
+        this.activePixelBuffer[yPos + y][xPos + x] = glyph[y][x]
+          ? this.textColor
+          : this.bgColor;
+      }
+    }
+  }
   /** Draw a pixel at (x, y). */
-  setPixel(x: number, y: number, color: number) {}
+  drawPixel(x: number, y: number, color: number) {}
 
   /** Render currently visible page to array of HTML hex color values. */
-  abstract render(): Array<Array<string>>;
+  renderToImageData({
+    xScale = 1,
+    yScale = 1,
+  }: {xScale?: number; yScale?: number} = {}): ImageData {
+    const uint8Array = new Uint8ClampedArray(
+      this.resolution.height * yScale * this.resolution.width * xScale * 4
+    );
+    for (let y = 0, offset = 0; y < this.resolution.height; ++y) {
+      for (let i = 0; i < yScale; ++i) {
+        for (let x = 0; x < this.resolution.width; ++x) {
+          const color = this.visiblePixelBuffer[y][x];
+          const [r, g, b] = this.toRgb(color);
+          for (let j = 0; j < xScale; ++j, offset += 4) {
+            uint8Array[offset] = r;
+            uint8Array[offset + 1] = g;
+            uint8Array[offset + 2] = b;
+            uint8Array[offset + 3] = 0xff;
+          }
+        }
+      }
+    }
+    // @ts-ignore
+    return createImageData(
+      uint8Array,
+      this.resolution.width * xScale,
+      this.resolution.height * yScale
+    );
+  }
 
   /** Currently active page. */
   protected activePage: number = 0;
   /** Currently visible page. */
   protected visiblePage: number = 0;
-  /** Buffer storing the ASCII value of the character at [page][y][x]. */
-  protected textBuffer: Array<Array<Array<number>>> = [];
-  /** Pixel buffer storing the color value at [page][y][x]. */
-  protected pixelBuffer: Array<Array<Array<number>>> = [];
+  /** Current foreground color. */
+  protected fgColor: number = 0;
+  /** Current background color. */
+  protected bgColor: number = 0;
+  /** Buffer storing the ASCII value of the character at [page][y][x].
+   *
+   * Initial value for all elements is space (0x20 / 32).
+   */
+  protected textBuffer: Array<Array<Array<number>>> = Array.from(
+    {length: this.numPages},
+    () =>
+      Array.from({length: this.textFormat.rows}, () =>
+        Array.from({length: this.textFormat.cols}, () => ' '.charCodeAt(0))
+      )
+  );
+  /** Pixel buffer storing the color value at [page][y][x].
+   *
+   * Initial value for pixels is the background color.
+   */
+  protected pixelBuffer: Array<Array<Array<number>>> = Array.from(
+    {length: this.numPages},
+    () =>
+      Array.from({length: this.resolution.height}, () =>
+        Array.from({length: this.resolution.width}, () => this.bgColor)
+      )
+  );
+
+  /** The currently active text buffer page. */
+  protected get activeTextBuffer() {
+    return this.textBuffer[this.activePage];
+  }
+  /** The currently active pixel buffer page. */
+  protected get activePixelBuffer() {
+    return this.pixelBuffer[this.activePage];
+  }
+  /** The currently visible pixel buffer page. */
+  protected get visiblePixelBuffer() {
+    return this.pixelBuffer[this.visiblePage];
+  }
+
+  /** Current text foreground color.
+   *
+   * This is typically the same as the graphics foreground color, but e.g. CGA
+   * mode always renders text in color 3.
+   */
+  protected get textColor() {
+    return this.fgColor;
+  }
+}
+
+/** Base class for text modes (BIOS modes 0, 1, 2, 3). */
+class TextModeController extends VideoModeController {
+  constructor(
+    textFormat: TextFormat,
+    resolution: Resolution,
+    readonly numPages: number
+  ) {
+    super(
+      VideoModeType.TEXT,
+      textFormat,
+      resolution,
+      numPages,
+      FONT_DATA.find(({name}) => name === '8x8')!
+    );
+    // Default text color is white.
+    this.fgColor = 15;
+  }
+
+  protected toRgb(color: number): RGB {
+    const v = TextMode16ColorPalette[color];
+    return Array.isArray(v) ? v : v.rgb;
+  }
+}
+
+/** 40x25 text mode (BIOS mode 1). */
+export class TextMode40x25Controller extends TextModeController {
+  constructor() {
+    super({cols: 40, rows: 25}, {width: 320, height: 200}, 8);
+  }
+}
+
+/** 80x25 text mode (BIOS mode 3). */
+export class TextMode80x25Controller extends TextModeController {
+  constructor() {
+    super({cols: 80, rows: 25}, {width: 640, height: 200}, 4);
+  }
+}
+
+if (require.main === module) {
+  const fs = require('fs-extra');
+  const path = require('path');
+
+  const controller = new TextMode40x25Controller();
+  let text = 'hello';
+  for (let i = 0; i < text.length; ++i) {
+    controller.drawChar(i, 0, text.charCodeAt(i));
+  }
+  text = 'world';
+  for (let i = 0; i < text.length; ++i) {
+    controller.drawChar(i + 10, 1, text.charCodeAt(i));
+  }
+  const imageData = controller.renderToImageData({xScale: 4, yScale: 4});
+  const c = createCanvas(
+    controller.resolution.width * 4,
+    controller.resolution.height * 4
+  );
+  const ctx = c.getContext('2d');
+  ctx.putImageData(imageData, 0, 0);
+  const pngBuffer = c.toBuffer('image/png');
+  fs.writeFile(
+    path.join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src',
+      'runtime',
+      'display',
+      'out.png'
+    ),
+    pngBuffer
+  );
 }
