@@ -9,6 +9,9 @@
 # Generated parser.
 /src/parser/grammar.ts
 
+# Generated font data.
+/src/runtime/display/font-data.ts
+
 # Intermediate debugging output generated during testing.
 *.bas.js
 *.ast.json
