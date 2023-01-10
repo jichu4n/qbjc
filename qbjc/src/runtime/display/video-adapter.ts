@@ -53,46 +53,6 @@ export interface ModeInfo {
   numPages: number;
 }
 
-/** 4-bit RGBI 16-color palette. */
-export const TextMode16ColorPalette: Palette = [
-  [0x00, 0x00, 0x00],
-  [0x00, 0x00, 0xaa],
-  [0x00, 0xaa, 0x00],
-  [0x00, 0xaa, 0xaa],
-  [0xaa, 0x00, 0x00],
-  [0xaa, 0x00, 0xaa],
-  [0xaa, 0x55, 0x00],
-  [0xaa, 0xaa, 0xaa],
-  [0x55, 0x55, 0x55],
-  [0x55, 0x55, 0xff],
-  [0x55, 0xff, 0x55],
-  [0x55, 0xff, 0xff],
-  [0xff, 0x55, 0x55],
-  [0xff, 0x55, 0xff],
-  [0xff, 0xff, 0x55],
-  [0xff, 0xff, 0xff],
-];
-
-/** 4-bit RGBI 8-color palette with blinking bit. */
-export const Cga8ColorPalette: Palette = [
-  [0x00, 0x00, 0x00],
-  [0x00, 0x00, 0xaa],
-  [0x00, 0xaa, 0x00],
-  [0x00, 0xaa, 0xaa],
-  [0xaa, 0x00, 0x00],
-  [0xaa, 0x00, 0xaa],
-  [0xaa, 0x55, 0x00],
-  [0xaa, 0xaa, 0xaa],
-  {rgb: [0x00, 0x00, 0x00], blink: true},
-  {rgb: [0x00, 0x00, 0xaa], blink: true},
-  {rgb: [0x00, 0xaa, 0x00], blink: true},
-  {rgb: [0x00, 0xaa, 0xaa], blink: true},
-  {rgb: [0xaa, 0x00, 0x00], blink: true},
-  {rgb: [0xaa, 0x00, 0xaa], blink: true},
-  {rgb: [0xaa, 0x55, 0x00], blink: true},
-  {rgb: [0xaa, 0xaa, 0xaa], blink: true},
-];
-
 export const CgaModes: Array<ModeInfo> = [
   // BIOS modes 0 & 1
   {
@@ -168,6 +128,18 @@ export enum VideoModeType {
   TEXT_AND_GRAPHICS = 'textAndGraphics',
 }
 
+/** Data and attributes stored for each element in a text buffer. */
+export interface TextCell {
+  /** The ASCII code of the text character. */
+  charCode: number;
+  /** Foreground color. */
+  fgColor: number;
+  /** Background color. */
+  bgColor: number;
+}
+
+const SPACE = ' '.charCodeAt(0);
+
 /** Base class for video mode implementations. */
 export abstract class VideoModeController {
   constructor(
@@ -180,7 +152,17 @@ export abstract class VideoModeController {
     /** Number of screen pages. */
     readonly numPages: number,
     /** Font. */
-    readonly font: Font
+    readonly font: Font,
+    /** Number of available foreground colors.
+     *
+     * Sets the upper bound on foreground colors.
+     */
+    readonly numFgColors: number,
+    /** Number of available background colors.
+     *
+     * Sets the upper bound on background colors.
+     */
+    readonly numBgColors: number
   ) {}
 
   /** Convert color value (number) to RGB. */
@@ -206,13 +188,17 @@ export abstract class VideoModeController {
     if (!glyph) {
       return;
     }
-    this.activeTextBuffer[y][x] = charCode;
+    this.activeTextBuffer[y][x] = {
+      charCode,
+      fgColor: this.textFgColor,
+      bgColor: this.bgColor,
+    };
     const xPos = this.font.width * x;
     const yPos = this.font.height * y;
     for (let y = 0; y < this.font.height; ++y) {
       for (let x = 0; x < this.font.width; ++x) {
         this.activePixelBuffer[yPos + y][xPos + x] = glyph[y][x]
-          ? this.textColor
+          ? this.textFgColor
           : this.bgColor;
       }
     }
@@ -255,18 +241,36 @@ export abstract class VideoModeController {
   /** Currently visible page. */
   protected visiblePage: number = 0;
   /** Current foreground color. */
-  protected fgColor: number = 0;
+  private _fgColor: number = this.numFgColors - 1;
+  /** Current foreground color. */
+  get fgColor() {
+    return this._fgColor;
+  }
+  set fgColor(color: number) {
+    this._fgColor = color % this.numFgColors;
+  }
   /** Current background color. */
-  protected bgColor: number = 0;
+  private _bgColor: number = 0;
+  /** Current background color. */
+  get bgColor() {
+    return this._bgColor;
+  }
+  set bgColor(color: number) {
+    this._bgColor = color % this.numBgColors;
+  }
   /** Buffer storing the ASCII value of the character at [page][y][x].
    *
    * Initial value for all elements is space (0x20 / 32).
    */
-  protected textBuffer: Array<Array<Array<number>>> = Array.from(
+  protected textBuffer: Array<Array<Array<TextCell>>> = Array.from(
     {length: this.numPages},
     () =>
       Array.from({length: this.textFormat.rows}, () =>
-        Array.from({length: this.textFormat.cols}, () => ' '.charCodeAt(0))
+        Array.from({length: this.textFormat.cols}, () => ({
+          charCode: SPACE,
+          fgColor: this.textFgColor,
+          bgColor: this.bgColor,
+        }))
       )
   );
   /** Pixel buffer storing the color value at [page][y][x].
@@ -299,10 +303,46 @@ export abstract class VideoModeController {
    * This is typically the same as the graphics foreground color, but e.g. CGA
    * mode always renders text in color 3.
    */
-  protected get textColor() {
+  protected get textFgColor() {
     return this.fgColor;
   }
 }
+
+/** 4-bit RGBI 16-color palette. */
+export const TEXT_MODE_16_COLOR_PALETTE: Palette = [
+  [0x00, 0x00, 0x00],
+  [0x00, 0x00, 0xaa],
+  [0x00, 0xaa, 0x00],
+  [0x00, 0xaa, 0xaa],
+  [0xaa, 0x00, 0x00],
+  [0xaa, 0x00, 0xaa],
+  [0xaa, 0x55, 0x00],
+  [0xaa, 0xaa, 0xaa],
+  [0x55, 0x55, 0x55],
+  [0x55, 0x55, 0xff],
+  [0x55, 0xff, 0x55],
+  [0x55, 0xff, 0xff],
+  [0xff, 0x55, 0x55],
+  [0xff, 0x55, 0xff],
+  [0xff, 0xff, 0x55],
+  [0xff, 0xff, 0xff],
+  {rgb: [0x00, 0x00, 0x00], blink: true},
+  {rgb: [0x00, 0x00, 0xaa], blink: true},
+  {rgb: [0x00, 0xaa, 0x00], blink: true},
+  {rgb: [0x00, 0xaa, 0xaa], blink: true},
+  {rgb: [0xaa, 0x00, 0x00], blink: true},
+  {rgb: [0xaa, 0x00, 0xaa], blink: true},
+  {rgb: [0xaa, 0x55, 0x00], blink: true},
+  {rgb: [0xaa, 0xaa, 0xaa], blink: true},
+  {rgb: [0x55, 0x55, 0x55], blink: true},
+  {rgb: [0x55, 0x55, 0xff], blink: true},
+  {rgb: [0x55, 0xff, 0x55], blink: true},
+  {rgb: [0x55, 0xff, 0xff], blink: true},
+  {rgb: [0xff, 0x55, 0x55], blink: true},
+  {rgb: [0xff, 0x55, 0xff], blink: true},
+  {rgb: [0xff, 0xff, 0x55], blink: true},
+  {rgb: [0xff, 0xff, 0xff], blink: true},
+];
 
 /** Base class for text modes (BIOS modes 0, 1, 2, 3). */
 class TextModeController extends VideoModeController {
@@ -316,14 +356,14 @@ class TextModeController extends VideoModeController {
       textFormat,
       resolution,
       numPages,
-      FONT_DATA.find(({name}) => name === '8x8')!
+      FONT_DATA.find(({name}) => name === '8x8')!,
+      16,
+      8
     );
-    // Default text color is white.
-    this.fgColor = 15;
   }
 
   protected toRgb(color: number): RGB {
-    const v = TextMode16ColorPalette[color];
+    const v = TEXT_MODE_16_COLOR_PALETTE[color];
     return Array.isArray(v) ? v : v.rgb;
   }
 }
@@ -352,6 +392,8 @@ if (require.main === module) {
     controller.drawChar(i, 0, text.charCodeAt(i));
   }
   text = 'world';
+  controller.fgColor = 1;
+  controller.bgColor = 4;
   for (let i = 0; i < text.length; ++i) {
     controller.drawChar(i + 10, 1, text.charCodeAt(i));
   }
