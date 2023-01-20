@@ -1,4 +1,4 @@
-import {createImageData, createCanvas} from 'canvas';
+import {createCanvas, createImageData, ImageData} from 'canvas';
 import {Font} from './font';
 import {FONT_DATA} from './font-data';
 
@@ -21,7 +21,7 @@ export type Resolution = Size2D;
 export type RGB = [number, number, number];
 
 /** Color with optional attributes. */
-export type RGBColor =
+export type Color =
   | RGB // Plain color (e.g. '#aaff00')
   | {
       // Color with attributes.
@@ -30,95 +30,7 @@ export type RGBColor =
     };
 
 /** A color palette, represented as an array of CSS colors. */
-export type Palette = Array<RGBColor>;
-
-/** Information about current screen mode. */
-export interface ModeInfo {
-  /** Whether the current mode supports graphics.
-   *
-   * If false, only text mode output is supported.
-   */
-  isGraphicsMode: boolean;
-  /** Number of colors supported for foreground. */
-  numFgColors: number;
-  /** Number of colors supported for background. */
-  numBgColors: number;
-  /** Text format. */
-  textFormat: TextFormat;
-  /** Graphics resolution. */
-  resolution: Resolution;
-  /** Size of a text character, in pixels. */
-  characterSize: Size2D;
-  /** Number of screen pages available. */
-  numPages: number;
-}
-
-export const CgaModes: Array<ModeInfo> = [
-  // BIOS modes 0 & 1
-  {
-    isGraphicsMode: false,
-    numFgColors: 16,
-    numBgColors: 8,
-    textFormat: {
-      cols: 40,
-      rows: 25,
-    },
-    resolution: {
-      width: 320,
-      height: 200,
-    },
-    characterSize: {height: 8, width: 8},
-    numPages: 8,
-  },
-  // BIOS modes 2 & 3
-  {
-    isGraphicsMode: false,
-    numFgColors: 16,
-    numBgColors: 8,
-    textFormat: {
-      cols: 80,
-      rows: 25,
-    },
-    resolution: {
-      width: 640,
-      height: 200,
-    },
-    characterSize: {height: 8, width: 8},
-    numPages: 4,
-  },
-  // BIOS mode 4
-  {
-    isGraphicsMode: true,
-    numFgColors: 4,
-    numBgColors: 16,
-    textFormat: {
-      cols: 40,
-      rows: 25,
-    },
-    resolution: {
-      width: 320,
-      height: 200,
-    },
-    characterSize: {height: 8, width: 8},
-    numPages: 1,
-  },
-  // BIOS mode 6
-  {
-    isGraphicsMode: true,
-    numFgColors: 1,
-    numBgColors: 1,
-    textFormat: {
-      cols: 80,
-      rows: 25,
-    },
-    resolution: {
-      width: 640,
-      height: 200,
-    },
-    characterSize: {height: 8, width: 8},
-    numPages: 1,
-  },
-];
+export type Palette = Array<Color>;
 
 /** Basic type of a video mode. */
 export enum VideoModeType {
@@ -207,32 +119,24 @@ export abstract class VideoModeController {
   drawPixel(x: number, y: number, color: number) {}
 
   /** Render currently visible page to array of HTML hex color values. */
-  renderToImageData({
-    xScale = 1,
-    yScale = 1,
-  }: {xScale?: number; yScale?: number} = {}): ImageData {
+  renderToImageData(): ImageData {
     const uint8Array = new Uint8ClampedArray(
-      this.resolution.height * yScale * this.resolution.width * xScale * 4
+      this.resolution.height * this.resolution.width * 4
     );
     for (let y = 0, offset = 0; y < this.resolution.height; ++y) {
-      for (let i = 0; i < yScale; ++i) {
-        for (let x = 0; x < this.resolution.width; ++x) {
-          const color = this.visiblePixelBuffer[y][x];
-          const [r, g, b] = this.toRgb(color);
-          for (let j = 0; j < xScale; ++j, offset += 4) {
-            uint8Array[offset] = r;
-            uint8Array[offset + 1] = g;
-            uint8Array[offset + 2] = b;
-            uint8Array[offset + 3] = 0xff;
-          }
-        }
+      for (let x = 0; x < this.resolution.width; ++x, offset += 4) {
+        const color = this.visiblePixelBuffer[y][x];
+        const [r, g, b] = this.toRgb(color);
+        uint8Array[offset] = r;
+        uint8Array[offset + 1] = g;
+        uint8Array[offset + 2] = b;
+        uint8Array[offset + 3] = 0xff;
       }
     }
-    // @ts-ignore
     return createImageData(
       uint8Array,
-      this.resolution.width * xScale,
-      this.resolution.height * yScale
+      this.resolution.width,
+      this.resolution.height
     );
   }
 
@@ -397,10 +301,10 @@ if (require.main === module) {
   for (let i = 0; i < text.length; ++i) {
     controller.drawChar(i + 10, 1, text.charCodeAt(i));
   }
-  const imageData = controller.renderToImageData({xScale: 4, yScale: 4});
+  const imageData = controller.renderToImageData();
   const c = createCanvas(
-    controller.resolution.width * 4,
-    controller.resolution.height * 4
+    controller.resolution.width,
+    controller.resolution.height
   );
   const ctx = c.getContext('2d');
   ctx.putImageData(imageData, 0, 0);
