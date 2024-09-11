@@ -1,12 +1,7 @@
 {
+  "extends": "./tsconfig.base",
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
-    "declaration": true,
-    "outDir": "dist",
-    "baseUrl": "."
+    "outDir": "dist"
   },
   "include": ["src/**/*"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "qbjc",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "QBasic to JavaScript compiler",
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime-bundle-bootstrap.js ./dist/runtime/node-runtime-bundle.js",
-    "build:tsc": "tsc && chmod +x ./dist/qbjc.js && (for p in browser node; do for e in js 'd.ts'; do ln -sf \"./dist/runtime/$p-platform.$e\" \"$p.$e\"; done; done)",
+    "build:tsc": "tsc && tsc -p tsconfig.platforms.json && chmod +x ./dist/qbjc.js",
     "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
     "lint": "prettier --check .",
     "test": "jest"
@@ -54,5 +54,10 @@
     "require-from-string": "^2.0.2",
     "source-map": "^0.8.0-beta.0",
     "terser": "^5.15.1"
-  }
+  },
+  "files": [
+    "dist",
+    "browser",
+    "node"
+  ]
 }
