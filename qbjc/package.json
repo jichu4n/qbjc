@@ -1,6 +1,6 @@
 {
   "name": "qbjc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "QBasic to JavaScript compiler",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
     "packageTest": "npm run build && ./src/tests/package-test.sh",
     "lint": "prettier --check .",
     "test": "jest",
-    "prepack": "cp ../README.md ./",
+    "prepack": "cp ../README.md ./ && rm -rf ./dist/{tests,tools}",
     "postpack": "rm ./README.md",
     "prepublishOnly": "npm run packageTest"
   },
