@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.10.4",
+    "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.10.4",
     "@fontsource/cascadia-mono": "^4.2.1",
     "@fontsource/roboto": "^4.5.8",
