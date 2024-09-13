@@ -1,6 +1,6 @@
 {
   "name": "qbjc",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "QBasic to JavaScript compiler",
   "repository": {
     "type": "git",
@@ -14,7 +14,9 @@
   "homepage": "https://github.com/jichu4n/qbjc#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./dist/qbjc.js",
+  "bin": {
+    "qbjc": "./dist/qbjc.js"
+  },
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime-bundle-bootstrap.js ./dist/runtime/node-runtime-bundle.js",
