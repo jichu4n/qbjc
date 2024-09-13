@@ -22,7 +22,9 @@
     "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
     "package-test": "npm run build && ./src/tests/package-test.sh",
     "lint": "prettier --check .",
-    "test": "jest"
+    "test": "jest",
+    "prepack": "cp ../README.md ./",
+    "postpack": "rm ./README.md"
   },
   "devDependencies": {
     "@types/ansi-styles": "^3.2.1",
