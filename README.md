@@ -1,4 +1,5 @@
-![build](https://github.com/jichu4n/qbjc/workflows/build/badge.svg)
+[![NPM Version][npm-version-image]][npm-url]
+[![Build Status][build-status-image]][github-url]
 
 # qbjc
 
@@ -152,3 +153,8 @@ For detailed compatibility information on individual commands and functions, see
 ## About
 
 qbjc is distributed under the Apache License v2.
+
+[npm-url]: https://npmjs.org/package/qbjc
+[npm-version-image]: https://badgen.net/npm/v/qbjc
+[github-url]: https://github.com/jichu4n/qbjc
+[build-status-image]: https://github.com/jichu4n/qbjc/actions/workflows/build.yaml/badge.svg
