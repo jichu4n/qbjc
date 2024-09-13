@@ -127,5 +127,6 @@ if (require.main === module) {
         console.error(e.message);
       }
     }
+    process.exit(1);
   });
 }

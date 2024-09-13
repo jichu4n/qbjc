@@ -1,6 +1,6 @@
 {
   "name": "qbjc",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "QBasic to JavaScript compiler",
   "repository": {
     "type": "git",
@@ -14,17 +14,20 @@
   "homepage": "https://github.com/jichu4n/qbjc#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./qbjc.js",
+  "bin": {
+    "qbjc": "./dist/qbjc.js"
+  },
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime-bundle-bootstrap.js ./dist/runtime/node-runtime-bundle.js",
     "build:tsc": "tsc && tsc -p tsconfig.platforms.json && chmod +x ./dist/qbjc.js",
     "build": "npm run build:grammar && npm run build:tsc && npm run build:nodeRuntimeBundle",
-    "package-test": "npm run build && ./src/tests/package-test.sh",
+    "packageTest": "npm run build && ./src/tests/package-test.sh",
     "lint": "prettier --check .",
     "test": "jest",
     "prepack": "cp ../README.md ./",
-    "postpack": "rm ./README.md"
+    "postpack": "rm ./README.md",
+    "prepublishOnly": "npm run packageTest"
   },
   "devDependencies": {
     "@types/ansi-styles": "^3.2.1",
@@ -60,7 +63,9 @@
   },
   "files": [
     "dist",
-    "browser",
-    "node"
+    "browser/*.js",
+    "browser/*.d.ts",
+    "node/*.js",
+    "node/*.d.ts"
   ]
 }
