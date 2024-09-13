@@ -23,11 +23,11 @@
     "prepack": "npm run lint && npm run build && npm test && rm -rf ./dist/tests ./dist/demo"
   },
   "devDependencies": {
-    "@types/jest": "^29.2.0",
+    "@types/jest": "^29.5.13",
     "copy-webpack-plugin": "^11.0.0",
     "html-webpack-plugin": "^5.5.0",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^29.2.2",
+    "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.2.2",
     "monaco-editor": "^0.34.1",
     "monaco-themes": "^0.4.2",
