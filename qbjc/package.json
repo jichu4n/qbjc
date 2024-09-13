@@ -14,7 +14,7 @@
   "homepage": "https://github.com/jichu4n/qbjc#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./qbjc.js",
+  "bin": "./dist/qbjc.js",
   "scripts": {
     "build:grammar": "cd ./src/parser && nearleyc grammar.ne -o grammar.ts",
     "build:nodeRuntimeBundle": "node ./dist/tools/build-runtime-bundle.js ./dist/runtime/node-runtime-bundle-bootstrap.js ./dist/runtime/node-runtime-bundle.js",

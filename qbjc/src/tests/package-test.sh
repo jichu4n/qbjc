@@ -25,6 +25,22 @@ async function testCompileAndRun(source: string) {
 
 EOF
 )
+
+function TEST_CLI() {
+  BIN=$1
+
+  (
+    set -ex
+
+    $BIN --version
+    $BIN --help
+
+    echo 'PRINT "Hello, World!"' > ./test.bas
+    $BIN -r ./test.bas
+  )
+}
+
+cd "$(dirname "$0")/../.."
 SOURCE_DIR="$PWD"
 TEMP_DIR="$PWD/../tmp-smoke-test"
 
@@ -63,6 +79,18 @@ if ./node_modules/.bin/ts-node -e "$TEST_SCRIPT"; then
 	exit_code=0
 else
   exit_code=$?
+  echo
+	echo "> Error - script returned status ${exit_code}"
+fi
+echo
+
+echo "> Running CLI test"
+TEST_CLI ./node_modules/.bin/qbjc
+exit_code=$?
+if [ $exit_code -eq 0 ]; then
+  echo
+	echo "> Success!"
+else
   echo
 	echo "> Error - script returned status ${exit_code}"
 fi
