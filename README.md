@@ -79,7 +79,7 @@ const {
   sourceFileName: 'hello.bas',
   // Optional - Whether to bundle with Node.js runtime code in order
   // to produce a standalone script.
-  enableBundling: true,
+  enableBundling: false,
   // Optional - Whether to minify the output.
   enableMinify: false,
 });
@@ -92,21 +92,19 @@ Executing the compiled code:
   ```TypeScript
   import {Terminal} from 'xterm';
   import {BrowserExecutor} from 'qbjc/browser';
-  import {compiledModule} from './hello.bas.js';
 
   // Set up xterm.js Terminal instance
   const terminal = new Terminal(...);
 
-  await new BrowserExecutor(terminal).executeModule(compiledModule);
+  await new BrowserExecutor(terminal).executeModule(code);
   ```
 
 - In Node.js:
 
   ```TypeScript
   import {NodeExecutor} from 'qbjc/node';
-  import {compiledModule} from './hello.bas.js';
 
-  await new NodeExecutor().executeModule(compiledModule);
+  await new NodeExecutor().executeModule(code);
   ```
 
 - In Node.js with bundling enabled (i.e. compiled with `enableBundling: true`):
