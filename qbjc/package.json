@@ -37,7 +37,7 @@
     "@types/moo": "^0.5.5",
     "@types/nearley": "^2.11.2",
     "@types/node": "^18.11.2",
-    "@types/require-from-string": "^1.2.1",
+    "@types/require-from-string": "^1.2.3",
     "airtable": "^0.12.2",
     "jest": "^29.7.0",
     "node-ansiparser": "^2.2.0",
