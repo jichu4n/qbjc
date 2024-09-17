@@ -6,7 +6,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.10.4",
     "@fontsource/cascadia-mono": "^4.2.1",
-    "@fontsource/roboto": "^4.5.8",
+    "@fontsource/roboto": "^5.1.0",
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.10",
     "@mui/styles": "^5.10.10",
