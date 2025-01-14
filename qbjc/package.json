@@ -48,7 +48,7 @@
     "xterm": "^4.19.0"
   },
   "dependencies": {
-    "@vercel/ncc": "^0.34.0",
+    "@vercel/ncc": "^0.38.3",
     "ansi-escapes": "^4.3.2",
     "ansi-styles": "^5.2.0",
     "commander": "^13.0.0",
