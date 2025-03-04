@@ -43,7 +43,7 @@
     "node-ansiparser": "^2.2.0",
     "node-ansiterminal": "^0.2.1-beta",
     "prettier": "^3.5.3",
-    "strip-ansi": "^6.0.1",
+    "strip-ansi": "^7.1.0",
     "typescript": "^4.8.4",
     "xterm": "^4.19.0"
   },
