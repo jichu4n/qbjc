@@ -112,7 +112,10 @@ export interface CodeGeneratorOpts {
  * Depends on semantic analysis info in the AST.
  */
 export class CodeGenerator extends AstVisitor<SourceNode> {
-  constructor(private readonly module: Module, opts: CodeGeneratorOpts = {}) {
+  constructor(
+    private readonly module: Module,
+    opts: CodeGeneratorOpts = {}
+  ) {
     super();
     this.opts = {
       sourceFileName: '',
