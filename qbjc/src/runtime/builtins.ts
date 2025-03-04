@@ -657,7 +657,7 @@ function overload<T extends BuiltinProc>(
       ({
         ...proc,
         paramTypeSpecs,
-      } as T)
+      }) as T
   );
 }
 
