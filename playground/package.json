@@ -7,7 +7,7 @@
     "@emotion/styled": "^11.10.4",
     "@fontsource/cascadia-mono": "^4.2.1",
     "@fontsource/roboto": "^5.1.0",
-    "@mui/icons-material": "^5.10.9",
+    "@mui/icons-material": "^6.4.7",
     "@mui/material": "^5.10.10",
     "@mui/styles": "^5.10.10",
     "@testing-library/jest-dom": "^6.5.0",
